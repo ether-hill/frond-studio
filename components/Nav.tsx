@@ -36,7 +36,7 @@ export default function Nav() {
   }, [menuOpen]);
 
   const linkStyle: React.CSSProperties = {
-    fontFamily: "var(--font-body), sans-serif",
+    fontFamily: "var(--font-mono)",
   };
 
   return (

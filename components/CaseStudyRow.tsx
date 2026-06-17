@@ -37,7 +37,7 @@ export default function CaseStudyRow({
             display: "flex",
             alignItems: "center",
             gap: 12,
-            fontFamily: "var(--font-body), sans-serif",
+            fontFamily: "var(--font-mono)",
             fontSize: 11,
             fontWeight: 500,
             letterSpacing: "0.18em",
@@ -99,7 +99,7 @@ export default function CaseStudyRow({
           </div>
         ) : null}
 
-        <Link className="linku" href={href} style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 12, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--accent)" }}>
+        <Link className="linku" href={href} style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--accent)" }}>
           View case study &#8594;
         </Link>
       </div>

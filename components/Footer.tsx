@@ -5,7 +5,7 @@ import CurrentYear from "./CurrentYear";
 const label = (text: string) => (
   <div
     style={{
-      fontFamily: "var(--font-body), sans-serif",
+      fontFamily: "var(--font-mono)",
       fontSize: 10,
       letterSpacing: "0.18em",
       textTransform: "uppercase",
@@ -55,12 +55,12 @@ export default function Footer() {
         >
           <div>
             <div style={{ display: "flex", flexDirection: "column", lineHeight: 1, gap: 4, marginBottom: 18 }}>
-              <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 27, fontWeight: 400, letterSpacing: "0.005em" }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 27, fontWeight: 400, letterSpacing: "0.005em" }}>
                 Frond
               </span>
               <span
                 style={{
-                  fontFamily: "var(--font-body), sans-serif",
+                  fontFamily: "var(--font-mono)",
                   fontSize: 10,
                   fontWeight: 500,
                   letterSpacing: "0.44em",
@@ -114,7 +114,7 @@ export default function Footer() {
             flexWrap: "wrap",
             gap: "14px 28px",
             justifyContent: "space-between",
-            fontFamily: "var(--font-body), sans-serif",
+            fontFamily: "var(--font-mono)",
             fontSize: 10.5,
             letterSpacing: "0.12em",
             textTransform: "uppercase",

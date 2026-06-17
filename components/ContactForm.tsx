@@ -22,7 +22,7 @@ export default function ContactForm() {
       >
         <div
           style={{
-            fontFamily: "var(--font-body), sans-serif",
+            fontFamily: "var(--font-mono)",
             fontSize: 11,
             fontWeight: 500,
             letterSpacing: "0.2em",

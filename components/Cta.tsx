@@ -36,7 +36,7 @@ export default function Cta() {
       >
         <div
           style={{
-            fontFamily: "var(--font-body), sans-serif",
+            fontFamily: "var(--font-mono)",
             fontSize: 12,
             fontWeight: 500,
             letterSpacing: "0.24em",

@@ -17,7 +17,7 @@ export default function CapabilityRows() {
             borderBottom: i === CAPABILITIES.length - 1 ? "1px solid var(--line)" : undefined,
           }}
         >
-          <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 11, color: "var(--fg-faint)" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-faint)" }}>
             {c.num}
           </span>
           <div>

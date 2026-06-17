@@ -15,7 +15,7 @@ export default function PageHeader({ eyebrow, title, intro, introSerif }: Props)
             display: "flex",
             alignItems: "center",
             gap: 13,
-            fontFamily: "var(--font-body), sans-serif",
+            fontFamily: "var(--font-mono)",
             fontSize: 11,
             fontWeight: 500,
             letterSpacing: "0.26em",
@@ -31,11 +31,11 @@ export default function PageHeader({ eyebrow, title, intro, introSerif }: Props)
 
       <h1
         style={{
-          fontFamily: "var(--font-display), serif",
-          fontWeight: 500,
+          fontFamily: "var(--font-display), sans-serif",
+          fontWeight: 600,
           fontSize: "clamp(52px,9vw,148px)",
-          lineHeight: 0.9,
-          letterSpacing: "-0.03em",
+          lineHeight: 0.92,
+          letterSpacing: "-0.035em",
         }}
       >
         <span className="mask-line">

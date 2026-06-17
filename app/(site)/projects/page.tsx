@@ -41,7 +41,7 @@ export default function ProjectsPage() {
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 }}>
                   <span
                     style={{
-                      fontFamily: "var(--font-body), sans-serif",
+                      fontFamily: "var(--font-mono)",
                       fontSize: 10,
                       fontWeight: 500,
                       letterSpacing: "0.18em",
@@ -94,7 +94,7 @@ export default function ProjectsPage() {
                   className="linku"
                   style={{
                     marginTop: 28,
-                    fontFamily: "var(--font-body), sans-serif",
+                    fontFamily: "var(--font-mono)",
                     fontSize: 11,
                     fontWeight: 500,
                     letterSpacing: "0.16em",

@@ -29,7 +29,7 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
         }}
       >
         <div style={{ display: "flex", gap: 18, alignItems: "baseline" }}>
-          <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", color: "var(--accent)" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", color: "var(--accent)" }}>
             (01)
           </span>
           <h2 style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
@@ -46,7 +46,7 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
             border: "1px solid var(--line)",
             borderRadius: 999,
             padding: 3,
-            fontFamily: "var(--font-body), sans-serif",
+            fontFamily: "var(--font-mono)",
             fontSize: 10,
             fontWeight: 500,
             letterSpacing: "0.14em",
@@ -100,7 +100,7 @@ function WorkGrid({ projects }: { projects: ProjectCard[] }) {
                 position: "absolute",
                 top: 14,
                 left: 15,
-                fontFamily: "var(--font-body), sans-serif",
+                fontFamily: "var(--font-mono)",
                 fontSize: 10,
                 fontWeight: 500,
                 letterSpacing: "0.12em",
@@ -123,7 +123,7 @@ function WorkGrid({ projects }: { projects: ProjectCard[] }) {
               &#8599;
             </span>
           </div>
-          <div style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-dim)" }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-dim)" }}>
             {disciplineLine(p)}
           </div>
         </Link>
@@ -236,13 +236,13 @@ function WorkIndex({ projects }: { projects: ProjectCard[] }) {
             borderTop: "1px solid var(--line)",
           }}
         >
-          <span className="wi-num" style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 13, fontWeight: 500, letterSpacing: "0.06em", color: "var(--fg-faint)" }}>
+          <span className="wi-num" style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 500, letterSpacing: "0.06em", color: "var(--fg-faint)" }}>
             {String(i + 1).padStart(2, "0")}
           </span>
           <h3 className="wi-name" style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(28px,4.6vw,72px)", fontWeight: 500, letterSpacing: "-0.022em", lineHeight: 1 }}>
             {p.title}
           </h3>
-          <span className="wi-tags" style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-dim)", whiteSpace: "nowrap" }}>
+          <span className="wi-tags" style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-dim)", whiteSpace: "nowrap" }}>
             {disciplineLine(p)}
           </span>
           <span className="wi-arrow" style={{ fontSize: 21, color: "var(--accent)" }}>

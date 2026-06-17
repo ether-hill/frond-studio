@@ -33,7 +33,7 @@ const meta = (label: string, value: React.ReactNode) => (
   <div>
     <div
       style={{
-        fontFamily: "var(--font-body), sans-serif",
+        fontFamily: "var(--font-mono)",
         fontSize: 10,
         fontWeight: 500,
         letterSpacing: "0.18em",
@@ -69,7 +69,7 @@ export default async function ProjectCaseStudy({
             display: "flex",
             alignItems: "center",
             gap: 13,
-            fontFamily: "var(--font-body), sans-serif",
+            fontFamily: "var(--font-mono)",
             fontSize: 11,
             fontWeight: 500,
             letterSpacing: "0.26em",
@@ -86,7 +86,7 @@ export default async function ProjectCaseStudy({
         </div>
 
         {/* Title */}
-        <h1 style={{ fontFamily: "var(--font-display), serif", fontWeight: 500, fontSize: "clamp(44px,7.4vw,120px)", lineHeight: 0.92, letterSpacing: "-0.03em", maxWidth: "18ch" }}>
+        <h1 style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(44px,7.4vw,120px)", lineHeight: 0.94, letterSpacing: "-0.035em", maxWidth: "18ch" }}>
           <span className="mask-line">
             <span>{project.title}</span>
           </span>
@@ -175,7 +175,7 @@ export default async function ProjectCaseStudy({
           <div className="page-gutter" style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(40px,6vh,72px) var(--gutter)", display: "flex", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
             {prev ? (
               <Link href={`/work/${prev.slug}`} className="linku" style={{ color: "var(--fg-dim)", display: "flex", flexDirection: "column", gap: 6 }}>
-                <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-faint)" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-faint)" }}>
                   &#8592; Previous
                 </span>
                 <span style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(20px,2vw,30px)", color: "var(--fg)" }}>{prev.title}</span>
@@ -183,7 +183,7 @@ export default async function ProjectCaseStudy({
             ) : <span />}
             {next ? (
               <Link href={`/work/${next.slug}`} className="linku" style={{ color: "var(--fg-dim)", textAlign: "right", display: "flex", flexDirection: "column", gap: 6, marginLeft: "auto" }}>
-                <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-faint)" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-faint)" }}>
                   Next &#8594;
                 </span>
                 <span style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(20px,2vw,30px)", color: "var(--fg)" }}>{next.title}</span>

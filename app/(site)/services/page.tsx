@@ -34,7 +34,7 @@ export default function ServicesPage() {
           {PILLARS.map((p) => (
             <div key={p.num} style={{ borderTop: "1px solid var(--line)", paddingTop: 22 }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 18 }}>
-                <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 11, fontWeight: 500, color: "var(--fg-faint)" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, color: "var(--fg-faint)" }}>
                   {p.num}
                 </span>
                 <h2 style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(26px,2.6vw,40px)", fontWeight: 500, letterSpacing: "-0.012em" }}>
@@ -67,7 +67,7 @@ export default function ServicesPage() {
       <section style={{ background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}>
         <div className="page-gutter" style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(72px,11vh,128px) var(--gutter)" }}>
           <div data-rvs style={{ display: "flex", gap: 18, alignItems: "baseline", marginBottom: "clamp(40px,6vh,64px)" }}>
-            <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 12, letterSpacing: "0.1em", color: "var(--accent)" }}>(04)</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.1em", color: "var(--accent)" }}>(04)</span>
             <h2 style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
               Capabilities
             </h2>

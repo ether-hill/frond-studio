@@ -18,7 +18,7 @@ export default function MediaPlaceholder({ label }: { label?: string }) {
       {label ? (
         <span
           style={{
-            fontFamily: "var(--font-body), sans-serif",
+            fontFamily: "var(--font-mono)",
             fontSize: 10,
             fontWeight: 500,
             letterSpacing: "0.18em",

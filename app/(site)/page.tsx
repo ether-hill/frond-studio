@@ -45,7 +45,7 @@ export default async function Home() {
               display: "flex",
               alignItems: "center",
               gap: 13,
-              fontFamily: "var(--font-body), sans-serif",
+              fontFamily: "var(--font-mono)",
               fontSize: 11,
               fontWeight: 500,
               letterSpacing: "0.26em",
@@ -58,7 +58,7 @@ export default async function Home() {
             Design — Development — Art Direction
           </div>
 
-          <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), serif", fontWeight: 500, fontSize: "clamp(48px,8.8vw,152px)", lineHeight: 0.9, letterSpacing: "-0.032em" }}>
+          <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(48px,8.8vw,152px)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
             <span className="mask-line">
               <span style={{ transitionDelay: "0.06s" }}>Design,</span>
             </span>
@@ -100,7 +100,7 @@ export default async function Home() {
               style={{
                 transitionDelay: "0.42s",
                 display: "inline-block",
-                fontFamily: "var(--font-body), sans-serif",
+                fontFamily: "var(--font-mono)",
                 fontSize: 10.5,
                 fontWeight: 500,
                 letterSpacing: "0.22em",
@@ -121,10 +121,10 @@ export default async function Home() {
         <div className="page-gutter" style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(72px,11vh,128px) var(--gutter)" }}>
           <div data-rvs style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 24, flexWrap: "wrap", marginBottom: "clamp(44px,6vh,72px)" }}>
             <div style={{ display: "flex", gap: 18, alignItems: "baseline" }}>
-              <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 12, letterSpacing: "0.1em", color: "var(--accent)" }}>(02)</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.1em", color: "var(--accent)" }}>(02)</span>
               <h2 style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>Capabilities</h2>
             </div>
-            <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-dim)" }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-dim)" }}>
               Design · Development · Consulting
             </span>
           </div>
@@ -141,7 +141,7 @@ export default async function Home() {
                   { t: "Consulting", d: "Creative & technical direction for teams and founders." },
                 ].map((r) => (
                   <div key={r.t}>
-                    <div style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 7 }}>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 7 }}>
                       {r.t}
                     </div>
                     <p style={{ color: "var(--fg-dim)", fontSize: 15, lineHeight: 1.5 }}>{r.d}</p>

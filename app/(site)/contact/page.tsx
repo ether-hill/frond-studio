@@ -23,7 +23,7 @@ export default function ContactPage() {
                 display: "flex",
                 alignItems: "center",
                 gap: 13,
-                fontFamily: "var(--font-body), sans-serif",
+                fontFamily: "var(--font-mono)",
                 fontSize: 11,
                 fontWeight: 500,
                 letterSpacing: "0.26em",
@@ -36,7 +36,7 @@ export default function ContactPage() {
               Contact — Worldwide
             </div>
 
-            <h1 style={{ fontFamily: "var(--font-display), serif", fontWeight: 500, fontSize: "clamp(52px,9vw,128px)", lineHeight: 0.9, letterSpacing: "-0.03em" }}>
+            <h1 style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(52px,9vw,128px)", lineHeight: 0.92, letterSpacing: "-0.035em" }}>
               <span className="mask-line">
                 <span style={{ transitionDelay: "0.05s" }}>Let&apos;s</span>
               </span>

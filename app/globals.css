@@ -14,6 +14,13 @@
   --media: #1a1610;
 }
 
+:root {
+  /* All-sans + mono system (ported from the Algorithms page). Display headings
+     now use the grotesk too — no serif. Micro-labels use the mono stack. */
+  --font-display: var(--font-body);
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+
 [data-theme="light"] {
   --bg-0: #f3efe6;
   --bg-1: #ebe6da;
@@ -86,45 +93,22 @@ button {
     color 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Reveal utilities ───────────────────────────────── */
-[data-rv] {
+/* ── Reveal utilities (GSAP-driven) ─────────────────────
+   Initial hidden states apply only when JS is active (the inline head script
+   adds .gsap-on before first paint), so the page degrades gracefully without
+   JS and never flashes. RevealRoot animates these in with GSAP ScrollTrigger. */
+.gsap-on [data-rv] {
   opacity: 0;
-  transform: translateY(26px);
-  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(24px);
 }
-[data-revealed="true"] [data-rv] {
-  opacity: 1;
-  transform: none;
-}
-[data-rvs] {
-  opacity: 0;
-  transform: translateY(34px);
-  transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
-}
-[data-rvs][data-inview="true"] {
-  opacity: 1;
-  transform: none;
-}
-[data-stag] > * {
+.gsap-on [data-rvs] {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
 }
-[data-stag][data-inview="true"] > * {
-  opacity: 1;
-  transform: none;
+.gsap-on [data-stag] > * {
+  opacity: 0;
+  transform: translateY(26px);
 }
-[data-stag][data-inview="true"] > *:nth-child(1) { transition-delay: 0.05s; }
-[data-stag][data-inview="true"] > *:nth-child(2) { transition-delay: 0.13s; }
-[data-stag][data-inview="true"] > *:nth-child(3) { transition-delay: 0.21s; }
-[data-stag][data-inview="true"] > *:nth-child(4) { transition-delay: 0.29s; }
-[data-stag][data-inview="true"] > *:nth-child(5) { transition-delay: 0.37s; }
-[data-stag][data-inview="true"] > *:nth-child(6) { transition-delay: 0.45s; }
-[data-stag][data-inview="true"] > *:nth-child(7) { transition-delay: 0.53s; }
-[data-stag][data-inview="true"] > *:nth-child(8) { transition-delay: 0.61s; }
 
 .mask-line {
   display: block;
@@ -135,11 +119,11 @@ button {
 }
 .mask-line > span {
   display: block;
-  transform: translateY(110%);
-  transition: transform 1.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
-[data-revealed="true"] .mask-line > span {
-  transform: translateY(0);
+.gsap-on .mask-line > span {
+  /* Pre-hide with opacity only — GSAP owns the (yPercent) transform. A CSS
+     percent transform here conflicts with GSAP's yPercent tween. */
+  opacity: 0;
 }
 
 /* ── Nav ───────────────────────────────── */
@@ -194,7 +178,7 @@ button {
 /* ── Pills with hover swap ───────────────────────────── */
 .pill {
   display: inline-block;
-  font-family: var(--font-body), sans-serif;
+  font-family: var(--font-mono);
   border-radius: 999px;
   white-space: nowrap;
   transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
