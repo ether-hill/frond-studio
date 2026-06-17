@@ -1535,97 +1535,6 @@ const dla: Gen = (p, seed, size, params) => {
   };
 };
 
-// Reticulum — an animated "foam mat" matching the dense mycelial-mat photograph:
-// thick, lumpy, bright cord-walls partition the frame into irregular cells, each dark
-// cell packed with fine speckle and droplets. It's a Lloyd-relaxed Voronoi distance
-// field (walls where the two nearest sites are equidistant; blobby nodes where three
-// meet), domain-warped for organic curved walls. The cell sites drift slowly so the
-// whole mat breathes and morphs, and the droplets twinkle. Rendered to a density-
-// independent offscreen buffer and blitted to fill the canvas (works at any DPR).
-function foamReticulum(p: any, seed: number, size: number): () => void {
-  const RES = size > 420 ? 420 : size;                 // field resolution (kept modest for 30fps)
-  const off = document.createElement("canvas"); off.width = off.height = RES;
-  const octx = off.getContext("2d") as CanvasRenderingContext2D;
-  const img = octx.createImageData(RES, RES);
-  const data = img.data;
-
-  // sites — base positions, Lloyd-relaxed → organic cells of varied size
-  const N = Math.round(80 + p.random() * 60);
-  const bx = new Float64Array(N), by = new Float64Array(N);
-  for (let i = 0; i < N; i++) { bx[i] = p.random() * RES; by[i] = p.random() * RES; }
-  const GG = 80;
-  for (let it = 0; it < 4; it++) {
-    const ax = new Float64Array(N), ay = new Float64Array(N), cn = new Float64Array(N);
-    for (let gy = 0; gy < GG; gy++) for (let gx = 0; gx < GG; gx++) {
-      const wx = (gx + 0.5) / GG * RES, wy = (gy + 0.5) / GG * RES;
-      let b = 0, bd = 1e18;
-      for (let i = 0; i < N; i++) { const dx = wx - bx[i], dy = wy - by[i], d = dx * dx + dy * dy; if (d < bd) { bd = d; b = i; } }
-      ax[b] += wx; ay[b] += wy; cn[b]++;
-    }
-    for (let i = 0; i < N; i++) if (cn[i]) { bx[i] = ax[i] / cn[i]; by[i] = ay[i] / cn[i]; }
-  }
-  const cellDark = new Float64Array(N);
-  const phx = new Float64Array(N), phy = new Float64Array(N), amp = new Float64Array(N);
-  for (let i = 0; i < N; i++) { cellDark[i] = 5 + p.random() * 30; phx[i] = p.random() * 6.28; phy[i] = p.random() * 6.28; amp[i] = RES * 0.014 * (0.5 + p.random()); }
-
-  // precompute the position-based noise (domain warp, wall width, mottle) ONCE — these
-  // don't need to change per frame, so the per-frame loop stays cheap (no noise calls).
-  const warpX = new Float32Array(RES * RES), warpY = new Float32Array(RES * RES);
-  const wwA = new Float32Array(RES * RES), mottA = new Float32Array(RES * RES);
-  const warp = RES * 0.055;
-  for (let py = 0; py < RES; py++) for (let px = 0; px < RES; px++) {
-    const o = py * RES + px;
-    warpX[o] = px + warp * (p.noise(px * 0.013, py * 0.013, 2.3) - 0.5) * 2;
-    warpY[o] = py + warp * (p.noise(px * 0.013 + 9, py * 0.013 + 4, 7.1) - 0.5) * 2;
-    wwA[o] = 4.5 + 8 * p.noise(px * 0.017, py * 0.017);
-    mottA[o] = 22 * p.noise(px * 0.06, py * 0.06);
-  }
-
-  const sx = new Float64Array(N), sy = new Float64Array(N);
-  const BS = 70, NB = Math.max(1, Math.ceil(RES / BS));
-  const clampB = (v: number) => Math.min(NB - 1, Math.max(0, v | 0));
-  const heads = new Int32Array(NB * NB), next = new Int32Array(N);  // bucket linked-lists (no per-frame allocation)
-  const ctx = p.drawingContext as CanvasRenderingContext2D;
-  let t = 0;
-
-  return () => {
-    t += 0.01;
-    // drift the sites so the mat breathes
-    for (let i = 0; i < N; i++) { sx[i] = bx[i] + Math.cos(t + phx[i]) * amp[i]; sy[i] = by[i] + Math.sin(t * 0.9 + phy[i]) * amp[i]; }
-    // rebuild buckets (linked lists)
-    heads.fill(-1);
-    for (let i = 0; i < N; i++) { const b = clampB(sx[i] / BS) + clampB(sy[i] / BS) * NB; next[i] = heads[b]; heads[b] = i; }
-    const tw = Math.floor(t * 4);                       // twinkle phase
-    for (let py = 0; py < RES; py++) for (let px = 0; px < RES; px++) {
-      const o = py * RES + px, wx = warpX[o], wy = warpY[o];
-      const bxi = clampB(wx / BS), byi = clampB(wy / BS);
-      let d1 = 1e18, d2 = 1e18, d3 = 1e18, i1 = 0;
-      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
-        const gx = bxi + ox, gy = byi + oy; if (gx < 0 || gy < 0 || gx >= NB || gy >= NB) continue;
-        for (let i = heads[gx + gy * NB]; i !== -1; i = next[i]) {
-          const dx = wx - sx[i], dy = wy - sy[i], d = dx * dx + dy * dy;
-          if (d < d1) { d3 = d2; d2 = d1; d1 = d; i1 = i; } else if (d < d2) { d3 = d2; d2 = d; } else if (d < d3) { d3 = d; }
-        }
-      }
-      const e1 = Math.sqrt(d1), e2 = Math.sqrt(d2), e3 = Math.sqrt(d3), ww = wwA[o];
-      let wall = e2 - e1 < ww ? 1 - (e2 - e1) / ww : 0; wall = wall * wall * (3 - 2 * wall);
-      const vw = ww * 1.9; let node = e3 - e1 < vw ? 1 - (e3 - e1) / vw : 0; node = node * node;
-      const w = wall > node ? wall : node;
-      const wallBright = 214 + 36 * (Math.sin(px * 0.05 + py * 0.043) * 0.5 + 0.5);
-      const h = Math.sin(px * 12.9898 + py * 78.233 + seed + tw * 0.7) * 43758.5453;
-      const fr = h - Math.floor(h);
-      const spk = fr > 0.66 ? (fr - 0.66) * 330 : 0;
-      const base = cellDark[i1] + mottA[o] + spk;
-      let g = base + w * (wallBright - base);
-      g = g < 0 ? 0 : g > 255 ? 255 : g;
-      data[o * 4] = data[o * 4 + 1] = data[o * 4 + 2] = g; data[o * 4 + 3] = 255;
-    }
-    octx.putImageData(img, 0, 0);
-    ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(off, 0, 0, p.width, p.height);        // scale-to-fill — DPR-independent
-  };
-}
-
 // Mycelium — fungal network growth, after the Neighbour-Sensing model (Meškauskas &
 // Moore) and space-colonization venation (Runions et al.). Hyphal TIPS are agents that
 // extend one step per frame, steered by chemotropism up a nutrient field, negative
@@ -1640,12 +1549,9 @@ function foamReticulum(p: any, seed: number, size: number): () => void {
 // Monochrome by default; coloured runs use a magma ramp keyed to hierarchy.
 const mycelium: Gen = (p, seed, size, params) => {
   p.randomSeed(seed); p.noiseSeed(seed);
-  // The "reticulum" preset is a different beast — a static foam/cellular mat, not
-  // line-growth — so it has its own renderer.
-  if (params && (params as Record<string, unknown>).preset === "reticulum") {
-    return foamReticulum(p, seed, size);
-  }
   const colored = !MONO_MODE;
+  const presetK = params && typeof (params as Record<string, unknown>).preset === "string"
+    ? String((params as Record<string, unknown>).preset) : "wild";
   const TAU = Math.PI * 2;
   // Six growth habits — biased toward the dense, intricate end. RANDOMISE rolls
   // the structure, not just the colour.
@@ -1660,10 +1566,9 @@ const mycelium: Gen = (p, seed, size, params) => {
   let habit: Habit = HABITS[Math.floor(p.random() * HABITS.length)];
   const initialHabit = habit;
 
-  // ── chaotic palette: 2…8 colours per seed, inherited down each hypha lineage.
-  // Half the seeds roll fully-random hues (true chaos); half spread around a base
-  // hue with heavy jitter. Saturation/lightness stay in a tuned band so even the
-  // wild palettes read as intentional rather than as random RGB. ──
+  // ── palette per preset, inherited down each hypha lineage. Strands gradient from
+  // one palette colour to the next along their depth, so veins shift tone toward
+  // their tips rather than reading as flat fills. ──
   const hsl = (h: number, s: number, l: number): RGB => {
     h = (((h % 360) + 360) % 360) / 360;
     const a = s * Math.min(l, 1 - l);
@@ -1671,26 +1576,22 @@ const mycelium: Gen = (p, seed, size, params) => {
     return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
   };
   const palette: RGB[] = [];
-  if (colored) {
-    const K = 2 + Math.floor(p.random() * 7);          // 2…8
-    const chaos = p.random() < 0.5;
-    const baseH = p.random() * 360;
-    for (let i = 0; i < K; i++) {
-      const h = chaos ? p.random() * 360 : (baseH + i * (360 / K) + (p.random() - 0.5) * 70);
-      const s = 0.52 + p.random() * 0.42;
-      const l = 0.46 + p.random() * 0.32;
-      palette.push(hsl(h, s, l));
-    }
+  const addc = (h: number, s: number, l: number) => palette.push(hsl(h, s, l));
+  if (presetK === "bloom") {                           // gradient greens, blues, yellows
+    const hs = [52, 96, 138, 168, 202, 64];
+    for (const h of hs) addc(h + (p.random() - 0.5) * 16, 0.55 + p.random() * 0.28, 0.5 + p.random() * 0.16);
+  } else if (presetK === "filigree") {                 // light grey → soft brown (hairline)
+    for (let i = 0; i < 5; i++) { const brown = p.random() < 0.55; addc(30 + p.random() * 14, brown ? 0.16 + p.random() * 0.22 : 0.02, 0.64 + p.random() * 0.24); }
+  } else if (presetK === "cords") {                    // earthy roots — browns and tans
+    for (let i = 0; i < 5; i++) addc(22 + p.random() * 24, 0.32 + p.random() * 0.3, 0.32 + p.random() * 0.32);
+  } else {                                             // wild — a mix of greys
+    for (let i = 0; i < 5; i++) addc(0, 0, 0.5 + p.random() * 0.5);
   }
-  // segment colour: mono → depth-keyed greyscale; colour → lineage palette colour
-  // darkened slightly with depth so primary veins stay luminous and tips recede.
+  // gradient lineage colour, dimmed slightly toward the fine tips
   const shade = (dnorm: number, ci: number): RGB => {
-    if (colored) {
-      const base = palette[ci % palette.length];
-      const f = 1 - 0.42 * dnorm;
-      return [Math.round(base[0] * f), Math.round(base[1] * f), Math.round(base[2] * f)];
-    }
-    const l = 0.98 - 0.62 * dnorm; const v = Math.round(l * 255); return [v, v, v];
+    const a = palette[ci % palette.length], b = palette[(ci + 1) % palette.length];
+    const f = dnorm, dim = 1 - 0.34 * dnorm;
+    return [Math.round((a[0] + (b[0] - a[0]) * f) * dim), Math.round((a[1] + (b[1] - a[1]) * f) * dim), Math.round((a[2] + (b[2] - a[2]) * f) * dim)];
   };
   const bg: RGB = [6, 8, 9];
 
@@ -1707,7 +1608,8 @@ const mycelium: Gen = (p, seed, size, params) => {
   };
 
   // habit parameters
-  const cx0 = size / 2, cy0 = habit === "bush" ? size * 0.99 : size / 2;
+  const rootMode = presetK === "cords";                 // grows from top-centre downward, like roots
+  const cx0 = size / 2, cy0 = rootMode ? size * 0.05 : habit === "bush" ? size * 0.99 : size / 2;
   const CFG = {
     colony: { maxTurn: 0.26, Kchemo: 0.6, Kauto: 0.8, Kwander: 0.18, Kbias: 0.4, branch: 0.17, latFrac: 0.5, latAng: 0.9, fuseD: 1.4, fuseP: 0.78, wBase: 2.6, maxAge: 1100 },
     frost:  { maxTurn: 0.12, Kchemo: 0.4, Kauto: 0.55, Kwander: 0.10, Kbias: 0.7, branch: 0.20, latFrac: 0.82, latAng: 0.62, fuseD: 2.6, fuseP: 0.30, wBase: 2.2, maxAge: 1400 },
@@ -1729,19 +1631,21 @@ const mycelium: Gen = (p, seed, size, params) => {
   //    cords ring fine inner fuzz, low radial bias so it fills the frame evenly.
   type CfgT = typeof CFG.colony;
   const PRESETS: Record<string, Partial<CfgT> & { habit: Habit }> = {
-    // (reticulum is handled by foamReticulum above, not here)
-    filigree:  { habit: "veil", maxTurn: 0.24, Kchemo: 0.46, Kauto: 0.72, Kwander: 0.26, Kbias: 0.3, branch: 0.30, latFrac: 0.72, latAng: 0.86, fuseD: 1.25, fuseP: 0.55, wBase: 1.5, maxAge: 1600 },
-    cords:     { habit: "cord", maxTurn: 0.16, Kchemo: 0.64, Kauto: 0.95, Kwander: 0.1, Kbias: 0.5, branch: 0.22, latFrac: 0.82, latAng: 0.7, fuseD: 1.8, fuseP: 0.45, wBase: 3.8, maxAge: 1600 },
-    bloom:     { habit: "colony", maxTurn: 0.26, Kbias: 0.45 },
+    // very fine hairline web, high tip-count
+    filigree: { habit: "veil", maxTurn: 0.27, Kchemo: 0.46, Kauto: 0.78, Kwander: 0.26, Kbias: 0.26, branch: 0.34, latFrac: 0.78, latAng: 0.85, fuseD: 1.25, fuseP: 0.45, wBase: 1.0, maxAge: 1900 },
+    // roots: thick primary cords descending from the top, straightish, with dense thin branching
+    cords:    { habit: "cord", maxTurn: 0.11, Kchemo: 0.55, Kauto: 0.62, Kwander: 0.07, Kbias: 1.05, branch: 0.3, latFrac: 0.76, latAng: 0.6, fuseD: 2.0, fuseP: 0.32, wBase: 3.4, maxAge: 2200 },
+    // colour colony with gradient strands
+    bloom:    { habit: "colony", maxTurn: 0.26, Kbias: 0.42, branch: 0.2, wBase: 2.4, maxAge: 1300 },
   };
-  const presetKey = params && typeof (params as Record<string, unknown>).preset === "string"
-    ? String((params as Record<string, unknown>).preset) : "";
-  const presetActive = Object.prototype.hasOwnProperty.call(PRESETS, presetKey);
+  const presetActive = Object.prototype.hasOwnProperty.call(PRESETS, presetK);
   if (presetActive) {
-    const { habit: ph, ...over } = PRESETS[presetKey];
+    const { habit: ph, ...over } = PRESETS[presetK];
     habit = ph;
     cfg = { ...CFG[habit], ...over };
   }
+  // Wild (no preset): longer strands — branch less often and live longer.
+  if (!presetActive) cfg = { ...cfg, branch: cfg.branch * 0.6, maxAge: cfg.maxAge * 1.7 };
 
   // denser, more intricate by default; the finest habits get the most tips
   const intricate = habit === "coral" || habit === "veil" || habit === "cord";
@@ -1750,9 +1654,9 @@ const mycelium: Gen = (p, seed, size, params) => {
   const baseTips = size > 360 ? (intricate ? 1200 : 880) : (intricate ? 480 : 340);
   const MAXT = Math.round(gp(params, "tips", baseTips));
   const step = size * 0.0045;
-  const branchSpace = size * 0.010;
+  const branchSpace = size * (presetActive ? 0.010 : 0.016);  // wild: branch less often → longer strands
   const DCAP = 9;                                       // depth → dnorm normaliser
-  const palN = colored ? palette.length : 1;
+  const palN = palette.length;
   const mutateCi = (ci: number) => (p.random() < 0.12 ? (p.random() * palN) | 0 : ci);
 
   // the laid-down network — stored so brightness pulses can travel along it (a real
@@ -1768,14 +1672,21 @@ const mycelium: Gen = (p, seed, size, params) => {
   const newTip = (x: number, y: number, a: number, depth = 0, energy = 110, ci = 0): Tip => ({ x, y, a, age: 0, energy, depth, sb: 0, ci });
   const seedColony = (n: number) => {
     for (let i = 0; i < n; i++) {
-      const ci = colored ? (p.random() * palN) | 0 : 0;
-      tips.push(newTip(cx0, cy0, habit === "bush" ? -Math.PI / 2 + (p.random() - 0.5) * 1.1 : (i / n) * TAU + p.random() * 0.3, 0, 110, ci));
+      const ci = (p.random() * palN) | 0;
+      const ang = rootMode
+        ? Math.PI / 2 + (i / n - 0.5) * 1.0 + (p.random() - 0.5) * 0.25  // downward fan from the top
+        : habit === "bush"
+        ? -Math.PI / 2 + (p.random() - 0.5) * 1.1
+        : (i / n) * TAU + p.random() * 0.3;
+      tips.push(newTip(cx0, cy0, ang, 0, 110, ci));
     }
   };
-  seedColony(intricate ? 26 + (p.random() * 10 | 0) : habit === "frost" ? 14 + (p.random() * 6 | 0) : 20 + (p.random() * 8 | 0));
+  seedColony(rootMode ? 9 + (p.random() * 6 | 0) : intricate ? 26 + (p.random() * 10 | 0) : habit === "frost" ? 14 + (p.random() * 6 | 0) : 20 + (p.random() * 8 | 0));
 
-  // habit-specific directional bias (radial-out for colony/frost, up-and-out for bush)
+  // directional bias — radial-out for colony/frost, up-and-out for bush, down-and-out
+  // from the top for roots (cords).
   const bias = (x: number, y: number): [number, number] => {
+    if (rootMode) { let dx = (x - cx0) * 0.45, dy = 1.0; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; }
     if (habit === "bush") { let dx = (x - size / 2) * 0.5, dy = -(cy0 - y); const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; }
     let dx = x - cx0, dy = y - cy0; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l];
   };
@@ -1844,32 +1755,39 @@ const mycelium: Gen = (p, seed, size, params) => {
     tips = next;
 
     // Keep the advancing margin populated — new tips emerge at frontier cells
-    // (open, fed substrate). No ramp/cap on the target: growth is perpetual.
+    // (open, fed substrate). Roots skip this (they grow only from the descending
+    // primaries + their branches) so the top-down structure stays legible.
     let guard = 0;
-    while (tips.length < MAXT && guard++ < 80) {
+    while (!rootMode && tips.length < MAXT && guard++ < 80) {
       let placed = false;
       for (let tries = 0; tries < 14 && !placed; tries++) {
         const gx = (p.random() * G) | 0, gy = (p.random() * G) | 0, ix = gy * G + gx;
         if (den[ix] > 0.1 && den[ix] < 2.8 && nut[ix] > 0.22) {
           const wx = (gx + .5) * cell, wy = (gy + .5) * cell, [bx, by] = bias(wx, wy);
-          tips.push(newTip(wx, wy, Math.atan2(by, bx) + (p.random() - .5) * 0.9, 1, 75, colored ? (p.random() * palN) | 0 : 0));
+          tips.push(newTip(wx, wy, Math.atan2(by, bx) + (p.random() - .5) * 0.9, 1, 75, (p.random() * palN) | 0));
           placed = true;
         }
       }
       if (!placed) break;
     }
 
-    // New colonies keep igniting at fresh sites, so the network never settles — it
-    // starts from new sources and positions and layers over what came before. Each
-    // burst seeds an outward fan and replenishes the substrate beneath it.
-    if (frame % 150 === 0 || tips.length < 20) {
-      // most bursts also shift the growth habit, so the morphology keeps evolving
-      // (frozen when a preset is active, to keep that look consistent)
-      if (!presetActive && p.random() < 0.6) { habit = ROTATE[(p.random() * ROTATE.length) | 0]; cfg = CFG[habit]; }
-      const sx0 = size * (0.1 + p.random() * 0.8), sy0 = size * (0.1 + p.random() * 0.8);
-      const ci0 = colored ? (p.random() * palN) | 0 : 0;
-      const n = 7 + (p.random() * 9 | 0), a0 = p.random() * TAU;
-      for (let i = 0; i < n; i++) tips.push(newTip(sx0, sy0, a0 + (i / n) * TAU + (p.random() - 0.5) * 0.5, 0, 100, ci0));
+    // New growth keeps igniting so the network never settles. Roots send fresh
+    // primaries down from the top; everything else plants new colonies at random
+    // sites that layer over what came before.
+    if (frame % (rootMode ? 55 : 150) === 0 || tips.length < 20) {
+      const ci0 = (p.random() * palN) | 0;
+      let sx0: number, sy0: number;
+      if (rootMode) {                                   // a new primary root from near the top
+        sx0 = size * (0.18 + p.random() * 0.64); sy0 = size * 0.05;
+        const n = 5 + (p.random() * 6 | 0);
+        for (let i = 0; i < n; i++) tips.push(newTip(sx0, sy0, Math.PI / 2 + (i / n - 0.5) * 0.9 + (p.random() - 0.5) * 0.3, 0, 100, ci0));
+      } else {
+        // most bursts also shift the growth habit, so the morphology keeps evolving
+        if (!presetActive && p.random() < 0.6) { habit = ROTATE[(p.random() * ROTATE.length) | 0]; cfg = { ...CFG[habit], branch: CFG[habit].branch * 0.6, maxAge: CFG[habit].maxAge * 1.7 }; }
+        sx0 = size * (0.1 + p.random() * 0.8); sy0 = size * (0.1 + p.random() * 0.8);
+        const n = 7 + (p.random() * 9 | 0), a0 = p.random() * TAU;
+        for (let i = 0; i < n; i++) tips.push(newTip(sx0, sy0, a0 + (i / n) * TAU + (p.random() - 0.5) * 0.5, 0, 100, ci0));
+      }
       const r = (G * 0.18) | 0, cgx = clampC(sx0 / cell), cgy = clampC(sy0 / cell);
       for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
         const gx = cgx + dx, gy = cgy + dy;

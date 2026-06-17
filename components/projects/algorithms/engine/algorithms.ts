@@ -330,9 +330,8 @@ const instances: any[] = []; // live p5 instances for the current selection
 // (keys match PRESETS in the mycelium generator). `color` opts the run into palette.
 const MYC_PRESETS: { key: string; label: string; color: boolean }[] = [
   { key: "wild", label: "Wild — emergent", color: false },
-  { key: "reticulum", label: "Reticulum — foam mat", color: false },
-  { key: "filigree", label: "Filigree — fine web", color: false },
-  { key: "cords", label: "Cords — rhizomorph", color: false },
+  { key: "filigree", label: "Filigree — fine web", color: true },
+  { key: "cords", label: "Cords — rhizome", color: true },
   { key: "bloom", label: "Bloom — colour colony", color: true },
 ];
 let mycPreset = "wild";
