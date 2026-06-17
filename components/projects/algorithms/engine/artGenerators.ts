@@ -1535,94 +1535,95 @@ const dla: Gen = (p, seed, size, params) => {
   };
 };
 
-// Reticulum — a static "foam mat" matching the dense mycelial-mat photograph:
-// thick, lumpy, bright cord-walls partition the frame into irregular cells, and each
-// dark cell is packed with fine speckle and droplets. Structure is a Lloyd-relaxed
-// Voronoi distance field (walls where the two nearest sites are equidistant; blobby
-// nodes where three meet); the grain/droplets are layered on top. Rendered once.
+// Reticulum — an animated "foam mat" matching the dense mycelial-mat photograph:
+// thick, lumpy, bright cord-walls partition the frame into irregular cells, each dark
+// cell packed with fine speckle and droplets. It's a Lloyd-relaxed Voronoi distance
+// field (walls where the two nearest sites are equidistant; blobby nodes where three
+// meet), domain-warped for organic curved walls. The cell sites drift slowly so the
+// whole mat breathes and morphs, and the droplets twinkle. Rendered to a density-
+// independent offscreen buffer and blitted to fill the canvas (works at any DPR).
 function foamReticulum(p: any, seed: number, size: number): () => void {
-  const R = size;
+  const RES = size > 420 ? 420 : size;                 // field resolution (kept modest for 30fps)
+  const off = document.createElement("canvas"); off.width = off.height = RES;
+  const octx = off.getContext("2d") as CanvasRenderingContext2D;
+  const img = octx.createImageData(RES, RES);
+  const data = img.data;
 
-  // sites, Lloyd-relaxed on a coarse grid → organic cells of varied size
-  const N = Math.round(95 + p.random() * 70);
-  const sx = new Float64Array(N), sy = new Float64Array(N);
-  for (let i = 0; i < N; i++) { sx[i] = p.random() * R; sy[i] = p.random() * R; }
-  const GG = 96;
+  // sites — base positions, Lloyd-relaxed → organic cells of varied size
+  const N = Math.round(80 + p.random() * 60);
+  const bx = new Float64Array(N), by = new Float64Array(N);
+  for (let i = 0; i < N; i++) { bx[i] = p.random() * RES; by[i] = p.random() * RES; }
+  const GG = 80;
   for (let it = 0; it < 4; it++) {
     const ax = new Float64Array(N), ay = new Float64Array(N), cn = new Float64Array(N);
     for (let gy = 0; gy < GG; gy++) for (let gx = 0; gx < GG; gx++) {
-      const wx = (gx + 0.5) / GG * R, wy = (gy + 0.5) / GG * R;
+      const wx = (gx + 0.5) / GG * RES, wy = (gy + 0.5) / GG * RES;
       let b = 0, bd = 1e18;
-      for (let i = 0; i < N; i++) { const dx = wx - sx[i], dy = wy - sy[i], d = dx * dx + dy * dy; if (d < bd) { bd = d; b = i; } }
+      for (let i = 0; i < N; i++) { const dx = wx - bx[i], dy = wy - by[i], d = dx * dx + dy * dy; if (d < bd) { bd = d; b = i; } }
       ax[b] += wx; ay[b] += wy; cn[b]++;
     }
-    for (let i = 0; i < N; i++) if (cn[i]) { sx[i] = ax[i] / cn[i]; sy[i] = ay[i] / cn[i]; }
+    for (let i = 0; i < N; i++) if (cn[i]) { bx[i] = ax[i] / cn[i]; by[i] = ay[i] / cn[i]; }
+  }
+  const cellDark = new Float64Array(N);
+  const phx = new Float64Array(N), phy = new Float64Array(N), amp = new Float64Array(N);
+  for (let i = 0; i < N; i++) { cellDark[i] = 5 + p.random() * 30; phx[i] = p.random() * 6.28; phy[i] = p.random() * 6.28; amp[i] = RES * 0.014 * (0.5 + p.random()); }
+
+  // precompute the position-based noise (domain warp, wall width, mottle) ONCE — these
+  // don't need to change per frame, so the per-frame loop stays cheap (no noise calls).
+  const warpX = new Float32Array(RES * RES), warpY = new Float32Array(RES * RES);
+  const wwA = new Float32Array(RES * RES), mottA = new Float32Array(RES * RES);
+  const warp = RES * 0.055;
+  for (let py = 0; py < RES; py++) for (let px = 0; px < RES; px++) {
+    const o = py * RES + px;
+    warpX[o] = px + warp * (p.noise(px * 0.013, py * 0.013, 2.3) - 0.5) * 2;
+    warpY[o] = py + warp * (p.noise(px * 0.013 + 9, py * 0.013 + 4, 7.1) - 0.5) * 2;
+    wwA[o] = 4.5 + 8 * p.noise(px * 0.017, py * 0.017);
+    mottA[o] = 22 * p.noise(px * 0.06, py * 0.06);
   }
 
-  // spatial buckets for fast nearest-three lookup
-  const BS = 80, NB = Math.max(1, Math.ceil(R / BS));
-  const buckets: number[][] = Array.from({ length: NB * NB }, () => []);
+  const sx = new Float64Array(N), sy = new Float64Array(N);
+  const BS = 70, NB = Math.max(1, Math.ceil(RES / BS));
   const clampB = (v: number) => Math.min(NB - 1, Math.max(0, v | 0));
-  for (let i = 0; i < N; i++) buckets[clampB(sx[i] / BS) + clampB(sy[i] / BS) * NB].push(i);
-
-  // each cell gets its own base darkness → some cells read much deeper than others
-  const cellDark = new Float64Array(N);
-  for (let i = 0; i < N; i++) cellDark[i] = 5 + p.random() * 30;
-
+  const heads = new Int32Array(NB * NB), next = new Int32Array(N);  // bucket linked-lists (no per-frame allocation)
   const ctx = p.drawingContext as CanvasRenderingContext2D;
-  const img = ctx.createImageData(R, R);
-  const data = img.data;
-  const warp = R * 0.05;                                             // organic wall waviness
-  for (let py = 0; py < R; py++) {
-    for (let px = 0; px < R; px++) {
-      // domain-warp the sample point so cell walls curve like wet foam, not straight Voronoi
-      const wx = px + warp * (p.noise(px * 0.012, py * 0.012, 2.3) - 0.5) * 2;
-      const wy = py + warp * (p.noise(px * 0.012 + 9, py * 0.012 + 4, 7.1) - 0.5) * 2;
-      const bx = clampB(wx / BS), by = clampB(wy / BS);
+  let t = 0;
+
+  return () => {
+    t += 0.01;
+    // drift the sites so the mat breathes
+    for (let i = 0; i < N; i++) { sx[i] = bx[i] + Math.cos(t + phx[i]) * amp[i]; sy[i] = by[i] + Math.sin(t * 0.9 + phy[i]) * amp[i]; }
+    // rebuild buckets (linked lists)
+    heads.fill(-1);
+    for (let i = 0; i < N; i++) { const b = clampB(sx[i] / BS) + clampB(sy[i] / BS) * NB; next[i] = heads[b]; heads[b] = i; }
+    const tw = Math.floor(t * 4);                       // twinkle phase
+    for (let py = 0; py < RES; py++) for (let px = 0; px < RES; px++) {
+      const o = py * RES + px, wx = warpX[o], wy = warpY[o];
+      const bxi = clampB(wx / BS), byi = clampB(wy / BS);
       let d1 = 1e18, d2 = 1e18, d3 = 1e18, i1 = 0;
       for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
-        const gx = bx + ox, gy = by + oy; if (gx < 0 || gy < 0 || gx >= NB || gy >= NB) continue;
-        const arr = buckets[gx + gy * NB];
-        for (let k = 0; k < arr.length; k++) { const i = arr[k], dx = wx - sx[i], dy = wy - sy[i], d = dx * dx + dy * dy;
-          if (d < d1) { d3 = d2; d2 = d1; d1 = d; i1 = i; } else if (d < d2) { d3 = d2; d2 = d; } else if (d < d3) { d3 = d; } }
+        const gx = bxi + ox, gy = byi + oy; if (gx < 0 || gy < 0 || gx >= NB || gy >= NB) continue;
+        for (let i = heads[gx + gy * NB]; i !== -1; i = next[i]) {
+          const dx = wx - sx[i], dy = wy - sy[i], d = dx * dx + dy * dy;
+          if (d < d1) { d3 = d2; d2 = d1; d1 = d; i1 = i; } else if (d < d2) { d3 = d2; d2 = d; } else if (d < d3) { d3 = d; }
+        }
       }
-      const e1 = Math.sqrt(d1), e2 = Math.sqrt(d2), e3 = Math.sqrt(d3);
-      const ww = 4.5 + 8 * p.noise(px * 0.016, py * 0.016);           // thick, lumpy wall
+      const e1 = Math.sqrt(d1), e2 = Math.sqrt(d2), e3 = Math.sqrt(d3), ww = wwA[o];
       let wall = e2 - e1 < ww ? 1 - (e2 - e1) / ww : 0; wall = wall * wall * (3 - 2 * wall);
-      const vw = ww * 1.9;
-      let node = e3 - e1 < vw ? 1 - (e3 - e1) / vw : 0; node = node * node;  // fat blobby junctions
+      const vw = ww * 1.9; let node = e3 - e1 < vw ? 1 - (e3 - e1) / vw : 0; node = node * node;
       const w = wall > node ? wall : node;
-      const wallBright = 218 + 37 * p.noise(px * 0.05 + 7, py * 0.05 + 3);
-      const mott = cellDark[i1] + 22 * p.noise(px * 0.06, py * 0.06);  // per-cell dark + mottle
-      const h = Math.sin(px * 12.9898 + py * 78.233 + seed) * 43758.5453;
+      const wallBright = 214 + 36 * (Math.sin(px * 0.05 + py * 0.043) * 0.5 + 0.5);
+      const h = Math.sin(px * 12.9898 + py * 78.233 + seed + tw * 0.7) * 43758.5453;
       const fr = h - Math.floor(h);
-      const spk = fr > 0.62 ? (fr - 0.62) * 360 : 0;                   // dense fine droplet speckle
-      const base = mott + spk;
+      const spk = fr > 0.66 ? (fr - 0.66) * 330 : 0;
+      const base = cellDark[i1] + mottA[o] + spk;
       let g = base + w * (wallBright - base);
       g = g < 0 ? 0 : g > 255 ? 255 : g;
-      const o = (py * R + px) * 4; data[o] = data[o + 1] = data[o + 2] = g; data[o + 3] = 255;
+      data[o * 4] = data[o * 4 + 1] = data[o * 4 + 2] = g; data[o * 4 + 3] = 255;
     }
-  }
-  ctx.putImageData(img, 0, 0);
-
-  // faint filament hairs crossing the cells (the fine fuzz in the photo)
-  const ctx2 = p.drawingContext as CanvasRenderingContext2D;
-  ctx2.lineCap = "round";
-  const hairs = Math.round(R * 2.2);
-  for (let i = 0; i < hairs; i++) {
-    const x = p.random() * R, y = p.random() * R, a = p.random() * Math.PI * 2, len = 3 + p.random() * 14;
-    ctx2.strokeStyle = `rgba(255,255,255,${0.04 + p.random() * 0.1})`;
-    ctx2.lineWidth = 0.6;
-    ctx2.beginPath(); ctx2.moveTo(x, y); ctx2.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); ctx2.stroke();
-  }
-  // bright wet droplets — dense, small, scattered (pop against the dark cells)
-  p.noStroke();
-  const drops = Math.round(R * 8);
-  for (let i = 0; i < drops; i++) {
-    p.fill(255, 255, 255, p.random() * 150 + 40);
-    p.circle(p.random() * R, p.random() * R, p.random() * 1.6 + 0.4);
-  }
-  return () => { /* static */ };
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, 0, 0, p.width, p.height);        // scale-to-fill — DPR-independent
+  };
 }
 
 // Mycelium — fungal network growth, after the Neighbour-Sensing model (Meškauskas &
