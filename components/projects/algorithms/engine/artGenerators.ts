@@ -1643,8 +1643,7 @@ const mycelium: Gen = (p, seed, size, params) => {
   // mycelium translocates signal/nutrient: "communication"). dist = radius from the
   // colony origin, which sets when each outward pulse reaches a given segment.
   interface NSeg { x1: number; y1: number; x2: number; y2: number; w: number; r: number; g: number; b: number; dist: number; node: boolean; }
-  const network: NSeg[] = [];
-  const NETCAP = size > 360 ? 13000 : 5200;
+  const network: NSeg[] = [];                         // current frame's new growth (drawn then emptied)
   const pushSeg = (x1: number, y1: number, x2: number, y2: number, w: number, col: RGB, nd: boolean) => {
     const mx = (x1 + x2) / 2 - cx0, my = (y1 + y2) / 2 - cy0;
     network.push({ x1, y1, x2, y2, w, r: col[0], g: col[1], b: col[2], dist: Math.hypot(mx, my), node: nd });
@@ -1669,9 +1668,11 @@ const mycelium: Gen = (p, seed, size, params) => {
   const advance = () => {
     frame++;
     if (frame % 4 === 0) for (let y = 1; y < G - 1; y++) for (let x = 1; x < G - 1; x++) { const i = y * G + x; nut[i] += ((nut[i - 1] + nut[i + 1] + nut[i - G] + nut[i + G]) * 0.25 - nut[i]) * 0.1; }
-    // Substrate slowly regrows and density slowly clears — so the colony never
-    // exhausts its world and keeps colonising, layering new growth over old.
-    for (let i = 0; i < G * G; i++) { den[i] *= 0.992; if (nut[i] < 0.92) nut[i] += 0.0011; }
+    // Density clears very slowly, so colonised ground stays "occupied" and tips
+    // are repelled into open space — the colony fills the region as an expanding
+    // network instead of overdrawing into a solid mass. Substrate trickles back
+    // just enough to keep slow growth going indefinitely.
+    for (let i = 0; i < G * G; i++) { den[i] *= 0.998; if (nut[i] < 0.5) nut[i] += 0.0003; }
 
     const next: Tip[] = [];
     for (const t of tips) {
@@ -1760,22 +1761,19 @@ const mycelium: Gen = (p, seed, size, params) => {
       }
     }
 
-    // Rolling buffer: once over the cap, shed the oldest growth so the colony grows
-    // perpetually without unbounded memory — old hyphae recede as new layers form.
-    if (network.length > NETCAP) network.splice(0, network.length - NETCAP);
   };
 
-  // Steady render — no travelling pulses. The network is drawn at its laid-down
-  // colour (lineage palette in colour mode, depth-keyed greyscale in mono), batched
-  // by (width, quantised colour) into a few stroke() calls. Redrawn every frame —
-  // the colony is always growing and shedding, so the image always evolves.
+  // Accumulative render — the canvas is painted ONCE, then every frame draws only
+  // the new segments grown that frame, layering over what's already there. Nothing
+  // is ever cleared or removed, so the colony grows out, overlays itself and fills
+  // the region indefinitely. `network` holds just the current frame's growth (drawn
+  // then emptied), so memory stays flat regardless of how long it runs.
   p.background(bg[0], bg[1], bg[2]);
+  const ctx = p.drawingContext as CanvasRenderingContext2D;
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
   return () => {
-    advance();                                       // grow → append to network
+    advance();                                       // grow → push this frame's segments
 
-    p.background(bg[0], bg[1], bg[2]);
-    const ctx = p.drawingContext as CanvasRenderingContext2D;
-    ctx.lineCap = "round"; ctx.lineJoin = "round";
     const buckets = new Map<string, { pa: Path2D; r: number; g: number; b: number; w: number }>();
     for (let i = 0; i < network.length; i++) {
       const s = network[i];
@@ -1794,10 +1792,9 @@ const mycelium: Gen = (p, seed, size, params) => {
     p.noStroke();
     for (let i = 0; i < network.length; i++) {
       const s = network[i];
-      if (!s.node) continue;
-      p.fill(245, 245, 245, 150);
-      p.circle(s.x1, s.y1, s.w);
+      if (s.node) p.fill(245, 245, 245, 150), p.circle(s.x1, s.y1, s.w);
     }
+    network.length = 0;                              // painted — free for next frame
   };
 };
 
