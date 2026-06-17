@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function ServicesPage() {
   return (
     <RevealRoot>
-      <section className="page-gutter" style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(130px,18vh,210px) var(--gutter) clamp(72px,11vh,128px)" }}>
+      <section className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}>
         <PageHeader
           eyebrow="Design · Development · Consulting"
           title="Services"
@@ -37,7 +37,7 @@ export default function ServicesPage() {
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, color: "var(--fg-faint)" }}>
                   {p.num}
                 </span>
-                <h2 style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(26px,2.6vw,40px)", fontWeight: 500, letterSpacing: "-0.012em" }}>
+                <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(26px,2.6vw,40px)", fontWeight: 500, letterSpacing: "-0.012em" }}>
                   {p.title}
                 </h2>
               </div>
@@ -65,10 +65,10 @@ export default function ServicesPage() {
 
       {/* (04) Capabilities band */}
       <section style={{ background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}>
-        <div className="page-gutter" style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(72px,11vh,128px) var(--gutter)" }}>
+        <div className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}>
           <div data-rvs style={{ display: "flex", gap: 18, alignItems: "baseline", marginBottom: "clamp(40px,6vh,64px)" }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.1em", color: "var(--accent)" }}>(04)</span>
-            <h2 style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
+            <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
               Capabilities
             </h2>
           </div>

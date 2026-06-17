@@ -36,13 +36,13 @@ export default function AlgorithmsApp() {
     >
       <section
         style={{
-          padding: "clamp(120px,13vw,170px) clamp(22px,5vw,64px) clamp(36px,5vw,52px)",
+          padding: "var(--pad-top) var(--gutter) clamp(36px,5vw,52px)",
           borderBottom: "1px solid rgba(var(--lw),0.1)",
         }}
       >
         <div
           style={{
-            maxWidth: 1680,
+            maxWidth: "var(--maxw)",
             margin: "0 auto",
             display: "flex",
             flexWrap: "wrap",
@@ -56,14 +56,14 @@ export default function AlgorithmsApp() {
               style={{
                 fontFamily: "ui-monospace,'SF Mono',Menlo,monospace",
                 fontSize: 11,
-                letterSpacing: "0.28em",
+                letterSpacing: "var(--eyebrow-tracking)",
                 color: "var(--fg4)",
                 marginBottom: 18,
               }}
             >
               THE TOOLBOX · 12 SYSTEMS
             </div>
-            <h1 style={{ margin: 0, fontWeight: 700, fontSize: "clamp(40px,7vw,92px)", lineHeight: 0.94, letterSpacing: "-0.025em" }}>
+            <h1 style={{ margin: 0, fontWeight: 600, fontSize: "clamp(44px,7vw,108px)", lineHeight: 0.94, letterSpacing: "-0.035em" }}>
               Algorithms
             </h1>
           </div>
@@ -74,8 +74,8 @@ export default function AlgorithmsApp() {
         </div>
       </section>
 
-      <section style={{ padding: "clamp(34px,5vw,56px) clamp(22px,5vw,64px) clamp(72px,9vw,120px)" }}>
-        <div style={{ maxWidth: 1680, margin: "0 auto" }}>
+      <section style={{ padding: "clamp(34px,5vw,56px) var(--gutter) var(--pad-bottom)" }}>
+        <div style={{ maxWidth: "var(--maxw)", margin: "0 auto" }}>
           <div
             id="algoGrid"
             style={{

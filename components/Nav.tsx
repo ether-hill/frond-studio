@@ -55,7 +55,7 @@ export default function Nav() {
       <header ref={navRef} className="nav-bar" data-nav="top">
         <div
           style={{
-            maxWidth: 1600,
+            maxWidth: "var(--maxw)",
             margin: "0 auto",
             padding: "16px var(--gutter)",
             display: "flex",

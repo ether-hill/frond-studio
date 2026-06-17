@@ -28,7 +28,7 @@ export default function Cta() {
         style={{
           position: "relative",
           zIndex: 2,
-          maxWidth: 1600,
+          maxWidth: "var(--maxw)",
           margin: "0 auto",
           padding: "clamp(90px,17vh,190px) var(--gutter)",
           textAlign: "center",
@@ -49,7 +49,7 @@ export default function Cta() {
         </div>
         <h2
           style={{
-            fontFamily: "var(--font-display), serif",
+            fontFamily: "var(--font-display), sans-serif",
             fontSize: "clamp(46px,8.4vw,134px)",
             fontWeight: 500,
             lineHeight: 0.92,

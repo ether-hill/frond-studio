@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <RevealRoot>
-      <section className="page-gutter" style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(130px,18vh,210px) var(--gutter) clamp(72px,11vh,128px)" }}>
+      <section className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}>
         <div
           className="contact-grid"
           style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: "clamp(44px,6vw,96px)", alignItems: "start" }}

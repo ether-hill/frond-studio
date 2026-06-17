@@ -16,7 +16,7 @@ export default function ProjectsPage() {
     <RevealRoot>
       <section
         className="page-gutter"
-        style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(130px,18vh,210px) var(--gutter) clamp(72px,11vh,128px)" }}
+        style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}
       >
         <PageHeader
           eyebrow="The lab"
@@ -57,7 +57,7 @@ export default function ProjectsPage() {
                 <h2
                   style={{
                     margin: "20px 0 0",
-                    fontFamily: "var(--font-display), serif",
+                    fontFamily: "var(--font-display), sans-serif",
                     fontWeight: 500,
                     fontSize: "clamp(30px,3.6vw,48px)",
                     lineHeight: 1.0,

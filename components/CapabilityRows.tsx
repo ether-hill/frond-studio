@@ -24,7 +24,7 @@ export default function CapabilityRows() {
             <h4
               className="cap-title"
               style={{
-                fontFamily: "var(--font-display), serif",
+                fontFamily: "var(--font-display), sans-serif",
                 fontSize: "clamp(22px,2.2vw,32px)",
                 fontWeight: 400,
                 letterSpacing: "-0.01em",

@@ -29,7 +29,7 @@ export default async function Home() {
           style={{
             position: "relative",
             zIndex: 2,
-            maxWidth: 1600,
+            maxWidth: "var(--maxw)",
             margin: "0 auto",
             minHeight: "100svh",
             padding: "120px var(--gutter) 96px",
@@ -94,7 +94,7 @@ export default async function Home() {
         </div>
 
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 30, zIndex: 2 }}>
-          <div style={{ maxWidth: 1600, margin: "0 auto", padding: "0 var(--gutter)" }}>
+          <div style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter)" }}>
             <span
               data-rv
               style={{
@@ -118,11 +118,11 @@ export default async function Home() {
 
       {/* Capabilities */}
       <section id="services" style={{ background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}>
-        <div className="page-gutter" style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(72px,11vh,128px) var(--gutter)" }}>
+        <div className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}>
           <div data-rvs style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 24, flexWrap: "wrap", marginBottom: "clamp(44px,6vh,72px)" }}>
             <div style={{ display: "flex", gap: 18, alignItems: "baseline" }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.1em", color: "var(--accent)" }}>(02)</span>
-              <h2 style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>Capabilities</h2>
+              <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>Capabilities</h2>
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-dim)" }}>
               Design · Development · Consulting
@@ -131,7 +131,7 @@ export default async function Home() {
 
           <div className="services-grid" style={{ display: "grid", gridTemplateColumns: "0.85fr 1.15fr", gap: "clamp(40px,5vw,90px)" }}>
             <div data-stag>
-              <p style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(24px,2.5vw,38px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.012em" }}>
+              <p style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(24px,2.5vw,38px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.012em" }}>
                 We move between design, development and consulting — so an idea can go from sketch to shipped without ever changing hands.
               </p>
               <div data-stag style={{ marginTop: "clamp(34px,4vh,52px)", display: "flex", flexDirection: "column", gap: 24 }}>

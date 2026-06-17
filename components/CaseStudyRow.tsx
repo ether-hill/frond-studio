@@ -54,7 +54,7 @@ export default function CaseStudyRow({
           <Link
             className="cs-title"
             href={href}
-            style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(30px,3.4vw,52px)", fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1, display: "inline-block" }}
+            style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(30px,3.4vw,52px)", fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1, display: "inline-block" }}
           >
             {project.title}
           </Link>

@@ -20,6 +20,13 @@
      now use the grotesk too — no serif. Micro-labels use the mono stack. */
   --font-display: var(--font-body);
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Layout + rhythm scale — one source of truth for page margins and spacing. */
+  --maxw: 1600px;
+  --pad-top: clamp(130px, 18vh, 210px);   /* first section, clears the fixed nav */
+  --pad-bottom: clamp(72px, 11vh, 128px); /* page foot before the CTA */
+  --section-y: clamp(72px, 11vh, 128px);  /* between in-page sections */
+  --eyebrow-tracking: 0.2em;              /* mono micro-label tracking */
 }
 
 [data-theme="light"] {

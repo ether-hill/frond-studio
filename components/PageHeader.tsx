@@ -50,7 +50,7 @@ export default function PageHeader({ eyebrow, title, intro, introSerif }: Props)
             transitionDelay: "0.2s",
             maxWidth: introSerif ? "26ch" : 620,
             marginTop: "clamp(24px,3.5vh,42px)",
-            fontFamily: introSerif ? "var(--font-display), serif" : "var(--font-body), sans-serif",
+            fontFamily: introSerif ? "var(--font-display), sans-serif" : "var(--font-body), sans-serif",
             fontSize: introSerif ? "clamp(24px,2.6vw,40px)" : "clamp(16px,1.4vw,19px)",
             fontWeight: introSerif ? 400 : undefined,
             lineHeight: introSerif ? 1.18 : 1.55,

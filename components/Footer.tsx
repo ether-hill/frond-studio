@@ -23,7 +23,7 @@ export default function Footer() {
       <div
         className="page-gutter"
         style={{
-          maxWidth: 1600,
+          maxWidth: "var(--maxw)",
           margin: "0 auto",
           padding: "clamp(64px,9vh,110px) var(--gutter) clamp(40px,5vh,56px)",
         }}
@@ -31,7 +31,7 @@ export default function Footer() {
         <h2
           data-rvs
           style={{
-            fontFamily: "var(--font-display), serif",
+            fontFamily: "var(--font-display), sans-serif",
             fontSize: "clamp(30px,4.4vw,68px)",
             fontWeight: 400,
             lineHeight: 1.04,

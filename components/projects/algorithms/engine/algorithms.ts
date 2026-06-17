@@ -288,7 +288,7 @@ const DATA: Algo[] = [
     note: "Meškauskas & Moore, Neighbour-Sensing model, Mycological Research, 2004 · Runions et al., space colonization, 2007.",
     paras: [
       "A fungus has no plan. Each hyphal tip is an autonomous agent that pushes forward, feeling for nutrient ahead and for the threads its own colony has already laid down.",
-      "Tips grow toward food and away from their own density, branch where the substrate is rich and open, and — the signature of a true mycelium — fuse when they meet, closing loops so the colony becomes a network rather than a tree. It eats its way outward, then fades and grows again.",
+      "Tips grow toward food and away from their own density, branch where the substrate is rich and open, and — the signature of a true mycelium — fuse when they meet, closing loops so the colony becomes a network rather than a tree. It colonises the substrate and holds; RANDOMISE rolls a new growth habit and palette.",
     ],
     steps: [
       { n: "1", title: "Extend", text: "Each hyphal tip advances a step, steered up the nutrient gradient — chemotropism." },

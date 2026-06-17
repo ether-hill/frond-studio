@@ -1491,17 +1491,47 @@ const mycelium: Gen = (p, seed, size, params) => {
   p.randomSeed(seed); p.noiseSeed(seed);
   const colored = !MONO_MODE;
   const TAU = Math.PI * 2;
-  const HABITS = ["colony", "frost", "bush"] as const;
+  // Six growth habits — biased toward the dense, intricate end. RANDOMISE rolls
+  // the structure, not just the colour.
+  //   colony — coherent radial mat that anastomoses        (open)
+  //   frost  — directional ribs, feathery side-branching    (mid)
+  //   bush   — trunks rising from a base, tapering to tips   (mid)
+  //   cord   — thick rhizomorph cords feeding fine laterals  (intricate)
+  //   coral  — relentless forking, fine and crowded          (very intricate)
+  //   veil   — delicate high-count filigree web              (very intricate)
+  const HABITS = ["colony", "frost", "bush", "cord", "coral", "veil"] as const;
   const habit = HABITS[Math.floor(p.random() * HABITS.length)];
 
-  // hierarchy-keyed shading: dnorm 0 (primary vein) … 1 (fine tip)
-  const magma = (t: number): RGB => {                 // yellow core → magenta → violet
-    const stops: RGB[] = [[252, 245, 200], [250, 196, 78], [236, 110, 70], [192, 52, 110], [110, 40, 132], [58, 28, 96]];
-    const x = Math.max(0, Math.min(0.999, t)) * (stops.length - 1);
-    const i = x | 0; return lerp3(stops[i], stops[i + 1], x - i);
+  // ── chaotic palette: 2…8 colours per seed, inherited down each hypha lineage.
+  // Half the seeds roll fully-random hues (true chaos); half spread around a base
+  // hue with heavy jitter. Saturation/lightness stay in a tuned band so even the
+  // wild palettes read as intentional rather than as random RGB. ──
+  const hsl = (h: number, s: number, l: number): RGB => {
+    h = (((h % 360) + 360) % 360) / 360;
+    const a = s * Math.min(l, 1 - l);
+    const f = (n: number) => { const k = (n + h * 12) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+    return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
   };
-  const shade = (dnorm: number): RGB => {
-    if (colored) return magma(dnorm);
+  const palette: RGB[] = [];
+  if (colored) {
+    const K = 2 + Math.floor(p.random() * 7);          // 2…8
+    const chaos = p.random() < 0.5;
+    const baseH = p.random() * 360;
+    for (let i = 0; i < K; i++) {
+      const h = chaos ? p.random() * 360 : (baseH + i * (360 / K) + (p.random() - 0.5) * 70);
+      const s = 0.52 + p.random() * 0.42;
+      const l = 0.46 + p.random() * 0.32;
+      palette.push(hsl(h, s, l));
+    }
+  }
+  // segment colour: mono → depth-keyed greyscale; colour → lineage palette colour
+  // darkened slightly with depth so primary veins stay luminous and tips recede.
+  const shade = (dnorm: number, ci: number): RGB => {
+    if (colored) {
+      const base = palette[ci % palette.length];
+      const f = 1 - 0.42 * dnorm;
+      return [Math.round(base[0] * f), Math.round(base[1] * f), Math.round(base[2] * f)];
+    }
     const l = 0.98 - 0.62 * dnorm; const v = Math.round(l * 255); return [v, v, v];
   };
   const bg: RGB = [6, 8, 9];
@@ -1524,29 +1554,45 @@ const mycelium: Gen = (p, seed, size, params) => {
     colony: { maxTurn: 0.26, Kchemo: 0.6, Kauto: 0.8, Kwander: 0.18, Kbias: 0.4, branch: 0.17, latFrac: 0.5, latAng: 0.9, fuseD: 1.4, fuseP: 0.78, wBase: 2.6, maxAge: 1100 },
     frost:  { maxTurn: 0.12, Kchemo: 0.4, Kauto: 0.55, Kwander: 0.10, Kbias: 0.7, branch: 0.20, latFrac: 0.82, latAng: 0.62, fuseD: 2.6, fuseP: 0.30, wBase: 2.2, maxAge: 1400 },
     bush:   { maxTurn: 0.20, Kchemo: 0.5, Kauto: 0.85, Kwander: 0.16, Kbias: 0.55, branch: 0.18, latFrac: 0.45, latAng: 1.0, fuseD: 1.6, fuseP: 0.55, wBase: 3.0, maxAge: 1300 },
+    // rhizomorph cords: persistent thick primaries feeding a haze of fine laterals
+    cord:   { maxTurn: 0.17, Kchemo: 0.62, Kauto: 0.92, Kwander: 0.12, Kbias: 0.5, branch: 0.23, latFrac: 0.82, latAng: 0.72, fuseD: 1.8, fuseP: 0.42, wBase: 3.6, maxAge: 1500 },
+    // coral: relentless apical forking, fine and crowded
+    coral:  { maxTurn: 0.30, Kchemo: 0.5, Kauto: 1.02, Kwander: 0.20, Kbias: 0.3, branch: 0.27, latFrac: 0.38, latAng: 1.12, fuseD: 1.3, fuseP: 0.62, wBase: 2.1, maxAge: 1250 },
+    // veil: delicate, high tip-count filigree
+    veil:   { maxTurn: 0.22, Kchemo: 0.46, Kauto: 0.72, Kwander: 0.24, Kbias: 0.36, branch: 0.30, latFrac: 0.7, latAng: 0.86, fuseD: 1.2, fuseP: 0.72, wBase: 1.6, maxAge: 1600 },
   }[habit];
 
-  interface Tip { x: number; y: number; a: number; age: number; energy: number; depth: number; sb: number; }
+  // denser, more intricate by default; the finest habits get the most tips
+  const intricate = habit === "coral" || habit === "veil" || habit === "cord";
+  interface Tip { x: number; y: number; a: number; age: number; energy: number; depth: number; sb: number; ci: number; }
   let tips: Tip[] = [];
-  const MAXT = Math.round(gp(params, "tips", size > 360 ? 760 : 280));
+  const baseTips = size > 360 ? (intricate ? 1200 : 880) : (intricate ? 480 : 340);
+  const MAXT = Math.round(gp(params, "tips", baseTips));
   const step = size * 0.0045;
   const branchSpace = size * 0.010;
   const DCAP = 9;                                       // depth → dnorm normaliser
+  const palN = colored ? palette.length : 1;
+  const mutateCi = (ci: number) => (p.random() < 0.12 ? (p.random() * palN) | 0 : ci);
 
   // the laid-down network — stored so brightness pulses can travel along it (a real
   // mycelium translocates signal/nutrient: "communication"). dist = radius from the
   // colony origin, which sets when each outward pulse reaches a given segment.
   interface NSeg { x1: number; y1: number; x2: number; y2: number; w: number; r: number; g: number; b: number; dist: number; node: boolean; }
   const network: NSeg[] = [];
-  const NETCAP = size > 360 ? 8200 : 3600;
+  const NETCAP = size > 360 ? 13000 : 5200;
   const pushSeg = (x1: number, y1: number, x2: number, y2: number, w: number, col: RGB, nd: boolean) => {
     const mx = (x1 + x2) / 2 - cx0, my = (y1 + y2) / 2 - cy0;
     network.push({ x1, y1, x2, y2, w, r: col[0], g: col[1], b: col[2], dist: Math.hypot(mx, my), node: nd });
   };
 
-  const newTip = (x: number, y: number, a: number, depth = 0, energy = 110): Tip => ({ x, y, a, age: 0, energy, depth, sb: 0 });
-  const seedColony = (n: number) => { for (let i = 0; i < n; i++) tips.push(newTip(cx0, cy0, habit === "bush" ? -Math.PI / 2 + (p.random() - 0.5) * 1.1 : (i / n) * TAU + p.random() * 0.3)); };
-  seedColony(habit === "frost" ? 14 + (p.random() * 6 | 0) : 20 + (p.random() * 8 | 0));
+  const newTip = (x: number, y: number, a: number, depth = 0, energy = 110, ci = 0): Tip => ({ x, y, a, age: 0, energy, depth, sb: 0, ci });
+  const seedColony = (n: number) => {
+    for (let i = 0; i < n; i++) {
+      const ci = colored ? (p.random() * palN) | 0 : 0;
+      tips.push(newTip(cx0, cy0, habit === "bush" ? -Math.PI / 2 + (p.random() - 0.5) * 1.1 : (i / n) * TAU + p.random() * 0.3, 0, 110, ci));
+    }
+  };
+  seedColony(intricate ? 26 + (p.random() * 10 | 0) : habit === "frost" ? 14 + (p.random() * 6 | 0) : 20 + (p.random() * 8 | 0));
 
   // habit-specific directional bias (radial-out for colony/frost, up-and-out for bush)
   const bias = (x: number, y: number): [number, number] => {
@@ -1577,7 +1623,7 @@ const mycelium: Gen = (p, seed, size, params) => {
       if (nx < 1 || nx > size - 1 || ny < 1 || ny > size - 1) continue;
 
       const dnorm = Math.min(1, t.depth / DCAP);
-      const col = shade(dnorm);
+      const col = shade(dnorm, t.ci);
       const w = Math.max(0.5, cfg.wBase * (1 - 0.72 * dnorm) - t.age * 0.0008);
 
       // anastomosis: meet established hyphae → fuse into a loop, mark the junction
@@ -1600,11 +1646,11 @@ const mycelium: Gen = (p, seed, size, params) => {
         t.sb = 0;
         if (p.random() < cfg.latFrac) {                  // lateral side-branch (feathery)
           const ang = cfg.latAng * (0.7 + p.random() * 0.6) * (p.random() < 0.5 ? 1 : -1);
-          next.push(newTip(t.x, t.y, t.a + ang, t.depth + 1, t.energy * 0.4));
+          next.push(newTip(t.x, t.y, t.a + ang, t.depth + 1, t.energy * 0.4, mutateCi(t.ci)));
           t.energy *= 0.82;                              // parent keeps most energy → vein persists
         } else {                                          // apical fork
           const ang = 0.34 + (p.random() - 0.5) * 0.24;
-          next.push(newTip(t.x, t.y, t.a + ang, t.depth + 1, t.energy * 0.5));
+          next.push(newTip(t.x, t.y, t.a + ang, t.depth + 1, t.energy * 0.5, mutateCi(t.ci)));
           t.a -= ang * 0.6; t.energy *= 0.55;
         }
       }
@@ -1624,63 +1670,52 @@ const mycelium: Gen = (p, seed, size, params) => {
         const gx = (p.random() * G) | 0, gy = (p.random() * G) | 0, ix = gy * G + gx;
         if (den[ix] > 0.12 && den[ix] < 2.8 && nut[ix] > 0.25) {
           const wx = (gx + .5) * cell, wy = (gy + .5) * cell, [bx, by] = bias(wx, wy);
-          tips.push(newTip(wx, wy, Math.atan2(by, bx) + (p.random() - .5) * 0.9, 1, 75));
+          tips.push(newTip(wx, wy, Math.atan2(by, bx) + (p.random() - .5) * 0.9, 1, 75, colored ? (p.random() * palN) | 0 : 0));
           placed = true;
         }
       }
       if (!placed) break;
     }
-    // mature colony (or one that has died out) → start a fresh one
-    if (network.length >= NETCAP || tips.length === 0) {
-      network.length = 0; tips = [];
-      for (let i = 0; i < G * G; i++) { const gx = i % G, gy = (i / G) | 0; den[i] = 0; nut[i] = 0.55 + 0.45 * p.noise(gx * 0.05 + frame * 0.013, gy * 0.05); }
-      seedColony(habit === "frost" ? 14 : 20);
-    }
+    // Mature colony → hold. A real mycelium colonises its substrate and stays; it
+    // does not blink out and restart. Once the network fills, retire the tips and
+    // let the structure persist (no auto-reseed — RANDOMISE is the only reset).
+    if (network.length >= NETCAP) tips = [];
   };
 
-  // travelling signal pulses — bright rings that sweep outward from the colony origin
-  // along the hyphae (translocation / "communication"). They make the whole network
-  // shimmer, not just the growing front.
-  const pulses: number[] = [];
-  let pulseTimer = 0;
-  const pw = size * 0.05;
+  // Steady render — no travelling pulses. The network is drawn at its laid-down
+  // colour (lineage palette in colour mode, depth-keyed greyscale in mono), batched
+  // by (width, quantised colour) into a few stroke() calls. A dirty check skips the
+  // redraw entirely once growth has settled, so a finished colony costs ~nothing.
+  let lastLen = -1;
   p.background(bg[0], bg[1], bg[2]);
   return () => {
     advance();                                       // grow → append to network
-    // schedule + advance pulses
-    if (++pulseTimer > 30) { pulseTimer = 0; pulses.push(0); }
-    for (let i = 0; i < pulses.length; i++) pulses[i] += size * 0.013;
-    while (pulses.length && pulses[0] > size * 1.15) pulses.shift();
+    if (network.length === lastLen) return;          // settled — hold the image
+    lastLen = network.length;
 
     p.background(bg[0], bg[1], bg[2]);
     const ctx = p.drawingContext as CanvasRenderingContext2D;
     ctx.lineCap = "round"; ctx.lineJoin = "round";
-    // redraw the network, brightness modulated by the travelling pulses, batched by
-    // (width, brightness-band) so it's a few dozen stroke() calls regardless of size
-    const buckets = new Map<number, { pa: Path2D; r: number; g: number; b: number; w: number; m: number }>();
+    const buckets = new Map<string, { pa: Path2D; r: number; g: number; b: number; w: number }>();
     for (let i = 0; i < network.length; i++) {
       const s = network[i];
       if (s.node) continue;
-      let m = 0.6;
-      for (let k = 0; k < pulses.length; k++) { const dd = s.dist - pulses[k]; m += 0.85 * Math.exp(-(dd * dd) / (2 * pw * pw)); }
-      const mb = Math.min(8, Math.max(2, Math.round(m * 5)));
-      const key = (Math.min(7, Math.round(s.w)) << 4) | mb;
+      const wb = Math.min(7, Math.round(s.w));
+      const key = `${wb}|${s.r >> 4}|${s.g >> 4}|${s.b >> 4}`;
       let e = buckets.get(key);
-      if (!e) { e = { pa: new Path2D(), r: s.r, g: s.g, b: s.b, w: s.w, m: mb / 5 }; buckets.set(key, e); }
+      if (!e) { e = { pa: new Path2D(), r: s.r, g: s.g, b: s.b, w: s.w }; buckets.set(key, e); }
       e.pa.moveTo(s.x1, s.y1); e.pa.lineTo(s.x2, s.y2);
     }
     buckets.forEach((e) => {
-      ctx.strokeStyle = `rgb(${Math.min(255, e.r * e.m) | 0},${Math.min(255, e.g * e.m) | 0},${Math.min(255, e.b * e.m) | 0})`;
+      ctx.strokeStyle = `rgb(${e.r},${e.g},${e.b})`;
       ctx.lineWidth = e.w; ctx.stroke(e.pa);
     });
-    // junction nodes — flare as a pulse passes through them
+    // junction nodes — quiet markers where hyphae have fused into loops
     p.noStroke();
     for (let i = 0; i < network.length; i++) {
       const s = network[i];
       if (!s.node) continue;
-      let m = 0.5;
-      for (let k = 0; k < pulses.length; k++) { const dd = s.dist - pulses[k]; m += Math.exp(-(dd * dd) / (2 * pw * pw)); }
-      p.fill(255, 255, 255, Math.min(255, 120 + m * 90));
+      p.fill(245, 245, 245, 150);
       p.circle(s.x1, s.y1, s.w);
     }
   };

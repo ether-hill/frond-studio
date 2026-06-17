@@ -13,7 +13,7 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
     <section
       id="work"
       className="page-gutter"
-      style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(72px,11vh,128px) var(--gutter)", position: "relative" }}
+      style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)", position: "relative" }}
     >
       <div
         data-rvs
@@ -32,7 +32,7 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", color: "var(--accent)" }}>
             (01)
           </span>
-          <h2 style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
+          <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
             Selected Work
           </h2>
         </div>
@@ -116,7 +116,7 @@ function WorkGrid({ projects }: { projects: ProjectCard[] }) {
             </span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 14 }}>
-            <h3 className="vwork-name" style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(22px,2.5vw,36px)", fontWeight: 500, letterSpacing: "-0.015em" }}>
+            <h3 className="vwork-name" style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(22px,2.5vw,36px)", fontWeight: 500, letterSpacing: "-0.015em" }}>
               {p.title}
             </h3>
             <span className="vwork-arrow" style={{ fontSize: 19, color: "var(--accent)" }}>
@@ -239,7 +239,7 @@ function WorkIndex({ projects }: { projects: ProjectCard[] }) {
           <span className="wi-num" style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 500, letterSpacing: "0.06em", color: "var(--fg-faint)" }}>
             {String(i + 1).padStart(2, "0")}
           </span>
-          <h3 className="wi-name" style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(28px,4.6vw,72px)", fontWeight: 500, letterSpacing: "-0.022em", lineHeight: 1 }}>
+          <h3 className="wi-name" style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(28px,4.6vw,72px)", fontWeight: 500, letterSpacing: "-0.022em", lineHeight: 1 }}>
             {p.title}
           </h3>
           <span className="wi-tags" style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-dim)", whiteSpace: "nowrap" }}>

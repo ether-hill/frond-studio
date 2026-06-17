@@ -17,7 +17,7 @@ export default async function WorkPage() {
 
   return (
     <RevealRoot>
-      <section className="page-gutter" style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(130px,18vh,210px) var(--gutter) clamp(72px,11vh,128px)" }}>
+      <section className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}>
         <PageHeader
           title="Work"
           intro="Selected client work in design, development and art direction, for people who care how things are built."
