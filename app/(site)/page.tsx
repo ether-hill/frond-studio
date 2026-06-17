@@ -16,14 +16,17 @@ export default async function Home() {
 
   return (
     <RevealRoot>
-      {/* Hero — live Jones-agent Physarum, full viewport */}
-      <section style={{ minHeight: "100svh", position: "relative", overflow: "hidden" }}>
+      {/* Hero — live Jones-agent Physarum, full viewport. Always the dark
+          monochrome scene (the inverted/light version reads poorly), so the
+          section pins data-theme="dark" for its text + overlays. */}
+      <section data-theme="dark" style={{ minHeight: "100svh", position: "relative", overflow: "hidden", background: "#000", color: "var(--fg)" }}>
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
           <HeroPhysarum />
         </div>
-        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(100deg, var(--bg-0) 0%, rgba(0,0,0,0) 64%)", opacity: 0.82 }} />
-        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(180deg, var(--bg-0) 0%, transparent 26%, transparent 70%, var(--bg-0) 100%)", opacity: 0.7 }} />
-        <RandomiseButton event="hero-physarum-reseed" title="Spawn a new Jones-agent render" />
+        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(100deg, var(--bg-0) 0%, rgba(0,0,0,0.0) 70%)", opacity: 0.9 }} />
+        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(to top, var(--bg-0) 4%, rgba(0,0,0,0) 50%)", opacity: 0.95 }} />
+        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(180deg, var(--bg-0) 0%, transparent 22%)", opacity: 0.6 }} />
+        <RandomiseButton event="hero-physarum-reseed" title="Spawn a new Jones-agent render" position="bottom-right" />
 
         <div
           className="hero-inner"
@@ -38,35 +41,15 @@ export default async function Home() {
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "flex-start",
+            textShadow: "0 2px 44px rgba(0,0,0,0.62)",
           }}
         >
-          <div
-            data-rv
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 13,
-              fontFamily: "var(--font-mono)",
-              fontSize: 11,
-              fontWeight: 500,
-              letterSpacing: "0.26em",
-              textTransform: "uppercase",
-              color: "var(--fg-dim)",
-              marginBottom: "clamp(20px,3vh,32px)",
-            }}
-          >
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)" }} />
-            Design — Development — Art Direction
-          </div>
-
           <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(48px,8.8vw,152px)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
             <span className="mask-line">
               <span style={{ transitionDelay: "0.06s" }}>Natural</span>
             </span>
             <span className="mask-line">
-              <span style={{ transitionDelay: "0.15s" }}>
-                <em style={{ fontWeight: 400 }}>selections.</em>
-              </span>
+              <span style={{ transitionDelay: "0.15s" }}>selections.</span>
             </span>
           </h1>
 

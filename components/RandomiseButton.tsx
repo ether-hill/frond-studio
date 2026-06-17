@@ -8,11 +8,17 @@ export default function RandomiseButton({
   event,
   label = "Randomise ↻",
   title,
+  position = "top-right",
 }: {
   event: string;
   label?: string;
   title?: string;
+  position?: "top-right" | "bottom-right";
 }) {
+  const vEdge =
+    position === "bottom-right"
+      ? { bottom: "clamp(20px,3vw,32px)" }
+      : { top: "clamp(20px,3vw,32px)" };
   return (
     <button
       type="button"
@@ -20,7 +26,7 @@ export default function RandomiseButton({
       onClick={() => window.dispatchEvent(new CustomEvent(event))}
       style={{
         position: "absolute",
-        top: "clamp(20px,3vw,32px)",
+        ...vEdge,
         right: "clamp(20px,3vw,32px)",
         zIndex: 4,
         fontFamily: "var(--font-mono)",

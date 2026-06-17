@@ -20,14 +20,12 @@ export default function HeroPhysarum() {
     let raf = 0;
     let disposed = false;
     let base: Record<string, unknown> = {};
-    // last movement variant in play, so a theme flip only swaps the palette
     let movement: Record<string, unknown> | null = null;
 
-    const isDark = () => (document.documentElement.dataset.theme || "dark") !== "light";
-    const palette = () =>
-      isDark()
-        ? { bg: "#000000", lo: "#3a3a3a", hi: "#ffffff" }
-        : { bg: "#f4f1ea", lo: "#b9b2a4", hi: "#0a0a0a" };
+    // The hero scene is always the dark monochrome look (stark white veins on
+    // black) — it reads better than the inverted version, so it does NOT follow
+    // the site theme.
+    const palette = () => ({ bg: "#000000", lo: "#3a3a3a", hi: "#ffffff" });
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
     const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
@@ -50,6 +48,7 @@ export default function HeroPhysarum() {
       ...base,
       ...(mv || {}),
       ...palette(),
+      agentTexW: 512, // ~262k agents — denser, higher-detail veins
       species: 1,
       avoid: 0,
       mouseFood: 0,
@@ -68,7 +67,7 @@ export default function HeroPhysarum() {
         /* noop */
       }
       try {
-        eng = new Engine(canvas, 512, buildParams(mv));
+        eng = new Engine(canvas, 1024, buildParams(mv)); // higher-res sim grid
       } catch {
         eng = null; // WebGL2 unavailable
       }
@@ -107,17 +106,10 @@ export default function HeroPhysarum() {
     };
     window.addEventListener("hero-physarum-reseed", onReseed);
 
-    // re-skin (not re-seed) when the theme flips
-    const themeObs = new MutationObserver(() => {
-      if (Engine) build(movement);
-    });
-    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-
     return () => {
       disposed = true;
       cancelAnimationFrame(raf);
       window.removeEventListener("hero-physarum-reseed", onReseed);
-      themeObs.disconnect();
       try {
         eng?.dispose();
       } catch {
