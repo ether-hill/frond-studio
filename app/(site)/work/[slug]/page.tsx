@@ -78,8 +78,8 @@ export default async function ProjectCaseStudy({
             marginBottom: "clamp(20px,3vh,30px)",
           }}
         >
-          <Link href="/projects" className="linku" style={{ color: "var(--fg-dim)" }}>
-            Projects
+          <Link href="/work" className="linku" style={{ color: "var(--fg-dim)" }}>
+            Work
           </Link>
           <span style={{ color: "var(--fg-faint)" }}>/</span>
           <span>{project.subtitle}</span>
@@ -174,7 +174,7 @@ export default async function ProjectCaseStudy({
         <nav style={{ borderTop: "1px solid var(--line)", background: "var(--bg-1)" }}>
           <div className="page-gutter" style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(40px,6vh,72px) var(--gutter)", display: "flex", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
             {prev ? (
-              <Link href={`/projects/${prev.slug}`} className="linku" style={{ color: "var(--fg-dim)", display: "flex", flexDirection: "column", gap: 6 }}>
+              <Link href={`/work/${prev.slug}`} className="linku" style={{ color: "var(--fg-dim)", display: "flex", flexDirection: "column", gap: 6 }}>
                 <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-faint)" }}>
                   &#8592; Previous
                 </span>
@@ -182,7 +182,7 @@ export default async function ProjectCaseStudy({
               </Link>
             ) : <span />}
             {next ? (
-              <Link href={`/projects/${next.slug}`} className="linku" style={{ color: "var(--fg-dim)", textAlign: "right", display: "flex", flexDirection: "column", gap: 6, marginLeft: "auto" }}>
+              <Link href={`/work/${next.slug}`} className="linku" style={{ color: "var(--fg-dim)", textAlign: "right", display: "flex", flexDirection: "column", gap: 6, marginLeft: "auto" }}>
                 <span style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-faint)" }}>
                   Next &#8594;
                 </span>

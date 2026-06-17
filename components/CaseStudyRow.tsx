@@ -10,7 +10,7 @@ export default function CaseStudyRow({
   project: ProjectCard;
   flip: boolean;
 }) {
-  const href = `/projects/${project.slug}`;
+  const href = `/work/${project.slug}`;
   const points = project.keyPoints || [];
   const scope = project.services || [];
 

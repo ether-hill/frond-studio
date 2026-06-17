@@ -1,32 +1,131 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
-import CaseStudyRow from "@/components/CaseStudyRow";
 import Cta from "@/components/Cta";
-import { getProjects } from "@/sanity/lib/queries";
+import { PERSONAL_PROJECTS } from "@/lib/projects";
 
 export const metadata: Metadata = {
   title: "Projects — Frond Studio",
-  description: "Selected client work in design, development and art direction.",
+  description:
+    "The studio's own experiments, tools and generative pieces — a growing directory of things we make to keep things interesting.",
 };
 
-export const revalidate = 60;
-
-export default async function ProjectsPage() {
-  const projects = await getProjects();
-
+export default function ProjectsPage() {
   return (
     <RevealRoot>
-      <section className="page-gutter" style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(130px,18vh,210px) var(--gutter) clamp(72px,11vh,128px)" }}>
+      <section
+        className="page-gutter"
+        style={{ maxWidth: 1600, margin: "0 auto", padding: "clamp(130px,18vh,210px) var(--gutter) clamp(72px,11vh,128px)" }}
+      >
         <PageHeader
+          eyebrow="The lab"
           title="Projects"
-          intro="We work across a wide range of projects to keep things interesting — selected client work in design, development and art direction, for people who care how things are built."
+          intro="Our own experiments, tools and generative pieces — a growing directory of things we make outside client work, to keep things interesting."
         />
 
-        <div data-stag style={{ marginTop: "clamp(56px,8vh,104px)", display: "flex", flexDirection: "column", gap: "clamp(72px,11vh,140px)" }}>
-          {projects.map((p, i) => (
-            <CaseStudyRow key={p._id} project={p} flip={i % 2 === 1} />
-          ))}
+        <div
+          data-stag
+          style={{
+            marginTop: "clamp(56px,8vh,104px)",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 380px), 1fr))",
+            gap: 1,
+            background: "var(--line-2)",
+            border: "1px solid var(--line-2)",
+          }}
+        >
+          {PERSONAL_PROJECTS.map((p) => {
+            const inner = (
+              <>
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 }}>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-body), sans-serif",
+                      fontSize: 10,
+                      fontWeight: 500,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      color: "var(--fg-faint)",
+                    }}
+                  >
+                    {p.kicker}
+                  </span>
+                  <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "var(--fg-faint)" }}>{p.year}</span>
+                </div>
+
+                <h2
+                  style={{
+                    margin: "20px 0 0",
+                    fontFamily: "var(--font-display), serif",
+                    fontWeight: 500,
+                    fontSize: "clamp(30px,3.6vw,48px)",
+                    lineHeight: 1.0,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {p.title}
+                </h2>
+
+                <p style={{ margin: "16px 0 0", fontSize: 15, lineHeight: 1.6, color: "var(--fg-dim)", maxWidth: "44ch" }}>
+                  {p.summary}
+                </p>
+
+                <div style={{ marginTop: 24, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {p.tags.map((t) => (
+                    <span
+                      key={t}
+                      style={{
+                        fontFamily: "ui-monospace, monospace",
+                        fontSize: 11,
+                        letterSpacing: "0.04em",
+                        color: "var(--fg-dim)",
+                        border: "1px solid var(--line)",
+                        borderRadius: 999,
+                        padding: "5px 11px",
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+
+                <span
+                  className="linku"
+                  style={{
+                    marginTop: 28,
+                    fontFamily: "var(--font-body), sans-serif",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: "var(--accent)",
+                  }}
+                >
+                  {p.external ? "Visit ↗" : "Open →"}
+                </span>
+              </>
+            );
+
+            const cardStyle: React.CSSProperties = {
+              display: "flex",
+              flexDirection: "column",
+              background: "var(--bg-0)",
+              padding: "clamp(28px,3vw,44px)",
+              textDecoration: "none",
+              color: "inherit",
+            };
+
+            return p.external ? (
+              <a key={p.slug} href={p.href} target="_blank" rel="noopener noreferrer" className="vwork" style={cardStyle}>
+                {inner}
+              </a>
+            ) : (
+              <Link key={p.slug} href={p.href} className="vwork" style={cardStyle}>
+                {inner}
+              </Link>
+            );
+          })}
         </div>
       </section>
 

@@ -5,6 +5,7 @@ export const PLACEHOLDER_VIDEO =
   "https://a.storyblok.com/f/69529/x/2c5c31c864/ostro-002-1500.mp4";
 
 export const NAV_LINKS = [
+  { label: "Work", href: "/work" },
   { label: "Projects", href: "/projects" },
   { label: "Services", href: "/services" },
   { label: "Contact", href: "/contact" },

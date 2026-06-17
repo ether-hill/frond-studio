@@ -73,7 +73,7 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
       {view === "grid" ? <WorkGrid projects={projects} /> : <WorkIndex projects={projects} />}
 
       <div data-rvs style={{ marginTop: "clamp(40px,6vh,72px)", display: "flex", justifyContent: "center" }}>
-        <Link href="/projects" className="pill pill-ghost" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", padding: "14px 28px" }}>
+        <Link href="/work" className="pill pill-ghost" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", padding: "14px 28px" }}>
           View all projects
         </Link>
       </div>
@@ -89,7 +89,7 @@ function WorkGrid({ projects }: { projects: ProjectCard[] }) {
   return (
     <div className="vwork-grid" data-stag style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(26px,3vw,52px)" }}>
       {projects.map((p, i) => (
-        <Link key={p._id} className="vwork" href={`/projects/${p.slug}`} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <Link key={p._id} className="vwork" href={`/work/${p.slug}`} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div
             className="vwork-media"
             style={{ position: "relative", aspectRatio: "16/9", borderRadius: 6, overflow: "hidden", background: "var(--media)", border: "1px solid var(--line-2)" }}
@@ -225,7 +225,7 @@ function WorkIndex({ projects }: { projects: ProjectCard[] }) {
           key={p._id}
           className="wi-row"
           data-vid={p.thumbnailVideo || ""}
-          href={`/projects/${p.slug}`}
+          href={`/work/${p.slug}`}
           data-rvs
           style={{
             display: "grid",

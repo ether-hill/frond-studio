@@ -84,7 +84,7 @@ export default async function Home() {
           </p>
 
           <div data-rv style={{ transitionDelay: "0.3s", marginTop: "clamp(24px,3.2vh,38px)", display: "flex", flexWrap: "wrap", gap: 14 }}>
-            <Link href="/projects" className="pill pill-solid" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", padding: "14px 26px" }}>
+            <Link href="/work" className="pill pill-solid" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", padding: "14px 26px" }}>
               View selected work
             </Link>
             <Link href="/contact" className="pill pill-ghost" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", padding: "14px 26px" }}>

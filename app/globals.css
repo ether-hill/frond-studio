@@ -471,3 +471,31 @@ button {
     scroll-behavior: auto;
   }
 }
+
+/* ── Algorithms (ported generative toolbox) ──────────────────────────────
+   Scoped token bridge: the engine markup uses --bg / --fg2..4 / --lw /
+   --accent-bg/-fg. We pin them to Frond's dark palette so the immersive
+   "screen" reads consistently in either site theme. */
+.algo-root {
+  --bg: #100e0b;
+  --fg2: #a39d92;
+  --fg3: #8a847a;
+  --fg4: #6a655c;
+  --lw: 241, 237, 229;
+  --accent-bg: #d9c9b0;
+  --accent-fg: #0b0a08;
+  color: #f1ede5;
+  background: #0b0a08;
+}
+.algo-root .idx-ghost:hover {
+  color: #f1ede5 !important;
+  background: rgba(var(--lw), 0.04) !important;
+}
+.algo-root .ghost-btn:hover {
+  border-color: rgba(var(--lw), 0.5) !important;
+}
+@media (max-width: 1040px) {
+  .algo-root #algoGrid {
+    grid-template-columns: 1fr !important;
+  }
+}
