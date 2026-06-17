@@ -10,9 +10,9 @@ const schibsted = Schibsted_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Frond Studio — Design, built in motion",
+  title: "Frond Studio — Natural selections",
   description:
-    "A transdisciplinary design & technology studio — websites, apps and platforms for ambitious clients around the world.",
+    "A transdisciplinary design & technology studio — biophilic design, ethical AI, design systems and generative work, remotely worldwide.",
 };
 
 export const viewport: Viewport = {
