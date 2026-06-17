@@ -17,6 +17,16 @@ export type PersonalProject = {
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
   {
+    slug: "sma-config",
+    title: "SMA Config",
+    kicker: "GENERATIVE · GPU · LIVE TOOL",
+    summary:
+      "An advanced real-time studio for the Jones (2010) agent-based Physarum slime-mould model — hundreds of thousands of agents on the GPU, with deep live control over sensing, deposition, diffusion and colour.",
+    year: "2026",
+    tags: ["WebGL2", "Slime mould", "Generative"],
+    href: "/projects/sma-config",
+  },
+  {
     slug: "instruments",
     title: "Instruments",
     kicker: "WEB AUDIO · PLAYABLE IN-BROWSER",
