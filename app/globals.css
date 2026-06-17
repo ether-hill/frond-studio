@@ -61,7 +61,8 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* NB: no global `scroll-behavior: smooth` — it makes Next's App Router
+     scroll-to-top animate and land mid-page on navigation. */
   scroll-padding-top: 92px;
 }
 

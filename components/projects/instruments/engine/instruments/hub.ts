@@ -69,7 +69,7 @@ hero.innerHTML =
 root.appendChild(hero);
 
 const grid = document.createElement("section");
-grid.style.cssText = "max-width:var(--maxw);margin:0 auto;padding:clamp(36px,5vw,64px) var(--gutter) clamp(72px,9vw,120px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:clamp(16px,2vw,24px)";
+grid.style.cssText = "max-width:var(--maxw);margin:0 auto;padding:clamp(36px,5vw,64px) var(--gutter) clamp(72px,9vw,120px);display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:clamp(20px,2.4vw,40px)";
 grid.innerHTML = RACK.map((r) =>
   `<a class="rack-card" href="/projects/instruments/${r.slug}" aria-label="Open ${r.name}">` +
     `<span class="rack-shot"><img src="${r.img}" alt="${r.name} interface" loading="lazy" decoding="async" width="1600" height="900"></span>` +
