@@ -46,11 +46,11 @@
 }
 
 :root {
-  --gutter: 4rem;
+  --gutter: 64px;
 }
-@media (max-width: 560px) {
+@media (max-width: 760px) {
   :root {
-    --gutter: 24px;
+    --gutter: 16px;
   }
 }
 

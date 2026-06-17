@@ -835,7 +835,6 @@ const boids: Gen = (p, seed, size, params) => {
 const lSystem: Gen = (p, seed, size, params) => {
   p.randomSeed(seed);
   p.noiseSeed(seed);
-  const TAU = Math.PI * 2;
   // foliage vs stem tones (greyscale by default; one hue when coloured)
   const pal = autoPal(p, 6);
   const stemTone = pal[3];
@@ -909,123 +908,184 @@ const lSystem: Gen = (p, seed, size, params) => {
     return { segs, maxD: 2, w: Math.max(1, maxX - minX), h: Math.max(1, maxY) };
   };
 
-  // ---- procedural ivy / vine: a meandering climbing stem with leaves + tendrils ----
-  const buildIvy = () => {
-    const segs: Seg[] = [];
-    const steps = 26 + Math.floor(p.random() * 16);
-    let x = 0, y = 0, a = (p.random() - 0.5) * 0.6;       // mostly upward, leaning
-    const climb = 0.18 + p.random() * 0.12;
-    for (let i = 0; i < steps; i++) {
-      a += (p.noise(i * 0.18, 7) - 0.5) * 0.9 - x * 0.01; // wander, gently self-correct
-      const nx = x + Math.sin(a) * climb, ny = y + Math.cos(a) * climb + 0.28;
-      segs.push({ x1: x, y1: y, x2: nx, y2: ny, d: 0, leaf: false });
-      if (i % 3 === 1) {                                   // a leaf pair
-        for (const sgn of [-1, 1]) {
-          const la = a + sgn * 1.1, ll = 0.7 + p.random() * 0.5;
-          const lx = nx + Math.sin(la) * ll, ly = ny + Math.cos(la) * ll;
-          segs.push({ x1: nx, y1: ny, x2: lx, y2: ly, d: 1, leaf: true });
-          segs.push({ x1: lx, y1: ly, x2: lx + Math.sin(la + 0.5) * ll * 0.5, y2: ly + Math.cos(la + 0.5) * ll * 0.5, d: 2, leaf: true });
-        }
-      }
-      x = nx; y = ny;
-    }
-    let maxY = 0, minX = 0, maxX = 0;
-    for (const s of segs) { maxY = Math.max(maxY, s.y1, s.y2); minX = Math.min(minX, s.x1, s.x2); maxX = Math.max(maxX, s.x1, s.x2); }
-    return { segs, maxD: 2, w: Math.max(1, maxX - minX), h: Math.max(1, maxY) };
+  const bbox = (segs: Seg[], md: number): Built => {
+    let minX = 0, maxX = 0, minY = 0, maxY = 0;
+    for (const s of segs) { minX = Math.min(minX, s.x1, s.x2); maxX = Math.max(maxX, s.x1, s.x2); minY = Math.min(minY, s.y1, s.y2); maxY = Math.max(maxY, s.y1, s.y2); }
+    return { segs, maxD: md, w: Math.max(1, maxX - minX), h: Math.max(1, maxY - minY) };
   };
 
+  // ---- recursive self-similar fern frond — the studio's signature form. A rachis
+  // of curving segments carries paired pinnae; each pinna is itself a smaller frond
+  // (2–3 levels of feathering) shrinking toward the curling tip. This is what gives
+  // the bipinnate "fern" look from the reference plate. ----
+  const buildFern = (): Built => {
+    const segs: Seg[] = [];
+    const sub = p.random() < 0.45 ? 3 : 2;                 // levels of feathering
+    const curl = (p.random() - 0.5) * 0.07;                // rachis curvature (fiddlehead at the extremes)
+    const pinAng = 0.42 + p.random() * 0.55;               // pinna divergence
+    const taper = 0.6 + p.random() * 0.18;                 // pinna length vs rachis
+    const asym = 0.82 + p.random() * 0.34;                 // left/right asymmetry
+    const spacing = Math.max(1, Math.round(1 + p.random() * 2)); // steps between pinnae
+    const CAP = 9000;
+    const frond = (x: number, y: number, a: number, len: number, level: number) => {
+      if (segs.length >= CAP || len < 0.5) return;
+      const steps = Math.max(5, Math.round(len * (level === sub ? 1.0 : 1.5)));
+      const seg = len / steps, d = sub - level;
+      let cx = x, cy = y, ca = a;
+      for (let i = 0; i < steps; i++) {
+        ca += curl * (1 + 0.8 * (i / steps)) + (p.noise(cx * 0.06, cy * 0.06, level + 1) - 0.5) * 0.045;
+        const nx = cx + Math.sin(ca) * seg, ny = cy + Math.cos(ca) * seg;
+        segs.push({ x1: cx, y1: cy, x2: nx, y2: ny, d, leaf: level === 0 });
+        const t = i / steps;
+        if (level > 0 && t > 0.05 && i % spacing === 0) {
+          const pl = len * taper * (1 - 0.82 * t);
+          if (pl > 0.5) {
+            frond(nx, ny, ca - pinAng, pl * asym, level - 1);
+            frond(nx, ny, ca + pinAng, pl, level - 1);
+          }
+        }
+        cx = nx; cy = ny;
+      }
+      if (level === 0) {                                   // terminal leaflet pair at the tip
+        for (const sgn of [-1, 1]) segs.push({ x1: cx, y1: cy, x2: cx + Math.sin(ca + sgn * 0.5) * seg * 1.2, y2: cy + Math.cos(ca + sgn * 0.5) * seg * 1.2, d, leaf: true });
+      }
+    };
+    frond(0, 0, (p.random() - 0.5) * 0.16, 10 + p.random() * 6, sub);
+    return bbox(segs, sub);
+  };
+
+  // ---- fractal tree — recursive 2/3-way branching with bud tips, the bare-branch
+  // and dense-canopy forms from the reference. ----
+  const buildTree = (): Built => {
+    const segs: Seg[] = [];
+    const ang = 0.3 + p.random() * 0.32, ratio = 0.7 + p.random() * 0.1;
+    const three = p.random() < 0.45, CAP = 9000;
+    let maxD = 0;
+    const branch = (x: number, y: number, a: number, len: number, d: number) => {
+      if (len < 0.4 || segs.length >= CAP) return;
+      if (d > maxD) maxD = d;
+      const nx = x + Math.sin(a) * len, ny = y + Math.cos(a) * len;
+      segs.push({ x1: x, y1: y, x2: nx, y2: ny, d, leaf: len < 1.1 });
+      const wob = (p.noise(x * 0.1, y * 0.1, d) - 0.5) * 0.34;
+      branch(nx, ny, a - ang + wob, len * ratio, d + 1);
+      branch(nx, ny, a + ang + wob, len * ratio, d + 1);
+      if (three) branch(nx, ny, a + wob * 0.6, len * ratio * 0.86, d + 1);
+    };
+    branch(0, 0, (p.random() - 0.5) * 0.12, 7 + p.random() * 3, 0);
+    return bbox(segs, Math.max(1, maxD));
+  };
+
+  // ---- Barnsley fern (IFS chaos game) — the canonical fractal fern, rendered as a
+  // fine stipple of points. ----
+  const buildBarnsley = (): Built => {
+    const segs: Seg[] = [];
+    const N = 7200;
+    let x = 0, y = 0;
+    for (let i = 0; i < N; i++) {
+      const r = p.random(); let nx: number, ny: number;
+      if (r < 0.01) { nx = 0; ny = 0.16 * y; }
+      else if (r < 0.86) { nx = 0.85 * x + 0.04 * y; ny = -0.04 * x + 0.85 * y + 1.6; }
+      else if (r < 0.93) { nx = 0.2 * x - 0.26 * y; ny = 0.23 * x + 0.22 * y + 1.6; }
+      else { nx = -0.15 * x + 0.28 * y; ny = 0.26 * x + 0.24 * y + 0.44; }
+      x = nx; y = ny;
+      if (i > 20) segs.push({ x1: x, y1: y, x2: x, y2: y, d: 2, leaf: true });  // round-capped dot
+    }
+    return bbox(segs, 2);
+  };
+
+  // Deepened Lindenmayer grammars (iter 6 → far denser than before).
   const FERNS = [
-    { axiom: "X", rules: { X: "F-[[X]+X]+F[+FX]-X", F: "FF" }, iter: 5, ang: 22 },
-    { axiom: "X", rules: { X: "F+[[X]-X]-F[-FX]+X", F: "FF" }, iter: 5, ang: 25 },
-    { axiom: "X", rules: { X: "F[-X][+X]F[-X]+FX", F: "FF" }, iter: 5, ang: 19 },   // bipinnate, dense
-    { axiom: "X", rules: { X: "FF[++X][+X][-X][--X]", F: "FF" }, iter: 4, ang: 16 }, // feathery rachis
-  ];
-  const BUSHES = [
-    { axiom: "F", rules: { F: "FF-[-F+F+F]+[+F-F-F]" }, iter: 4, ang: 24 },
-    { axiom: "F", rules: { F: "F[+FF][-FF]F[-F][+F]F" }, iter: 3, ang: 20 },
+    { axiom: "X", rules: { X: "F-[[X]+X]+F[+FX]-X", F: "FF" }, iter: 6, ang: 22 },
+    { axiom: "X", rules: { X: "F+[[X]-X]-F[-FX]+X", F: "FF" }, iter: 6, ang: 25 },
+    { axiom: "X", rules: { X: "F[-X][+X]F[-X]+FX", F: "FF" }, iter: 6, ang: 19 },    // bipinnate, dense
+    { axiom: "X", rules: { X: "FF[++X][+X][-X][--X]", F: "FF" }, iter: 5, ang: 16 }, // feathery rachis
   ];
 
   type Built = { segs: Seg[]; maxD: number; w: number; h: number };
+  // Fern-dominant population matching the reference plate: recursive fronds, fractal
+  // trees and the Barnsley fern carry it; deepened Lindenmayer ferns and the palm add
+  // variety. Caps are ~6× the old jungle so each specimen is far more intricate.
   const makeSpecies = (): Built => {
     const r = p.random();
-    if (r < 0.52) { const f = FERNS[Math.floor(p.random(FERNS.length))]; return lbuild(f.axiom, f.rules, f.iter, f.ang + p.random() * 6, 0.3, 1500); } // fern-heavy
-    if (r < 0.7) { const b = BUSHES[Math.floor(p.random(BUSHES.length))]; return lbuild(b.axiom, b.rules, b.iter, b.ang + p.random() * 6, 0.4, 1100); }
-    if (r < 0.87) return buildPalm();
-    return buildIvy();
+    if (r < 0.46) return buildFern();
+    if (r < 0.68) return buildTree();
+    if (r < 0.82) return buildBarnsley();
+    if (r < 0.95) { const f = FERNS[Math.floor(p.random(FERNS.length))]; return lbuild(f.axiom, f.rules, f.iter, f.ang + p.random() * 6, 0.28, 9000); }
+    return buildPalm();
   };
 
   interface Plant {
     segs: Seg[]; maxD: number; baseX: number; baseY: number; scale: number; flip: number;
     depth: number; h: number; tone: number; shown: number; grow: number; state: number; age: number; life: number;
-    alpha: number; phase: number; sway: number;
+    alpha: number; cache: Map<number, Path2D> | null;
   }
   const plants: Plant[] = [];
-  const MAXP = Math.round(gp(params, "plants", size > 360 ? 11 : 6));
+  const MAXP = Math.round(gp(params, "plants", size > 360 ? 7 : 4));
 
   const spawn = () => {
     const b = makeSpecies();
     const depth = p.random();                               // 0 far … 1 near
-    const baseScale = (size * (0.26 + depth * 0.42)) / b.h; // nearer = bigger, taller canopy
+    const baseScale = (size * (0.30 + depth * 0.5)) / b.h;  // nearer = bigger, taller specimen
     plants.push({
       segs: b.segs, maxD: b.maxD,
-      baseX: p.random(size * 0.04, size * 0.96),
-      baseY: size * (0.86 + depth * 0.13),                  // nearer plants sit lower (front)
+      baseX: p.random(size * 0.06, size * 0.94),
+      baseY: size * (0.9 + depth * 0.1),                    // nearer plants sit lower (front)
       scale: baseScale, flip: p.random() < 0.5 ? -1 : 1, h: b.h,
       depth, tone: 0.58 + depth * 0.42,
-      shown: 0, grow: Math.max(6, Math.ceil(b.segs.length / 70)),
-      state: 0, age: 0, life: 360 + p.random() * 420, alpha: 1,
-      phase: p.random(TAU), sway: 0.01 + p.random() * 0.02,
+      shown: 0, grow: Math.max(24, Math.ceil(b.segs.length / 80)),
+      state: 0, age: 0, life: 600 + p.random() * 700, alpha: 1, cache: null,
     });
     plants.sort((a, c) => a.depth - c.depth);               // back-to-front
   };
-  for (let i = 0; i < 5; i++) spawn();                      // seed a few immediately
+  for (let i = 0; i < 4; i++) spawn();                      // seed a few immediately
   let spawnAt = 14;
   let frame = 0;
-  let time = 0;
 
-  const drawPlant = (pl: Plant) => {
-    const n = Math.min(pl.shown, pl.segs.length);
-    const swayK = size * pl.sway;
-    const sw = Math.sin(time + pl.phase);
-    const k = pl.tone * pl.alpha;
-    const wfac = 0.55 + pl.depth * 1.05;
-    const ctx = p.drawingContext as CanvasRenderingContext2D;
-    ctx.lineCap = "round"; ctx.lineJoin = "round";
-    const sx = (gx: number, gy: number) => pl.baseX + gx * pl.scale * pl.flip + swayK * Math.pow(gy / pl.h, 1.5) * sw;
-    // Batch segments into one Path2D per (leaf, depth) bucket and stroke each bucket once
-    // — depth shading + round-capped additive volume at ~a few dozen stroke() calls per
-    // plant instead of thousands, so the jungle stays at framerate.
-    const buckets = new Map<number, Path2D>();
-    for (let i = 0; i < n; i++) {
+  // Geometry buckets (one Path2D per leaf/depth band), in screen space. Built once the
+  // plant is fully unfurled, then cached and re-stroked each frame at the current alpha
+  // — so a frame of detailed ferns is a few dozen stroke() calls, not tens of thousands.
+  const buildGeom = (pl: Plant, count: number) => {
+    const m = new Map<number, Path2D>();
+    for (let i = 0; i < count; i++) {
       const g = pl.segs[i];
       const key = (g.leaf ? 4096 : 0) + g.d;
-      let pa = buckets.get(key); if (!pa) { pa = new Path2D(); buckets.set(key, pa); }
-      pa.moveTo(sx(g.x1, g.y1), pl.baseY - g.y1 * pl.scale);
-      pa.lineTo(sx(g.x2, g.y2), pl.baseY - g.y2 * pl.scale);
+      let pa = m.get(key); if (!pa) { pa = new Path2D(); m.set(key, pa); }
+      pa.moveTo(pl.baseX + g.x1 * pl.scale * pl.flip, pl.baseY - g.y1 * pl.scale);
+      pa.lineTo(pl.baseX + g.x2 * pl.scale * pl.flip, pl.baseY - g.y2 * pl.scale);
     }
+    return m;
+  };
+
+  const drawPlant = (pl: Plant) => {
+    const k = pl.tone * pl.alpha;
+    const wfac = 0.5 + pl.depth * 0.9;
+    const ctx = p.drawingContext as CanvasRenderingContext2D;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    let buckets: Map<number, Path2D>;
+    if (pl.state >= 1) { if (!pl.cache) pl.cache = buildGeom(pl, pl.segs.length); buckets = pl.cache; }
+    else buckets = buildGeom(pl, Math.min(pl.shown, pl.segs.length));
     buckets.forEach((pa, key) => {
       const leaf = key >= 4096, d = key & 4095;
       const c = leaf ? leafTone : stemTone;
-      const ds = 0.74 + 0.26 * (1 - d / (pl.maxD + 1));    // gentle depth shade (kept bright)
-      ctx.strokeStyle = `rgba(${Math.min(255, c[0] * k * ds + 28) | 0},${Math.min(255, c[1] * k * ds + 28) | 0},${Math.min(255, c[2] * k * ds + 28) | 0},${((leaf ? 220 : 255) * pl.alpha) / 255})`;
-      ctx.lineWidth = Math.max(0.5, (leaf ? 0.85 : 2.4 * (1 - d / (pl.maxD + 1)) + 0.5) * wfac);
+      const ds = 0.72 + 0.28 * (1 - d / (pl.maxD + 1));
+      ctx.strokeStyle = `rgba(${Math.min(255, c[0] * k * ds + 26) | 0},${Math.min(255, c[1] * k * ds + 26) | 0},${Math.min(255, c[2] * k * ds + 26) | 0},${((leaf ? 200 : 255) * pl.alpha) / 255})`;
+      ctx.lineWidth = Math.max(0.45, (leaf ? 0.7 : 2.2 * (1 - d / (pl.maxD + 1)) + 0.45) * wfac);
       ctx.stroke(pa);
     });
   };
 
   return () => {
-    time += 0.045;
     frame++;
     p.background(8, 10, 9);
     if (frame > spawnAt && plants.length < MAXP) {          // staggered, continuous spawning
-      spawn(); spawnAt = frame + 28 + Math.floor(p.random() * 64);
+      spawn(); spawnAt = frame + 40 + Math.floor(p.random() * 90);
     }
     for (let i = plants.length - 1; i >= 0; i--) {
       const pl = plants[i];
       pl.age++;
       if (pl.state === 0) { pl.shown += pl.grow; if (pl.shown >= pl.segs.length) pl.state = 1; }
       else if (pl.state === 1 && pl.age > pl.life) pl.state = 2;
-      if (pl.state === 2) { pl.alpha -= 0.012; if (pl.alpha <= 0) { plants.splice(i, 1); continue; } }
+      if (pl.state === 2) { pl.alpha -= 0.01; if (pl.alpha <= 0) { plants.splice(i, 1); continue; } }
       drawPlant(pl);
     }
   };
@@ -1500,7 +1560,9 @@ const mycelium: Gen = (p, seed, size, params) => {
   //   coral  — relentless forking, fine and crowded          (very intricate)
   //   veil   — delicate high-count filigree web              (very intricate)
   const HABITS = ["colony", "frost", "bush", "cord", "coral", "veil"] as const;
-  const habit = HABITS[Math.floor(p.random() * HABITS.length)];
+  type Habit = (typeof HABITS)[number];
+  let habit: Habit = HABITS[Math.floor(p.random() * HABITS.length)];
+  const initialHabit = habit;
 
   // ── chaotic palette: 2…8 colours per seed, inherited down each hypha lineage.
   // Half the seeds roll fully-random hues (true chaos); half spread around a base
@@ -1550,7 +1612,7 @@ const mycelium: Gen = (p, seed, size, params) => {
 
   // habit parameters
   const cx0 = size / 2, cy0 = habit === "bush" ? size * 0.99 : size / 2;
-  const cfg = {
+  const CFG = {
     colony: { maxTurn: 0.26, Kchemo: 0.6, Kauto: 0.8, Kwander: 0.18, Kbias: 0.4, branch: 0.17, latFrac: 0.5, latAng: 0.9, fuseD: 1.4, fuseP: 0.78, wBase: 2.6, maxAge: 1100 },
     frost:  { maxTurn: 0.12, Kchemo: 0.4, Kauto: 0.55, Kwander: 0.10, Kbias: 0.7, branch: 0.20, latFrac: 0.82, latAng: 0.62, fuseD: 2.6, fuseP: 0.30, wBase: 2.2, maxAge: 1400 },
     bush:   { maxTurn: 0.20, Kchemo: 0.5, Kauto: 0.85, Kwander: 0.16, Kbias: 0.55, branch: 0.18, latFrac: 0.45, latAng: 1.0, fuseD: 1.6, fuseP: 0.55, wBase: 3.0, maxAge: 1300 },
@@ -1560,10 +1622,13 @@ const mycelium: Gen = (p, seed, size, params) => {
     coral:  { maxTurn: 0.30, Kchemo: 0.5, Kauto: 1.02, Kwander: 0.20, Kbias: 0.3, branch: 0.27, latFrac: 0.38, latAng: 1.12, fuseD: 1.3, fuseP: 0.62, wBase: 2.1, maxAge: 1250 },
     // veil: delicate, high tip-count filigree
     veil:   { maxTurn: 0.22, Kchemo: 0.46, Kauto: 0.72, Kwander: 0.24, Kbias: 0.36, branch: 0.30, latFrac: 0.7, latAng: 0.86, fuseD: 1.2, fuseP: 0.72, wBase: 1.6, maxAge: 1600 },
-  }[habit];
+  };
+  let cfg = CFG[habit];
+  // habits a new source may switch to mid-run (bush is origin-specific, so excluded)
+  const ROTATE: Habit[] = ["colony", "frost", "cord", "coral", "veil"];
 
   // denser, more intricate by default; the finest habits get the most tips
-  const intricate = habit === "coral" || habit === "veil" || habit === "cord";
+  const intricate = initialHabit === "coral" || initialHabit === "veil" || initialHabit === "cord";
   interface Tip { x: number; y: number; a: number; age: number; energy: number; depth: number; sb: number; ci: number; }
   let tips: Tip[] = [];
   const baseTips = size > 360 ? (intricate ? 1200 : 880) : (intricate ? 480 : 340);
@@ -1604,7 +1669,9 @@ const mycelium: Gen = (p, seed, size, params) => {
   const advance = () => {
     frame++;
     if (frame % 4 === 0) for (let y = 1; y < G - 1; y++) for (let x = 1; x < G - 1; x++) { const i = y * G + x; nut[i] += ((nut[i - 1] + nut[i + 1] + nut[i - G] + nut[i + G]) * 0.25 - nut[i]) * 0.1; }
-    for (let i = 0; i < G * G; i++) den[i] *= 0.997;
+    // Substrate slowly regrows and density slowly clears — so the colony never
+    // exhausts its world and keeps colonising, layering new growth over old.
+    for (let i = 0; i < G * G; i++) { den[i] *= 0.992; if (nut[i] < 0.92) nut[i] += 0.0011; }
 
     const next: Tip[] = [];
     for (const t of tips) {
@@ -1659,16 +1726,14 @@ const mycelium: Gen = (p, seed, size, params) => {
     }
     tips = next;
 
-    // Keep an advancing margin: new tips emerge at frontier cells (low-but-adjacent
-    // density, fresh substrate) pointing outward — the colony's growth zone. The target
-    // ramps with time so the colony expands and fills the frame, then turns over.
-    const target = Math.min(MAXT, 200 + frame * 2.2);
+    // Keep the advancing margin populated — new tips emerge at frontier cells
+    // (open, fed substrate). No ramp/cap on the target: growth is perpetual.
     let guard = 0;
-    while (tips.length < target && guard++ < 60) {
+    while (tips.length < MAXT && guard++ < 80) {
       let placed = false;
-      for (let tries = 0; tries < 12 && !placed; tries++) {
+      for (let tries = 0; tries < 14 && !placed; tries++) {
         const gx = (p.random() * G) | 0, gy = (p.random() * G) | 0, ix = gy * G + gx;
-        if (den[ix] > 0.12 && den[ix] < 2.8 && nut[ix] > 0.25) {
+        if (den[ix] > 0.1 && den[ix] < 2.8 && nut[ix] > 0.22) {
           const wx = (gx + .5) * cell, wy = (gy + .5) * cell, [bx, by] = bias(wx, wy);
           tips.push(newTip(wx, wy, Math.atan2(by, bx) + (p.random() - .5) * 0.9, 1, 75, colored ? (p.random() * palN) | 0 : 0));
           placed = true;
@@ -1676,22 +1741,37 @@ const mycelium: Gen = (p, seed, size, params) => {
       }
       if (!placed) break;
     }
-    // Mature colony → hold. A real mycelium colonises its substrate and stays; it
-    // does not blink out and restart. Once the network fills, retire the tips and
-    // let the structure persist (no auto-reseed — RANDOMISE is the only reset).
-    if (network.length >= NETCAP) tips = [];
+
+    // New colonies keep igniting at fresh sites, so the network never settles — it
+    // starts from new sources and positions and layers over what came before. Each
+    // burst seeds an outward fan and replenishes the substrate beneath it.
+    if (frame % 150 === 0 || tips.length < 20) {
+      // most bursts also shift the growth habit, so the morphology keeps evolving
+      if (p.random() < 0.6) { habit = ROTATE[(p.random() * ROTATE.length) | 0]; cfg = CFG[habit]; }
+      const sx0 = size * (0.1 + p.random() * 0.8), sy0 = size * (0.1 + p.random() * 0.8);
+      const ci0 = colored ? (p.random() * palN) | 0 : 0;
+      const n = 7 + (p.random() * 9 | 0), a0 = p.random() * TAU;
+      for (let i = 0; i < n; i++) tips.push(newTip(sx0, sy0, a0 + (i / n) * TAU + (p.random() - 0.5) * 0.5, 0, 100, ci0));
+      const r = (G * 0.18) | 0, cgx = clampC(sx0 / cell), cgy = clampC(sy0 / cell);
+      for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+        const gx = cgx + dx, gy = cgy + dy;
+        if (gx < 0 || gy < 0 || gx >= G || gy >= G || dx * dx + dy * dy >= r * r) continue;
+        const ix = gy * G + gx; nut[ix] = Math.min(1, nut[ix] + 0.5); den[ix] *= 0.4;
+      }
+    }
+
+    // Rolling buffer: once over the cap, shed the oldest growth so the colony grows
+    // perpetually without unbounded memory — old hyphae recede as new layers form.
+    if (network.length > NETCAP) network.splice(0, network.length - NETCAP);
   };
 
   // Steady render — no travelling pulses. The network is drawn at its laid-down
   // colour (lineage palette in colour mode, depth-keyed greyscale in mono), batched
-  // by (width, quantised colour) into a few stroke() calls. A dirty check skips the
-  // redraw entirely once growth has settled, so a finished colony costs ~nothing.
-  let lastLen = -1;
+  // by (width, quantised colour) into a few stroke() calls. Redrawn every frame —
+  // the colony is always growing and shedding, so the image always evolves.
   p.background(bg[0], bg[1], bg[2]);
   return () => {
     advance();                                       // grow → append to network
-    if (network.length === lastLen) return;          // settled — hold the image
-    lastLen = network.length;
 
     p.background(bg[0], bg[1], bg[2]);
     const ctx = p.drawingContext as CanvasRenderingContext2D;
