@@ -3,12 +3,15 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Homepage hero background — the Jones (2010) agent Physarum model running live
- * in "Monochrome Drift": ~65k agents leaving stark veins, white-on-black in dark
- * mode and inverted in light mode. RANDOMISE (the `hero-physarum-reseed` event)
- * spawns a fresh variant by perturbing the movement parameters while keeping the
- * monochrome palette. WebGL2-only; falls back to a quiet empty background.
+ * Homepage hero background — the Jones (2010) agent Physarum model running live.
+ * First paint is the studio default, "Monochrome Drift" (stark white veins on
+ * black; it stays dark regardless of site theme — the inverse reads poorly).
+ * RANDOMISE (the `hero-physarum-reseed` event) explores the FULL space: it draws
+ * a random curated scene — colours, sensing, deposition, everything — and jitters
+ * its movement for extra variation. WebGL2-only; falls back to an empty bg.
  */
+type P = Record<string, unknown>;
+
 export default function HeroPhysarum() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -16,43 +19,36 @@ export default function HeroPhysarum() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const RES = 2048; // high-res sim/display grid for crisp veins
+    const AGENTS = 1024; // agentTexW → ~1M agents for dense detail
+
     let eng: { render: () => void; dispose: () => void } | null = null;
     let raf = 0;
     let disposed = false;
-    let base: Record<string, unknown> = {};
-    let movement: Record<string, unknown> | null = null;
-
-    // The hero scene is always the dark monochrome look (stark white veins on
-    // black) — it reads better than the inverted version, so it does NOT follow
-    // the site theme.
-    const palette = () => ({ bg: "#000000", lo: "#3a3a3a", hi: "#ffffff" });
+    let scenes: P[] = [];
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
     const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
 
-    const newMovement = () => ({
-      sensorAngle: rand(14, 34),
-      sensorDist: rand(8, 22),
-      turnSpeed: rand(14, 40),
-      stepSize: rand(1.1, 2.0),
-      deposit: rand(0.06, 0.12),
-      decay: rand(0.86, 0.94),
-      diffuse: Math.random() < 0.5 ? 0 : rand(0, 0.32),
-      stepsPerFrame: 2 + (Math.random() * 2 | 0),
-      intensity: rand(2.4, 3.4),
-      gamma: rand(0.28, 0.5),
+    // full-space variation layered on top of a curated scene's own palette/params
+    const jitter = (p: P): P => ({
+      ...p,
+      sensorAngle: rand(12, 38),
+      sensorDist: rand(7, 22),
+      turnSpeed: rand(12, 42),
+      stepSize: rand(1.0, 2.0),
+      deposit: rand(0.05, 0.13),
+      decay: rand(0.85, 0.95),
+      diffuse: Math.random() < 0.45 ? 0 : rand(0, 0.4),
+      gamma: rand(0.28, 0.55),
       spawn: pick(["random", "ring", "center"] as const),
     });
 
-    const buildParams = (mv: Record<string, unknown> | null) => ({
-      ...base,
-      ...(mv || {}),
-      ...palette(),
-      agentTexW: 512, // ~262k agents — denser, higher-detail veins
-      species: 1,
-      avoid: 0,
+    const buildParams = (p: P): P => ({
+      ...p,
+      agentTexW: AGENTS,
+      stepsPerFrame: Math.min(Number(p.stepsPerFrame) || 2, 2),
       mouseFood: 0,
-      displayMode: "palette",
     });
 
     let Engine: new (c: HTMLCanvasElement, res: number, p: unknown) => {
@@ -60,14 +56,14 @@ export default function HeroPhysarum() {
       dispose: () => void;
     };
 
-    const build = (mv: Record<string, unknown> | null) => {
+    const build = (p: P) => {
       try {
         eng?.dispose();
       } catch {
         /* noop */
       }
       try {
-        eng = new Engine(canvas, 1024, buildParams(mv)); // higher-res sim grid
+        eng = new Engine(canvas, RES, buildParams(p));
       } catch {
         eng = null; // WebGL2 unavailable
       }
@@ -81,9 +77,10 @@ export default function HeroPhysarum() {
       .then(([{ Physarum }, { VERSIONS, HERO_VERSION_ID }]) => {
         if (disposed) return;
         Engine = Physarum as typeof Engine;
+        // every 2D scene is fair game for RANDOMISE (colours + full params)
+        scenes = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => v.params as unknown as P);
         const hero = VERSIONS.find((v) => v.id === HERO_VERSION_ID) || VERSIONS[0];
-        base = { ...(hero.params as unknown as Record<string, unknown>) };
-        build(null); // canonical Monochrome Drift on first paint
+        build(hero.params as unknown as P); // canonical Monochrome Drift on first paint
 
         if (reduce) {
           for (let k = 0; k < 90 && eng; k++) eng.render();
@@ -100,9 +97,8 @@ export default function HeroPhysarum() {
       });
 
     const onReseed = () => {
-      if (!Engine) return;
-      movement = newMovement();
-      build(movement);
+      if (!Engine || !scenes.length) return;
+      build(jitter(pick(scenes)));
     };
     window.addEventListener("hero-physarum-reseed", onReseed);
 
