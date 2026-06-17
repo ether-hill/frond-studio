@@ -4,9 +4,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { NAV_LINKS } from "@/lib/site";
 import Wordmark from "./Wordmark";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Nav() {
   const navRef = useRef<HTMLElement>(null);
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Scroll-direction show/hide with a few px hysteresis.
@@ -27,17 +30,25 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Body scroll lock while the mobile menu is open.
+  // Body scroll lock + focus management + Escape while the mobile menu is open.
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setMenuOpen(false);
+      };
+      document.addEventListener("keydown", onKey);
+      menuRef.current?.querySelector<HTMLElement>("a,button")?.focus();
+      return () => {
+        document.removeEventListener("keydown", onKey);
+        document.body.style.overflow = "";
+        burgerRef.current?.focus();
+      };
+    }
+    document.body.style.overflow = "";
   }, [menuOpen]);
 
-  const linkStyle: React.CSSProperties = {
-    fontFamily: "var(--font-mono)",
-  };
+  const labelStyle: React.CSSProperties = { fontFamily: "var(--font-mono)" };
 
   return (
     <>
@@ -55,70 +66,69 @@ export default function Nav() {
         >
           <Wordmark />
 
-          <nav
-            className="nav-links"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 36,
-              ...linkStyle,
-              fontSize: 11,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-              color: "var(--fg-dim)",
-            }}
-          >
-            {NAV_LINKS.map((l) => (
-              <Link key={l.href} className="linku" href={l.href}>
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-
-          <button
-            className="nav-burger"
-            onClick={() => setMenuOpen(true)}
-            aria-label="Open menu"
-            style={{
-              alignItems: "center",
-              gap: 9,
-              border: "1px solid var(--line)",
-              background: "transparent",
-              color: "var(--fg)",
-              borderRadius: 999,
-              padding: "10px 17px",
-              cursor: "pointer",
-              ...linkStyle,
-              fontSize: 11,
-              fontWeight: 500,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
-            }}
-          >
-            Menu
-          </button>
-
-          <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Link
-              href="/contact"
-              className="pill pill-ghost"
+          <div style={{ display: "flex", alignItems: "center", gap: "clamp(18px,2.4vw,40px)" }}>
+            <nav
+              className="nav-links"
+              aria-label="Primary"
               style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 36,
+                ...labelStyle,
                 fontSize: 11,
-                letterSpacing: "0.14em",
+                letterSpacing: "0.16em",
                 textTransform: "uppercase",
-                padding: "10px 18px",
+                color: "var(--fg-dim)",
               }}
             >
-              Message us
-            </Link>
+              {NAV_LINKS.map((l) => (
+                <Link key={l.href} className="linku" href={l.href}>
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
+
+            <ThemeToggle />
+
+            <button
+              ref={burgerRef}
+              className="nav-burger"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+              style={{
+                alignItems: "center",
+                gap: 9,
+                border: "1px solid var(--line)",
+                background: "transparent",
+                color: "var(--fg)",
+                borderRadius: 999,
+                padding: "10px 17px",
+                cursor: "pointer",
+                ...labelStyle,
+                fontSize: 11,
+                fontWeight: 500,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+              }}
+            >
+              Menu
+            </button>
           </div>
         </div>
       </header>
 
       {/* Mobile menu */}
       <div
+        ref={menuRef}
+        id="mobile-menu"
         className="m-menu"
         data-open={menuOpen}
+        aria-hidden={!menuOpen}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Site menu"
         style={{
           position: "fixed",
           inset: 0,
@@ -141,7 +151,7 @@ export default function Nav() {
               borderRadius: 999,
               padding: "10px 18px",
               cursor: "pointer",
-              ...linkStyle,
+              ...labelStyle,
               fontSize: 11,
               fontWeight: 500,
               letterSpacing: "0.16em",
@@ -152,18 +162,22 @@ export default function Nav() {
           </button>
         </div>
 
-        <nav style={{ margin: "auto 0", display: "flex", flexDirection: "column", gap: 2 }}>
+        <nav
+          aria-label="Site"
+          style={{ margin: "auto 0", display: "flex", flexDirection: "column", gap: 2 }}
+        >
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
               className="mlink"
               href={l.href}
               onClick={() => setMenuOpen(false)}
+              tabIndex={menuOpen ? 0 : -1}
               style={{
-                fontFamily: "var(--font-display), serif",
+                fontFamily: "var(--font-display), sans-serif",
                 fontSize: "clamp(44px,15vw,76px)",
-                fontWeight: 500,
-                letterSpacing: "-0.022em",
+                fontWeight: 600,
+                letterSpacing: "-0.03em",
                 lineHeight: 1.16,
               }}
             >
@@ -186,6 +200,7 @@ export default function Nav() {
           <Link
             href="/contact"
             onClick={() => setMenuOpen(false)}
+            tabIndex={menuOpen ? 0 : -1}
             className="pill pill-ghost"
             style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", padding: "12px 22px" }}
           >

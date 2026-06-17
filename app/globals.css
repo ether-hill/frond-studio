@@ -5,13 +5,14 @@
   --bg-2: #16130f;
   --fg: #f1ede5;
   --fg-dim: #a39d92;
-  --fg-faint: #6a655c;
+  --fg-faint: #8a8479;
   --line: rgba(241, 237, 229, 0.13);
   --line-2: rgba(241, 237, 229, 0.06);
   --accent: #d9c9b0;
   --accent-2: #ecdfca;
   --nav: rgba(11, 10, 8, 0.72);
   --media: #1a1610;
+  --algo-lw: 241, 237, 229;
 }
 
 :root {
@@ -27,13 +28,14 @@
   --bg-2: #e3ddce;
   --fg: #171410;
   --fg-dim: #5b554b;
-  --fg-faint: #938c80;
+  --fg-faint: #67625a;
   --line: rgba(23, 20, 16, 0.16);
   --line-2: rgba(23, 20, 16, 0.07);
-  --accent: #8c6f49;
+  --accent: #7a5f33;
   --accent-2: #6f5734;
   --nav: rgba(243, 239, 230, 0.72);
   --media: #ddd6c5;
+  --algo-lw: 23, 20, 16;
 }
 
 :root {
@@ -91,6 +93,36 @@ button {
   transition: background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
     border-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
     color 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Keyboard focus (visible only for keyboard users) ───── */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ── Theme toggle ───────────────────────────── */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+.theme-toggle:hover {
+  border-color: var(--fg-dim);
+  background: var(--bg-2);
 }
 
 /* ── Reveal utilities (GSAP-driven) ─────────────────────
@@ -457,19 +489,19 @@ button {
 }
 
 /* ── Algorithms (ported generative toolbox) ──────────────────────────────
-   Scoped token bridge: the engine markup uses --bg / --fg2..4 / --lw /
-   --accent-bg/-fg. We pin them to Frond's dark palette so the immersive
-   "screen" reads consistently in either site theme. */
+   Token bridge: the engine markup uses --bg / --fg2..4 / --lw / --accent-bg/-fg.
+   We map them to Frond's theme tokens so the page chrome inverts with the site;
+   the hero canvas keeps its own black screen (the generative art is white-on-black). */
 .algo-root {
-  --bg: #100e0b;
-  --fg2: #a39d92;
-  --fg3: #8a847a;
-  --fg4: #6a655c;
-  --lw: 241, 237, 229;
-  --accent-bg: #d9c9b0;
-  --accent-fg: #0b0a08;
-  color: #f1ede5;
-  background: #0b0a08;
+  --bg: var(--bg-1);
+  --fg2: var(--fg-dim);
+  --fg3: color-mix(in srgb, var(--fg-dim) 80%, var(--fg-faint));
+  --fg4: var(--fg-faint);
+  --lw: var(--algo-lw);
+  --accent-bg: var(--accent-2);
+  --accent-fg: var(--bg-0);
+  color: var(--fg);
+  background: var(--bg-0);
 }
 .algo-root .idx-ghost:hover {
   color: #f1ede5 !important;

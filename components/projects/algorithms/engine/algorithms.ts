@@ -369,11 +369,11 @@ function renderIndex() {
   indexEl.innerHTML = DATA.map((d, i) => {
     if (i === sel) {
       return `<button data-sel="${i}" style="display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:10px 11px;background:var(--accent-bg);color:var(--accent-fg);border:none;border-radius:3px;cursor:pointer;font-family:${HELV}">` +
-        `<span style="font-family:ui-monospace,monospace;font-size:9.5px;opacity:0.55">${d.i}</span>` +
+        `<span style="font-family:ui-monospace,monospace;font-size:9.5px;opacity:0.9">${d.i}</span>` +
         `<span style="font-weight:600;font-size:12.5px;letter-spacing:-0.01em">${esc(d.name)}</span></button>`;
     }
     return `<button class="idx-ghost" data-sel="${i}" style="display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:10px 11px;background:transparent;color:var(--fg2);border:none;border-bottom:1px solid rgba(var(--lw),0.07);cursor:pointer;font-family:${HELV};transition:color .2s,background .2s">` +
-      `<span style="font-family:ui-monospace,monospace;font-size:9.5px;color:#666">${d.i}</span>` +
+      `<span style="font-family:ui-monospace,monospace;font-size:9.5px;color:var(--fg4)">${d.i}</span>` +
       `<span style="font-weight:500;font-size:12.5px;letter-spacing:-0.01em">${esc(d.name)}</span></button>`;
   }).join("");
   indexEl.querySelectorAll<HTMLButtonElement>("button[data-sel]").forEach((b) => {
@@ -393,7 +393,7 @@ function renderMain() {
         `<div style="position:absolute;left:14px;bottom:14px;display:flex;gap:8px">` +
           `<button class="ghost-btn" data-act="reseed" style="padding:9px 14px;background:rgba(12,12,12,0.62);border:1px solid rgba(255,255,255,0.2);color:#ededed;border-radius:3px;font-size:10px;letter-spacing:0.14em;cursor:pointer;backdrop-filter:blur(8px)">RANDOMISE</button>` +
         `</div>` +
-        `<div id="heroSeed" style="position:absolute;right:14px;bottom:14px;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:0.12em;color:rgba(255,255,255,0.45)"></div>` +
+        `<div id="heroSeed" style="position:absolute;right:14px;bottom:14px;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:0.12em;color:rgba(255,255,255,0.7)"></div>` +
       `</div>` +
     `</div>`;
 
