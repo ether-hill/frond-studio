@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import RevealRoot from "@/components/RevealRoot";
 import AlgorithmsApp from "@/components/projects/algorithms/AlgorithmsApp";
 
 export const metadata: Metadata = {
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function AlgorithmsPage() {
-  return <AlgorithmsApp />;
+  return (
+    <RevealRoot>
+      <AlgorithmsApp />
+    </RevealRoot>
+  );
 }

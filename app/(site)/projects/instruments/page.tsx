@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import RevealRoot from "@/components/RevealRoot";
 import InstrumentMount from "@/components/projects/instruments/InstrumentMount";
 
 export const metadata: Metadata = {
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function InstrumentsHubPage() {
-  return <InstrumentMount kind="hub" />;
+  return (
+    <RevealRoot>
+      <InstrumentMount kind="hub" />
+    </RevealRoot>
+  );
 }

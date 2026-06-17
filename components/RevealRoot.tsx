@@ -114,7 +114,7 @@ export default function RevealRoot({ children }: { children: React.ReactNode }) 
               }
             );
           });
-        }, rootRef);
+        }, document.body);  // body-scoped so the shared Footer (rendered outside this wrapper) reveals too
 
         // Re-measure once fonts/images settle.
         ScrollTrigger.refresh();

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import RevealRoot from "@/components/RevealRoot";
 import InstrumentMount, { type InstrumentKind } from "@/components/projects/instruments/InstrumentMount";
 
 const INSTRUMENTS: Record<string, { title: string; desc: string }> = {
@@ -22,5 +23,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function InstrumentPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   if (!INSTRUMENTS[slug]) notFound();
-  return <InstrumentMount kind={slug as InstrumentKind} />;
+  return (
+    <RevealRoot>
+      <InstrumentMount kind={slug as InstrumentKind} />
+    </RevealRoot>
+  );
 }

@@ -325,6 +325,18 @@ let heroSeed = 0;
 let heroParams: Params | undefined; // current overrides (only Physarum's default sets any)
 const instances: any[] = []; // live p5 instances for the current selection
 
+// Mycelium presets — surfaced as a custom chooser under the title when Mycelium is
+// selected. "wild" is the default emergent behaviour; the rest pin a fixed look
+// (keys match PRESETS in the mycelium generator). `color` opts the run into palette.
+const MYC_PRESETS: { key: string; label: string; color: boolean }[] = [
+  { key: "wild", label: "Wild — emergent", color: false },
+  { key: "reticulum", label: "Reticulum — foam mat", color: false },
+  { key: "filigree", label: "Filigree — fine web", color: false },
+  { key: "cords", label: "Cords — rhizomorph", color: false },
+  { key: "bloom", label: "Bloom — colour colony", color: true },
+];
+let mycPreset = "wild";
+
 const baseSeed = (i: number) => 1000 + i * 131 + 7;
 
 function teardown() {
@@ -360,7 +372,16 @@ function buildHero() {
     return;
   }
 
-  const inst = renderArt(host, DATA[sel].gen, heroSeed, HERO_PX, 30, heroParams);
+  // Mycelium derives its params from the chosen preset; everything else uses heroParams.
+  let useParams = heroParams;
+  if (DATA[sel].gen === "mycelium") {
+    const mp = MYC_PRESETS.find((m) => m.key === mycPreset) || MYC_PRESETS[0];
+    const mpParams: Params = {};
+    if (mp.key !== "wild") mpParams.preset = mp.key;
+    if (mp.color) mpParams.color = 1;
+    useParams = mpParams;
+  }
+  const inst = renderArt(host, DATA[sel].gen, heroSeed, HERO_PX, 30, useParams);
   if (inst) instances.push(inst);
   if (lbl) lbl.textContent = `seed ${heroSeed}`;
 }
@@ -390,7 +411,7 @@ function renderMain() {
       `<div style="position:relative;aspect-ratio:1/1;max-height:760px;background:#000">` +
         `<div id="heroCanvas" style="position:absolute;inset:0"></div>` +
         `<div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 86% 86% at 50% 50%,transparent 58%,rgba(0,0,0,0.5) 100%)"></div>` +
-        `<div style="position:absolute;left:14px;bottom:14px;display:flex;gap:8px">` +
+        `<div style="position:absolute;right:14px;top:14px;display:flex;gap:8px">` +
           `<button class="ghost-btn" data-act="reseed" style="padding:9px 14px;background:rgba(12,12,12,0.62);border:1px solid rgba(255,255,255,0.2);color:#ededed;border-radius:3px;font-size:10px;letter-spacing:0.14em;cursor:pointer;backdrop-filter:blur(8px)">RANDOMISE</button>` +
         `</div>` +
         `<div id="heroSeed" style="position:absolute;right:14px;bottom:14px;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:0.12em;color:rgba(255,255,255,0.7)"></div>` +
@@ -404,6 +425,7 @@ function renderMain() {
       `<h2 style="margin:0;font-weight:700;font-size:clamp(26px,3.2vw,42px);line-height:1.02;letter-spacing:-0.02em">${esc(a.name)}</h2>` +
     `</div>` +
     `<div style="font-family:${MONO};font-size:11.5px;letter-spacing:0.16em;color:var(--fg3);margin-top:12px">${esc(a.sub)}</div>` +
+    (a.gen === "mycelium" ? `<div id="mycPresetSlot" style="margin-top:22px"></div>` : "") +
     `<div style="display:flex;flex-direction:column;gap:16px;margin-top:24px">` +
       a.paras.map((p) => `<p style="margin:0;font-size:clamp(14px,1.05vw,15.5px);line-height:1.65;color:var(--fg2)">${esc(p)}</p>`).join("") +
     `</div>` +
@@ -432,12 +454,79 @@ function renderMain() {
 
   heroEl.querySelector('[data-act="reseed"]')?.addEventListener("click", () => {
     heroSeed = Math.floor(Math.random() * 999900) + 1;
-    heroParams = { color: 1 }; // RANDOMISE opts into colour; the generator rolls a palette from the seed
+    // RANDOMISE opts into colour; for mycelium the preset controls the look instead.
+    if (DATA[sel].gen !== "mycelium") heroParams = { color: 1 };
     teardown();
     buildHero();
   });
 
+  // Mycelium gets a custom preset chooser under its title.
+  if (DATA[sel].gen === "mycelium") {
+    const slot = textEl.querySelector<HTMLElement>("#mycPresetSlot");
+    if (slot) buildPresetDropdown(slot);
+  }
+
   buildHero();
+}
+
+// Custom preset dropdown (not a native <select>) — styled to the page tokens.
+function buildPresetDropdown(slot: HTMLElement) {
+  const cur = () => MYC_PRESETS.find((m) => m.key === mycPreset) || MYC_PRESETS[0];
+
+  const cap = document.createElement("div");
+  cap.textContent = "PRESET";
+  cap.style.cssText = `font-family:${MONO};font-size:10px;letter-spacing:0.2em;color:var(--fg4);margin-bottom:8px`;
+
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "position:relative;max-width:320px";
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.setAttribute("aria-haspopup", "listbox");
+  btn.style.cssText = `display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:11px 14px;background:transparent;border:1px solid rgba(var(--lw),0.26);border-radius:5px;color:var(--fg);font-family:${MONO};font-size:11px;letter-spacing:0.1em;cursor:pointer`;
+  const lab = document.createElement("span");
+  const caret = document.createElement("span");
+  caret.textContent = "▾";
+  caret.style.cssText = "opacity:0.6;transition:transform .2s";
+  btn.append(lab, caret);
+  const setLabel = () => { lab.textContent = cur().label.toUpperCase(); };
+  setLabel();
+
+  const list = document.createElement("div");
+  list.setAttribute("role", "listbox");
+  list.style.cssText = `position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:6;background:var(--bg);border:1px solid rgba(var(--lw),0.26);border-radius:5px;overflow:hidden;display:none;box-shadow:0 18px 44px rgba(0,0,0,0.5)`;
+
+  const opts: HTMLButtonElement[] = MYC_PRESETS.map((m) => {
+    const o = document.createElement("button");
+    o.type = "button";
+    o.setAttribute("role", "option");
+    o.textContent = m.label.toUpperCase();
+    o.style.cssText = `display:block;width:100%;text-align:left;padding:10px 14px;background:transparent;border:none;border-bottom:1px solid rgba(var(--lw),0.08);color:${m.key === mycPreset ? "var(--fg)" : "var(--fg3)"};font-family:${MONO};font-size:11px;letter-spacing:0.06em;cursor:pointer`;
+    o.addEventListener("mouseenter", () => { o.style.background = "rgba(var(--lw),0.06)"; });
+    o.addEventListener("mouseleave", () => { o.style.background = "transparent"; });
+    o.addEventListener("click", () => {
+      close();
+      if (m.key === mycPreset) return;
+      mycPreset = m.key;
+      setLabel();
+      opts.forEach((b, j) => { b.style.color = MYC_PRESETS[j].key === mycPreset ? "var(--fg)" : "var(--fg3)"; });
+      heroSeed = baseSeed(sel);
+      teardown();
+      buildHero();
+    });
+    list.append(o);
+    return o;
+  });
+
+  let open = false;
+  const onDoc = (e: MouseEvent) => { if (!wrap.contains(e.target as Node)) close(); };
+  function openList() { open = true; list.style.display = "block"; caret.style.transform = "rotate(180deg)"; document.addEventListener("click", onDoc); }
+  function close() { if (!open) return; open = false; list.style.display = "none"; caret.style.transform = "none"; document.removeEventListener("click", onDoc); }
+  btn.addEventListener("click", (e) => { e.stopPropagation(); open ? close() : openList(); });
+
+  wrap.append(btn, list);
+  slot.append(cap, wrap);
+  instances.push({ remove() { close(); } });   // clean the doc listener on teardown
 }
 
 function select(i: number) {

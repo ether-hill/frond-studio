@@ -1627,8 +1627,28 @@ const mycelium: Gen = (p, seed, size, params) => {
   // habits a new source may switch to mid-run (bush is origin-specific, so excluded)
   const ROTATE: Habit[] = ["colony", "frost", "cord", "coral", "veil"];
 
+  // Named presets from the page's chooser. A preset fixes the config (overriding
+  // the random habit) and freezes mid-run rotation, for a repeatable look.
+  //  • reticulum — dense "foam" mat: heavy anastomosis closes cells, thick bright
+  //    cords ring fine inner fuzz, low radial bias so it fills the frame evenly.
+  type CfgT = typeof CFG.colony;
+  const PRESETS: Record<string, Partial<CfgT> & { habit: Habit }> = {
+    reticulum: { habit: "coral", maxTurn: 0.36, Kchemo: 0.5, Kauto: 1.18, Kwander: 0.27, Kbias: 0.1, branch: 0.33, latFrac: 0.62, latAng: 1.0, fuseD: 1.0, fuseP: 0.93, wBase: 2.9, maxAge: 1500 },
+    filigree:  { habit: "veil", maxTurn: 0.24, Kchemo: 0.46, Kauto: 0.72, Kwander: 0.26, Kbias: 0.3, branch: 0.30, latFrac: 0.72, latAng: 0.86, fuseD: 1.25, fuseP: 0.55, wBase: 1.5, maxAge: 1600 },
+    cords:     { habit: "cord", maxTurn: 0.16, Kchemo: 0.64, Kauto: 0.95, Kwander: 0.1, Kbias: 0.5, branch: 0.22, latFrac: 0.82, latAng: 0.7, fuseD: 1.8, fuseP: 0.45, wBase: 3.8, maxAge: 1600 },
+    bloom:     { habit: "colony", maxTurn: 0.26, Kbias: 0.45 },
+  };
+  const presetKey = params && typeof (params as Record<string, unknown>).preset === "string"
+    ? String((params as Record<string, unknown>).preset) : "";
+  const presetActive = Object.prototype.hasOwnProperty.call(PRESETS, presetKey);
+  if (presetActive) {
+    const { habit: ph, ...over } = PRESETS[presetKey];
+    habit = ph;
+    cfg = { ...CFG[habit], ...over };
+  }
+
   // denser, more intricate by default; the finest habits get the most tips
-  const intricate = initialHabit === "coral" || initialHabit === "veil" || initialHabit === "cord";
+  const intricate = habit === "coral" || habit === "veil" || habit === "cord";
   interface Tip { x: number; y: number; a: number; age: number; energy: number; depth: number; sb: number; ci: number; }
   let tips: Tip[] = [];
   const baseTips = size > 360 ? (intricate ? 1200 : 880) : (intricate ? 480 : 340);
@@ -1748,7 +1768,8 @@ const mycelium: Gen = (p, seed, size, params) => {
     // burst seeds an outward fan and replenishes the substrate beneath it.
     if (frame % 150 === 0 || tips.length < 20) {
       // most bursts also shift the growth habit, so the morphology keeps evolving
-      if (p.random() < 0.6) { habit = ROTATE[(p.random() * ROTATE.length) | 0]; cfg = CFG[habit]; }
+      // (frozen when a preset is active, to keep that look consistent)
+      if (!presetActive && p.random() < 0.6) { habit = ROTATE[(p.random() * ROTATE.length) | 0]; cfg = CFG[habit]; }
       const sx0 = size * (0.1 + p.random() * 0.8), sy0 = size * (0.1 + p.random() * 0.8);
       const ci0 = colored ? (p.random() * palN) | 0 : 0;
       const n = 7 + (p.random() * 9 | 0), a0 = p.random() * TAU;
