@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-export type InstrumentKind = "hub" | "juno-106" | "space-echo" | "theremin";
+export type InstrumentKind = "hub" | "juno-106" | "space-echo" | "theremin" | "biome";
 
 /**
  * Mounts a Web-Audio instrument (or the rack hub) into a container, ported from
@@ -27,6 +27,8 @@ export default function InstrumentMount({ kind }: { kind: InstrumentKind }) {
             ? await import("./engine/instruments/juno106")
             : kind === "space-echo"
             ? await import("./engine/instruments/spaceEcho")
+            : kind === "biome"
+            ? await import("./engine/instruments/biome")
             : await import("./engine/instruments/theremin");
         if (!cancelled && ref.current) mod.mount(ref.current);
       } catch (err) {

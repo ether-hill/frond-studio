@@ -40,7 +40,7 @@ function injectCss(): void {
   cssDone = true;
   const s = document.createElement("style");
   s.textContent = `
-.inst-stage{max-width:1180px;margin:0 auto;padding:0 var(--gutter) clamp(64px,8vw,110px)}
+.inst-stage{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter) clamp(64px,8vw,110px)}
 .inst-panel{border:1px solid rgba(var(--lw),0.13);border-radius:8px;background:var(--panel);padding:clamp(18px,2.4vw,28px)}
 .inst-cap{font-family:${MONO};font-size:10px;letter-spacing:0.22em;color:var(--fg4);margin:0 0 18px}
 .inst-ctl{display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -71,8 +71,10 @@ function injectCss(): void {
 .inst-bkey{position:absolute;top:0;width:5.5%;height:62%;transform:translateX(-50%);border:1px solid rgba(var(--lw),0.4);border-radius:0 0 3px 3px;background:linear-gradient(180deg,#101010,#272727);cursor:pointer;z-index:2}
 :root[data-theme=light] .inst-bkey{background:linear-gradient(180deg,#3a362d,#1d1b15)}
 .inst-bkey[data-down="1"]{background:var(--fg3)}
-.inst-link{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--fg);font-family:${MONO};font-size:11px;letter-spacing:0.14em;padding:11px 16px;border:1px solid rgba(var(--lw),0.26);border-radius:4px;transition:background .2s,color .2s}
+.inst-link{display:inline-flex;align-items:center;gap:8px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;text-decoration:none;color:var(--fg);font-family:${MONO};font-size:11px;letter-spacing:0.14em;padding:11px 16px;border:1px solid rgba(var(--lw),0.26);border-radius:4px;transition:background .2s,color .2s}
 .inst-link:hover{background:var(--fg);color:var(--bg)}
+.inst-link[data-on="1"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.inst-link:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
 @media (prefers-reduced-motion: reduce){.inst-power[data-on="1"] .inst-dot{animation:none}}
 `;
   document.head.appendChild(s);
@@ -98,9 +100,9 @@ export function instrumentPage(root: HTMLElement, opts: {
 
   const hero = document.createElement("section");
   hero.style.cssText =
-    "padding:clamp(40px,6vw,72px) var(--gutter) clamp(28px,4vw,48px);border-bottom:1px solid rgba(var(--lw),0.1)";
+    "padding:var(--pad-top) 0 clamp(28px,4vw,48px);border-bottom:1px solid rgba(var(--lw),0.1)";
   hero.innerHTML =
-    `<div style="max-width:1180px;margin:0 auto">` +
+    `<div style="max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)">` +
       `<a href="/projects/instruments" class="inst-link" style="margin-bottom:clamp(20px,3vw,30px)">← THE RACK</a>` +
       `<div style="font-family:${MONO};font-size:11px;letter-spacing:0.26em;color:var(--fg4);margin:clamp(20px,3vw,30px) 0 16px">${opts.kicker}</div>` +
       `<h1 style="margin:0;font-weight:700;font-size:clamp(36px,6.5vw,86px);line-height:0.95;letter-spacing:-0.03em;max-width:16ch">${opts.title}</h1>` +
@@ -115,7 +117,7 @@ export function instrumentPage(root: HTMLElement, opts: {
 
   return {
     root, stage,
-    finalize() { /* Frond's layout provides the footer */ },
+    finalize() { /* Frond layout provides the footer */ },
   };
 }
 
