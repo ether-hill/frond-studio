@@ -465,12 +465,12 @@ button {
 }
 @media (max-width: 560px) {
   .page-gutter {
-    padding-left: 24px !important;
-    padding-right: 24px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
   }
   .hero-inner {
-    padding-left: 24px !important;
-    padding-right: 24px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
     padding-bottom: 84px !important;
   }
   .vwork-grid {

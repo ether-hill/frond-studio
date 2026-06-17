@@ -36,7 +36,7 @@ export default function AlgorithmsApp() {
     >
       <section
         style={{
-          padding: "var(--pad-top) var(--gutter) clamp(36px,5vw,52px)",
+          padding: "var(--pad-top) 0 clamp(36px,5vw,52px)",
           borderBottom: "1px solid rgba(var(--lw),0.1)",
         }}
       >
@@ -44,6 +44,7 @@ export default function AlgorithmsApp() {
           style={{
             maxWidth: "var(--maxw)",
             margin: "0 auto",
+            padding: "0 var(--gutter)",
             display: "flex",
             flexWrap: "wrap",
             alignItems: "flex-end",
@@ -74,8 +75,8 @@ export default function AlgorithmsApp() {
         </div>
       </section>
 
-      <section style={{ padding: "clamp(34px,5vw,56px) var(--gutter) var(--pad-bottom)" }}>
-        <div style={{ maxWidth: "var(--maxw)", margin: "0 auto" }}>
+      <section style={{ padding: "clamp(34px,5vw,56px) 0 var(--pad-bottom)" }}>
+        <div style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter)" }}>
           <div
             id="algoGrid"
             style={{
