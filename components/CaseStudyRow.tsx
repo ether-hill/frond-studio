@@ -1,0 +1,108 @@
+import Link from "next/link";
+import AutoVideo from "./AutoVideo";
+import MediaPlaceholder from "./MediaPlaceholder";
+import type { ProjectCard } from "@/sanity/lib/queries";
+
+export default function CaseStudyRow({
+  project,
+  flip,
+}: {
+  project: ProjectCard;
+  flip: boolean;
+}) {
+  const href = `/projects/${project.slug}`;
+  const points = project.keyPoints || [];
+  const scope = project.services || [];
+
+  return (
+    <article className="cs-row" data-flip={flip ? "true" : "false"} data-rvs>
+      {/* Media */}
+      <Link className="cs-media vwork" href={href} aria-label={project.title}>
+        <div
+          className="vwork-media"
+          style={{ position: "relative", aspectRatio: "16/9", borderRadius: 8, overflow: "hidden", background: "var(--media)", border: "1px solid var(--line-2)" }}
+        >
+          {project.thumbnailVideo ? (
+            <AutoVideo src={project.thumbnailVideo} poster={`/posters/${project.slug}.jpg`} />
+          ) : (
+            <MediaPlaceholder label={project.title} />
+          )}
+        </div>
+      </Link>
+
+      {/* Text */}
+      <div className="cs-text">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            fontFamily: "var(--font-body), sans-serif",
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "var(--fg-dim)",
+            marginBottom: "clamp(14px,2vh,20px)",
+          }}
+        >
+          <span>{project.subtitle}</span>
+          {project.year ? <span style={{ color: "var(--fg-faint)" }}>— {project.year}</span> : null}
+        </div>
+
+        <h2 style={{ marginBottom: "clamp(14px,2vh,20px)" }}>
+          <Link
+            className="cs-title"
+            href={href}
+            style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(30px,3.4vw,52px)", fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1, display: "inline-block" }}
+          >
+            {project.title}
+          </Link>
+        </h2>
+
+        {project.summary ? (
+          <p style={{ color: "var(--fg-dim)", fontSize: "clamp(15px,1.2vw,17px)", lineHeight: 1.55, maxWidth: "46ch", marginBottom: "clamp(20px,3vh,28px)" }}>
+            {project.summary}
+          </p>
+        ) : null}
+
+        {points.length ? (
+          <ul style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: "clamp(22px,3vh,30px)" }}>
+            {points.map((pt) => (
+              <li key={pt} style={{ display: "flex", alignItems: "flex-start", gap: 12, fontSize: 15, color: "var(--fg)", lineHeight: 1.5 }}>
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "var(--accent)",
+                    flexShrink: 0,
+                    marginTop: "calc(0.75em - 3px)",
+                  }}
+                />
+                <span>{pt}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {scope.length ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: "clamp(24px,3.5vh,34px)" }}>
+            {scope.map((s) => (
+              <span
+                key={s}
+                style={{ border: "1px solid var(--line)", borderRadius: 999, padding: "5px 13px", fontSize: 11, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-dim)" }}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        <Link className="linku" href={href} style={{ fontFamily: "var(--font-body), sans-serif", fontSize: 12, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--accent)" }}>
+          View case study &#8594;
+        </Link>
+      </div>
+    </article>
+  );
+}
