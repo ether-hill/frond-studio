@@ -7,6 +7,14 @@
 
 import { GENERATORS, renderArt, type Params } from "./artGenerators";
 import { PhysMod, M_DEFAULTS, type MParams } from "./physmod";
+import { Physarum } from "./physarum";
+import { VERSIONS, HERO_VERSION_ID } from "./versions";
+
+// Jones (2010) agent-model presets for the algorithms demo — the 2D versions from
+// the SMA Config studio, surfaced via the same preset chooser as Mycelium.
+const JONES_PRESETS = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => ({
+  key: v.id, label: v.label.replace(/^v\d+\s*·\s*/, ""), params: v.params,
+}));
 
 // Physarum now runs the studio's latest GPU model — the density-modulated Physarum
 // from Playground 2 (src/physmod.ts), ~590k agents on the WebGL2 engine, instead of
@@ -304,6 +312,28 @@ const DATA: Algo[] = [
       { label: "substrate", value: "depleting nutrient" },
     ],
   },
+  {
+    i: "13", tag: "physarum-jones", gen: "physarum-jones", name: "Physarum — Jones", sub: "JONES AGENT MODEL", filename: "jones_2010.sim",
+    group: "NATURE SYSTEM",
+    note: "J. Jones, “Characteristics of Pattern Formation and Evolution in Approximations of Physarum Transport Networks”, Artificial Life, 2010.",
+    paras: [
+      "The Jones agent model is the canonical multi-agent slime-mould simulation, and the engine behind the SMA Config studio. Hundreds of thousands of agents move over a shared trail map, each sensing three points ahead and turning toward the strongest signal.",
+      "Every agent deposits a chemical trail as it moves; the field diffuses and decays. From stigmergy alone — coordination through the environment — labyrinths, reticulated transport networks and fanning search fronts emerge. Pick a preset to change the regime.",
+    ],
+    steps: [
+      { n: "1", title: "Sense", text: "Each agent probes three points ahead — left, centre, right — of the trail map." },
+      { n: "2", title: "Rotate", text: "It steers toward whichever sensor reads the strongest trail." },
+      { n: "3", title: "Deposit", text: "Moving forward, it lays a chemical trail onto the continuum grid." },
+      { n: "4", title: "Diffuse & Decay", text: "The field blurs and fades, so paths adapt, merge or collapse." },
+    ],
+    params: [
+      { label: "model", value: "Jones (2010) agents" },
+      { label: "engine", value: "WebGL2 · GPU" },
+      { label: "sensors", value: "L · C · R, 3-point" },
+      { label: "presets", value: "classic … aurora" },
+      { label: "studio", value: "→ SMA Config" },
+    ],
+  },
 ];
 
 const esc = (s: string) =>
@@ -335,6 +365,7 @@ const MYC_PRESETS: { key: string; label: string; color: boolean }[] = [
   { key: "bloom", label: "Bloom — colour colony", color: true },
 ];
 let mycPreset = "wild";
+let jonesPreset = JONES_PRESETS.some((p) => p.key === HERO_VERSION_ID) ? HERO_VERSION_ID : JONES_PRESETS[0].key;
 
 const baseSeed = (i: number) => 1000 + i * 131 + 7;
 
@@ -368,6 +399,24 @@ function buildHero() {
     } catch { /* WebGL2 unavailable — leave the panel dark */ }
     instances.push({ remove() { cancelAnimationFrame(raf); try { pm?.dispose(); } catch { /* noop */ } cv.remove(); } });
     if (lbl) lbl.textContent = `${preset.name.toLowerCase()} · ${heroSeed}`;
+    return;
+  }
+
+  // Jones agent model (the canonical multi-agent Physarum), preset-driven.
+  if (DATA[sel].gen === "physarum-jones") {
+    const cv = document.createElement("canvas");
+    cv.style.cssText = "width:100%;height:100%;display:block";
+    host.appendChild(cv);
+    const pr = JONES_PRESETS.find((x) => x.key === jonesPreset) || JONES_PRESETS[0];
+    let raf = 0;
+    let eng: Physarum | null = null;
+    try {
+      eng = new Physarum(cv, 512, pr.params);
+      const loop = () => { eng!.render(); raf = requestAnimationFrame(loop); };
+      raf = requestAnimationFrame(loop);
+    } catch { /* WebGL2 unavailable — leave the panel dark */ }
+    instances.push({ remove() { cancelAnimationFrame(raf); try { eng?.dispose(); } catch { /* noop */ } cv.remove(); } });
+    if (lbl) lbl.textContent = pr.label.toLowerCase();
     return;
   }
 
@@ -424,7 +473,7 @@ function renderMain() {
       `<h2 style="margin:0;font-weight:700;font-size:clamp(26px,3.2vw,42px);line-height:1.02;letter-spacing:-0.02em">${esc(a.name)}</h2>` +
     `</div>` +
     `<div style="font-family:${MONO};font-size:11.5px;letter-spacing:0.16em;color:var(--fg3);margin-top:12px">${esc(a.sub)}</div>` +
-    (a.gen === "mycelium" ? `<div id="mycPresetSlot" style="margin-top:22px"></div>` : "") +
+    (a.gen === "mycelium" || a.gen === "physarum-jones" ? `<div id="mycPresetSlot" style="margin-top:22px"></div>` : "") +
     `<div style="display:flex;flex-direction:column;gap:16px;margin-top:24px">` +
       a.paras.map((p) => `<p style="margin:0;font-size:clamp(14px,1.05vw,15.5px);line-height:1.65;color:var(--fg2)">${esc(p)}</p>`).join("") +
     `</div>` +
@@ -459,18 +508,22 @@ function renderMain() {
     buildHero();
   });
 
-  // Mycelium gets a custom preset chooser under its title.
-  if (DATA[sel].gen === "mycelium") {
-    const slot = textEl.querySelector<HTMLElement>("#mycPresetSlot");
-    if (slot) buildPresetDropdown(slot);
+  // Mycelium and the Jones model get a custom preset chooser under their title.
+  const slot = textEl.querySelector<HTMLElement>("#mycPresetSlot");
+  if (slot) {
+    if (DATA[sel].gen === "mycelium") {
+      buildPresetDropdown(slot, MYC_PRESETS, () => mycPreset, (k) => { mycPreset = k; heroSeed = baseSeed(sel); teardown(); buildHero(); });
+    } else if (DATA[sel].gen === "physarum-jones") {
+      buildPresetDropdown(slot, JONES_PRESETS, () => jonesPreset, (k) => { jonesPreset = k; teardown(); buildHero(); });
+    }
   }
 
   buildHero();
 }
 
 // Custom preset dropdown (not a native <select>) — styled to the page tokens.
-function buildPresetDropdown(slot: HTMLElement) {
-  const cur = () => MYC_PRESETS.find((m) => m.key === mycPreset) || MYC_PRESETS[0];
+function buildPresetDropdown(slot: HTMLElement, presets: { key: string; label: string }[], getCur: () => string, onSelect: (k: string) => void) {
+  const cur = () => presets.find((m) => m.key === getCur()) || presets[0];
 
   const cap = document.createElement("div");
   cap.textContent = "PRESET";
@@ -495,23 +548,20 @@ function buildPresetDropdown(slot: HTMLElement) {
   list.setAttribute("role", "listbox");
   list.style.cssText = `position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:6;background:var(--bg);border:1px solid rgba(var(--lw),0.26);border-radius:5px;overflow:hidden;display:none;box-shadow:0 18px 44px rgba(0,0,0,0.5)`;
 
-  const opts: HTMLButtonElement[] = MYC_PRESETS.map((m) => {
+  const opts: HTMLButtonElement[] = presets.map((m) => {
     const o = document.createElement("button");
     o.type = "button";
     o.setAttribute("role", "option");
     o.textContent = m.label.toUpperCase();
-    o.style.cssText = `display:block;width:100%;text-align:left;padding:10px 14px;background:transparent;border:none;border-bottom:1px solid rgba(var(--lw),0.08);color:${m.key === mycPreset ? "var(--fg)" : "var(--fg3)"};font-family:${MONO};font-size:11px;letter-spacing:0.06em;cursor:pointer`;
+    o.style.cssText = `display:block;width:100%;text-align:left;padding:10px 14px;background:transparent;border:none;border-bottom:1px solid rgba(var(--lw),0.08);color:${m.key === getCur() ? "var(--fg)" : "var(--fg3)"};font-family:${MONO};font-size:11px;letter-spacing:0.06em;cursor:pointer`;
     o.addEventListener("mouseenter", () => { o.style.background = "rgba(var(--lw),0.06)"; });
     o.addEventListener("mouseleave", () => { o.style.background = "transparent"; });
     o.addEventListener("click", () => {
       close();
-      if (m.key === mycPreset) return;
-      mycPreset = m.key;
+      if (m.key === getCur()) return;
+      onSelect(m.key);
       setLabel();
-      opts.forEach((b, j) => { b.style.color = MYC_PRESETS[j].key === mycPreset ? "var(--fg)" : "var(--fg3)"; });
-      heroSeed = baseSeed(sel);
-      teardown();
-      buildHero();
+      opts.forEach((b, j) => { b.style.color = presets[j].key === getCur() ? "var(--fg)" : "var(--fg3)"; });
     });
     list.append(o);
     return o;

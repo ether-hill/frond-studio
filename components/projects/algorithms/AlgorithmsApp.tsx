@@ -62,14 +62,14 @@ export default function AlgorithmsApp() {
                 marginBottom: 18,
               }}
             >
-              THE TOOLBOX · 12 SYSTEMS
+              THE TOOLBOX · 13 SYSTEMS
             </div>
             <h1 style={{ margin: 0, fontWeight: 600, fontSize: "clamp(44px,7vw,108px)", lineHeight: 0.94, letterSpacing: "-0.035em" }}>
               Algorithms
             </h1>
           </div>
           <p style={{ margin: 0, maxWidth: "46ch", fontSize: "clamp(14px,1.7vw,16px)", lineHeight: 1.6, color: "var(--fg2)" }}>
-            Twelve systems, each running live. Every one builds complex structure from a handful of simple rules — no
+            Thirteen systems, each running live. Every one builds complex structure from a handful of simple rules — no
             blueprint, just local interactions. Pick one to watch it run.
           </p>
         </div>
