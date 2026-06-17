@@ -1,28 +1,29 @@
 import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
-import AutoVideo from "@/components/AutoVideo";
+import HeroPhysarum from "@/components/HeroPhysarum";
+import RandomiseButton from "@/components/RandomiseButton";
 import SelectedWork from "@/components/SelectedWork";
+import SelectedProjects from "@/components/SelectedProjects";
 import CapabilityRows from "@/components/CapabilityRows";
 import Cta from "@/components/Cta";
-import { PLACEHOLDER_VIDEO } from "@/lib/site";
 import { getProjects } from "@/sanity/lib/queries";
 
 export const revalidate = 60;
 
 export default async function Home() {
   const projects = await getProjects();
-  const featured = projects.slice(0, 6);
+  const featured = projects.slice(0, 4);
 
   return (
     <RevealRoot>
-      {/* Hero — cinematic, full viewport */}
+      {/* Hero — live Jones-agent Physarum, full viewport */}
       <section style={{ minHeight: "100svh", position: "relative", overflow: "hidden" }}>
-        <div data-par="-0.085" style={{ position: "absolute", top: "-22%", left: 0, width: "100%", height: "148%", zIndex: 0, willChange: "transform" }}>
-          <AutoVideo src={PLACEHOLDER_VIDEO} />
+        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+          <HeroPhysarum />
         </div>
-        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "var(--bg-0)", opacity: 0.3 }} />
-        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(100deg, var(--bg-0) 0%, rgba(0,0,0,0) 62%)" }} />
-        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(180deg, var(--bg-0) 0%, transparent 24%, transparent 72%, var(--bg-0) 100%)", opacity: 0.6 }} />
+        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(100deg, var(--bg-0) 0%, rgba(0,0,0,0) 64%)", opacity: 0.82 }} />
+        <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(180deg, var(--bg-0) 0%, transparent 26%, transparent 70%, var(--bg-0) 100%)", opacity: 0.7 }} />
+        <RandomiseButton event="hero-physarum-reseed" title="Spawn a new Jones-agent render" />
 
         <div
           className="hero-inner"
@@ -60,11 +61,11 @@ export default async function Home() {
 
           <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(48px,8.8vw,152px)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
             <span className="mask-line">
-              <span style={{ transitionDelay: "0.06s" }}>Design,</span>
+              <span style={{ transitionDelay: "0.06s" }}>Natural</span>
             </span>
             <span className="mask-line">
               <span style={{ transitionDelay: "0.15s" }}>
-                built <em style={{ fontWeight: 400 }}>in motion.</em>
+                <em style={{ fontWeight: 400 }}>selections.</em>
               </span>
             </span>
           </h1>
@@ -73,14 +74,15 @@ export default async function Home() {
             data-rv
             style={{
               transitionDelay: "0.22s",
-              maxWidth: 500,
+              maxWidth: 560,
               marginTop: "clamp(22px,3vh,38px)",
               fontSize: "clamp(16px,1.35vw,19px)",
               lineHeight: 1.55,
               color: "var(--fg-dim)",
             }}
           >
-            A transdisciplinary design &amp; technology studio — websites, apps and platforms for ambitious clients around the world.
+            <span style={{ color: "var(--fg)" }}>Things that matter to us:</span> transdisciplinary and biophilic design,
+            meandering, ethical AI, design systems, working remotely worldwide…
           </p>
 
           <div data-rv style={{ transitionDelay: "0.3s", marginTop: "clamp(24px,3.2vh,38px)", display: "flex", flexWrap: "wrap", gap: 14 }}>
@@ -116,12 +118,13 @@ export default async function Home() {
 
       <SelectedWork projects={featured} />
 
+      <SelectedProjects />
+
       {/* Capabilities */}
       <section id="services" style={{ background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}>
         <div className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}>
           <div data-rvs style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 24, flexWrap: "wrap", marginBottom: "clamp(44px,6vh,72px)" }}>
             <div style={{ display: "flex", gap: 18, alignItems: "baseline" }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.1em", color: "var(--accent)" }}>(02)</span>
               <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>Capabilities</h2>
             </div>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-dim)" }}>

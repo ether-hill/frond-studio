@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CtaCanvas from "./CtaCanvas";
+import RandomiseButton from "./RandomiseButton";
 
 export default function Cta() {
   return (
@@ -7,6 +8,19 @@ export default function Cta() {
       <div data-par="0.14" style={{ position: "absolute", inset: "-14% 0", zIndex: 0, willChange: "transform" }}>
         <CtaCanvas />
       </div>
+      {/* scrim: keep the headline legible over the living network */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
+          pointerEvents: "none",
+          background:
+            "radial-gradient(60% 70% at 50% 50%, color-mix(in srgb, var(--bg-0) 78%, transparent) 0%, color-mix(in srgb, var(--bg-0) 38%, transparent) 55%, transparent 100%)",
+        }}
+      />
+      <RandomiseButton event="cta-mycelium-reseed" title="Randomise the mycelium background" />
       <div
         className="hero-glow"
         style={{

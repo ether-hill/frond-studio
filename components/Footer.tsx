@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NAV_LINKS } from "@/lib/site";
 import CurrentYear from "./CurrentYear";
+import FooterBlurb from "./FooterBlurb";
 
 const label = (text: string) => (
   <div
@@ -28,20 +29,7 @@ export default function Footer() {
           padding: "clamp(64px,9vh,110px) var(--gutter) clamp(40px,5vh,56px)",
         }}
       >
-        <h2
-          data-rvs
-          style={{
-            fontFamily: "var(--font-display), sans-serif",
-            fontSize: "clamp(30px,4.4vw,68px)",
-            fontWeight: 400,
-            lineHeight: 1.04,
-            letterSpacing: "-0.02em",
-            maxWidth: "16ch",
-            marginBottom: "clamp(48px,7vh,90px)",
-          }}
-        >
-          A design &amp; technology studio working with clients worldwide.
-        </h2>
+        <FooterBlurb />
 
         <div
           className="footer-grid"
@@ -73,7 +61,7 @@ export default function Footer() {
               </span>
             </div>
             <p style={{ color: "var(--fg-dim)", fontSize: 15, lineHeight: 1.55, maxWidth: "34ch" }}>
-              A transdisciplinary design &amp; technology studio working with clients around the world.
+              A transdisciplinary design &amp; technology studio working remotely worldwide.
             </p>
           </div>
 
@@ -130,7 +118,7 @@ export default function Footer() {
               Privacy
             </a>
           </div>
-          <span>Working with clients worldwide</span>
+          <span>Working remotely worldwide</span>
         </div>
       </div>
     </footer>

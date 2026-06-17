@@ -29,9 +29,6 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
         }}
       >
         <div style={{ display: "flex", gap: 18, alignItems: "baseline" }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", color: "var(--accent)" }}>
-            (01)
-          </span>
           <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
             Selected Work
           </h2>
@@ -88,32 +85,13 @@ function disciplineLine(p: ProjectCard) {
 function WorkGrid({ projects }: { projects: ProjectCard[] }) {
   return (
     <div className="vwork-grid" data-stag style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(26px,3vw,52px)" }}>
-      {projects.map((p, i) => (
+      {projects.map((p) => (
         <Link key={p._id} className="vwork" href={`/work/${p.slug}`} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div
             className="vwork-media"
             style={{ position: "relative", aspectRatio: "16/9", borderRadius: 6, overflow: "hidden", background: "var(--media)", border: "1px solid var(--line-2)" }}
           >
             {p.thumbnailVideo ? <AutoVideo src={p.thumbnailVideo} poster={`/posters/${p.slug}.jpg`} /> : <MediaPlaceholder label={p.title} />}
-            <span
-              style={{
-                position: "absolute",
-                top: 14,
-                left: 15,
-                fontFamily: "var(--font-mono)",
-                fontSize: 10,
-                fontWeight: 500,
-                letterSpacing: "0.12em",
-                color: "#f1ede5",
-                background: "rgba(10,9,7,0.4)",
-                backdropFilter: "blur(5px)",
-                padding: "5px 9px",
-                borderRadius: 3,
-                zIndex: 2,
-              }}
-            >
-              {String(i + 1).padStart(2, "0")}
-            </span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 14 }}>
             <h3 className="vwork-name" style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(22px,2.5vw,36px)", fontWeight: 500, letterSpacing: "-0.015em" }}>
@@ -220,7 +198,7 @@ function WorkIndex({ projects }: { projects: ProjectCard[] }) {
         <video ref={videoRef} src={firstVid} poster={firstPoster} autoPlay muted loop playsInline preload="metadata" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
 
-      {projects.map((p, i) => (
+      {projects.map((p) => (
         <Link
           key={p._id}
           className="wi-row"
@@ -229,16 +207,13 @@ function WorkIndex({ projects }: { projects: ProjectCard[] }) {
           data-rvs
           style={{
             display: "grid",
-            gridTemplateColumns: "auto 1fr auto auto",
+            gridTemplateColumns: "1fr auto auto",
             gap: "clamp(16px,3vw,48px)",
             alignItems: "center",
             padding: "clamp(20px,2.5vw,38px) 0",
             borderTop: "1px solid var(--line)",
           }}
         >
-          <span className="wi-num" style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 500, letterSpacing: "0.06em", color: "var(--fg-faint)" }}>
-            {String(i + 1).padStart(2, "0")}
-          </span>
           <h3 className="wi-name" style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(28px,4.6vw,72px)", fontWeight: 500, letterSpacing: "-0.022em", lineHeight: 1 }}>
             {p.title}
           </h3>

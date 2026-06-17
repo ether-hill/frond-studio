@@ -38,6 +38,11 @@ export default function ProjectsPage() {
           {PERSONAL_PROJECTS.map((p) => {
             const inner = (
               <>
+                {p.image && (
+                  <span className="proj-shot">
+                    <img src={p.image} alt={`${p.title} preview`} loading="lazy" decoding="async" width={1600} height={900} />
+                  </span>
+                )}
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 }}>
                   <span
                     style={{

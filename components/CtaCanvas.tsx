@@ -2,7 +2,15 @@
 
 import { useEffect, useRef } from "react";
 
-/** Generative flow-field: particles advect through a procedural field, leaving faint trails. */
+/**
+ * Mycelium background for the closing CTA. Fine hyphal tips wander and branch
+ * from seeded colonies, accumulating a hairline filament network. A very slow
+ * fade keeps it alive (and legible behind the headline) rather than filling
+ * solid. RANDOMISE (dispatched via the `cta-mycelium-reseed` event) rolls a new
+ * palette + growth habit and starts a fresh colony.
+ */
+type Tip = { x: number; y: number; a: number; w: number; life: number; hue: number };
+
 export default function CtaCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -15,7 +23,55 @@ export default function CtaCanvas() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let W = 0;
     let H = 0;
-    let P: { x: number; y: number; px: number; py: number }[] = [];
+
+    // theme-aware ink: light filaments on dark, dark filaments on light
+    const isDark = () =>
+      (document.documentElement.dataset.theme || "dark") !== "light";
+    const bgRGB = () => (isDark() ? [11, 10, 8] : [244, 241, 234]);
+
+    let tips: Tip[] = [];
+    let baseHue = 150;
+    let sat = 22;
+    let turn = 0.34;
+    let speed = 1.05;
+    let branchP = 0.05;
+    let frame = 0;
+
+    const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+    const seedColony = (n: number) => {
+      // colonies start near a random anchor with tips fanning outward
+      const ax = rand(0.08, 0.92) * W;
+      const ay = rand(0.12, 0.88) * H;
+      const spread = rand(0, Math.PI * 2);
+      for (let i = 0; i < n; i++) {
+        tips.push({
+          x: ax + rand(-8, 8),
+          y: ay + rand(-8, 8),
+          a: spread + (i / n) * Math.PI * 2 + rand(-0.5, 0.5),
+          w: rand(0.9, 1.7),
+          life: rand(160, 380),
+          hue: baseHue + rand(-16, 16),
+        });
+      }
+    };
+
+    const reseed = (clear = true) => {
+      baseHue = rand(0, 360);
+      sat = rand(10, 34);
+      turn = rand(0.22, 0.46);
+      speed = rand(0.85, 1.3);
+      branchP = rand(0.05, 0.085);
+      tips = [];
+      frame = 0;
+      if (clear) {
+        const [r, g, b] = bgRGB();
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+      const colonies = 3 + (Math.random() * 3 | 0);
+      for (let c = 0; c < colonies; c++) seedColony(13 + (Math.random() * 10 | 0));
+    };
 
     const resize = () => {
       const r = canvas.getBoundingClientRect();
@@ -24,62 +80,58 @@ export default function CtaCanvas() {
       canvas.width = Math.floor(W * dpr);
       canvas.height = Math.floor(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, W, H);
-      const N = Math.max(60, Math.min(190, Math.floor((W * H) / 8200)));
-      P = [];
-      for (let i = 0; i < N; i++) P.push({ x: Math.random() * W, y: Math.random() * H, px: 0, py: 0 });
+      reseed(true);
     };
     resize();
     window.addEventListener("resize", resize);
 
-    const mouse = { x: -9999, y: -9999 };
-    const onMove = (e: MouseEvent) => {
-      const r = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - r.left;
-      mouse.y = e.clientY - r.top;
-    };
-    const onLeave = () => {
-      mouse.x = -9999;
-      mouse.y = -9999;
-    };
-    window.addEventListener("mousemove", onMove);
-    canvas.addEventListener("mouseleave", onLeave);
+    const MAXT = 680;
+    const SETTLE = 1300; // stop spawning after this many frames → a rich, stable network
+    const lum = () => (isDark() ? rand(58, 80) : rand(30, 48));
 
-    let t = 0;
     const step = () => {
-      t += 0.0017;
-      ctx.fillStyle = "rgba(11,10,8,0.058)";
-      ctx.fillRect(0, 0, W, H);
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "rgba(222,206,180,0.34)";
-      for (const p of P) {
-        p.px = p.x;
-        p.py = p.y;
-        const a = (Math.sin(p.x * 0.0021 + t) + Math.cos(p.y * 0.0021 - t * 1.3)) * Math.PI;
-        let vx = Math.cos(a);
-        let vy = Math.sin(a);
-        const dx = p.x - mouse.x;
-        const dy = p.y - mouse.y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < 26000) {
-          const d = Math.sqrt(d2) || 1;
-          const f = (1 - d / 161) * 2.6;
-          vx += (dx / d) * f;
-          vy += (dy / d) * f;
+      frame++;
+      // Accumulative growth — like a real mycelium, segments persist and the
+      // network fills the region (no per-frame fade). Legibility comes from the
+      // low canvas opacity + the centre scrim, not from erasing the colony.
+
+      const next: Tip[] = [];
+      for (const t of tips) {
+        const px = t.x;
+        const py = t.y;
+        t.a += rand(-turn, turn);
+        t.x += Math.cos(t.a) * speed;
+        t.y += Math.sin(t.a) * speed;
+        t.w *= 0.997;
+        t.life--;
+
+        ctx.strokeStyle = `hsla(${t.hue},${sat}%,${lum()}%,0.34)`;
+        ctx.lineWidth = Math.max(0.35, t.w);
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(t.x, t.y);
+        ctx.stroke();
+
+        const out = t.x < -20 || t.x > W + 20 || t.y < -20 || t.y > H + 20;
+        if (t.life <= 0 || out || t.w < 0.32) continue;
+
+        // branch
+        if (Math.random() < branchP && tips.length + next.length < MAXT) {
+          next.push({
+            x: t.x,
+            y: t.y,
+            a: t.a + rand(0.5, 1.0) * (Math.random() < 0.5 ? -1 : 1),
+            w: t.w * 0.78,
+            life: t.life * rand(0.5, 0.85),
+            hue: t.hue + rand(-8, 8),
+          });
         }
-        p.x += vx * 1.1;
-        p.y += vy * 1.1;
-        if (p.x < 0) p.x = W;
-        else if (p.x > W) p.x = 0;
-        if (p.y < 0) p.y = H;
-        else if (p.y > H) p.y = 0;
-        if (Math.abs(p.x - p.px) < 40 && Math.abs(p.y - p.py) < 40) {
-          ctx.beginPath();
-          ctx.moveTo(p.px, p.py);
-          ctx.lineTo(p.x, p.y);
-          ctx.stroke();
-        }
+        next.push(t);
       }
+      tips = next;
+
+      // keep colonising until the region is filled, then let it settle
+      if (frame < SETTLE && tips.length < 90 && frame % 5 === 0) seedColony(11 + (Math.random() * 8 | 0));
     };
 
     const reduce =
@@ -88,27 +140,33 @@ export default function CtaCanvas() {
 
     let raf = 0;
     if (reduce) {
-      for (let k = 0; k < 140; k++) step();
+      for (let k = 0; k < 900; k++) step();
     } else {
+      // a few growth sub-steps per frame so the network fills quickly and looks
+      // the same regardless of refresh rate
       const loop = () => {
+        step();
+        step();
         step();
         raf = requestAnimationFrame(loop);
       };
       loop();
     }
 
+    const onReseed = () => reseed(true);
+    window.addEventListener("cta-mycelium-reseed", onReseed);
+
     return () => {
       if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
-      window.removeEventListener("mousemove", onMove);
-      canvas.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("cta-mycelium-reseed", onReseed);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", opacity: 0.55 }}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", opacity: 0.5 }}
     />
   );
 }

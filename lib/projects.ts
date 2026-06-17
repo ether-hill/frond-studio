@@ -13,6 +13,8 @@ export type PersonalProject = {
   tags: string[];
   href: string;
   external?: boolean;
+  /** 16:9 cover image (in /public). */
+  image?: string;
 };
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
@@ -25,6 +27,7 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     year: "2026",
     tags: ["WebGL2", "Slime mould", "Generative"],
     href: "/projects/sma-config",
+    image: "/cards/sma-config.jpg",
   },
   {
     slug: "instruments",
@@ -35,6 +38,7 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     year: "2026",
     tags: ["Web Audio", "Synthesis", "TypeScript"],
     href: "/projects/instruments",
+    image: "/cards/instruments.jpg",
   },
   {
     slug: "algorithms",
@@ -45,5 +49,6 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     year: "2026",
     tags: ["Generative", "p5.js", "WebGL"],
     href: "/projects/algorithms",
+    image: "/cards/algorithms.jpg",
   },
 ];

@@ -285,6 +285,31 @@ button {
   color: var(--accent);
 }
 
+/* Personal-project + instrument card cover (16:9) */
+.proj-shot {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 28px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--bg-0, #000);
+  border: 1px solid var(--line);
+}
+.proj-shot img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vwork:hover .proj-shot img {
+  transform: scale(1.03);
+}
+
 /* ── Case-study rows (Projects v2) ───────────────── */
 .cs-row {
   display: grid;
@@ -335,12 +360,6 @@ button {
 .wi-row:hover .wi-arrow {
   opacity: 1;
   transform: none;
-}
-.wi-row .wi-num {
-  transition: color 0.4s ease;
-}
-.wi-row:hover .wi-num {
-  color: var(--accent);
 }
 
 /* ── Capability rows ───────────────────────────── */
@@ -427,6 +446,11 @@ button {
 }
 
 /* ── Responsive ───────────────────────────── */
+@media (max-width: 980px) {
+  .sp-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
 @media (max-width: 900px) {
   .vwork-grid,
   .services-grid,
@@ -457,7 +481,10 @@ button {
     display: none !important;
   }
   .wi-row {
-    grid-template-columns: auto 1fr auto !important;
+    grid-template-columns: 1fr auto !important;
+  }
+  .sp-grid {
+    grid-template-columns: 1fr !important;
   }
   .contact-grid {
     grid-template-columns: 1fr !important;
