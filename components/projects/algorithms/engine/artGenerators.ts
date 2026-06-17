@@ -1535,6 +1535,96 @@ const dla: Gen = (p, seed, size, params) => {
   };
 };
 
+// Reticulum — a static "foam mat" matching the dense mycelial-mat photograph:
+// thick, lumpy, bright cord-walls partition the frame into irregular cells, and each
+// dark cell is packed with fine speckle and droplets. Structure is a Lloyd-relaxed
+// Voronoi distance field (walls where the two nearest sites are equidistant; blobby
+// nodes where three meet); the grain/droplets are layered on top. Rendered once.
+function foamReticulum(p: any, seed: number, size: number): () => void {
+  const R = size;
+
+  // sites, Lloyd-relaxed on a coarse grid → organic cells of varied size
+  const N = Math.round(95 + p.random() * 70);
+  const sx = new Float64Array(N), sy = new Float64Array(N);
+  for (let i = 0; i < N; i++) { sx[i] = p.random() * R; sy[i] = p.random() * R; }
+  const GG = 96;
+  for (let it = 0; it < 4; it++) {
+    const ax = new Float64Array(N), ay = new Float64Array(N), cn = new Float64Array(N);
+    for (let gy = 0; gy < GG; gy++) for (let gx = 0; gx < GG; gx++) {
+      const wx = (gx + 0.5) / GG * R, wy = (gy + 0.5) / GG * R;
+      let b = 0, bd = 1e18;
+      for (let i = 0; i < N; i++) { const dx = wx - sx[i], dy = wy - sy[i], d = dx * dx + dy * dy; if (d < bd) { bd = d; b = i; } }
+      ax[b] += wx; ay[b] += wy; cn[b]++;
+    }
+    for (let i = 0; i < N; i++) if (cn[i]) { sx[i] = ax[i] / cn[i]; sy[i] = ay[i] / cn[i]; }
+  }
+
+  // spatial buckets for fast nearest-three lookup
+  const BS = 80, NB = Math.max(1, Math.ceil(R / BS));
+  const buckets: number[][] = Array.from({ length: NB * NB }, () => []);
+  const clampB = (v: number) => Math.min(NB - 1, Math.max(0, v | 0));
+  for (let i = 0; i < N; i++) buckets[clampB(sx[i] / BS) + clampB(sy[i] / BS) * NB].push(i);
+
+  // each cell gets its own base darkness → some cells read much deeper than others
+  const cellDark = new Float64Array(N);
+  for (let i = 0; i < N; i++) cellDark[i] = 5 + p.random() * 30;
+
+  const ctx = p.drawingContext as CanvasRenderingContext2D;
+  const img = ctx.createImageData(R, R);
+  const data = img.data;
+  const warp = R * 0.05;                                             // organic wall waviness
+  for (let py = 0; py < R; py++) {
+    for (let px = 0; px < R; px++) {
+      // domain-warp the sample point so cell walls curve like wet foam, not straight Voronoi
+      const wx = px + warp * (p.noise(px * 0.012, py * 0.012, 2.3) - 0.5) * 2;
+      const wy = py + warp * (p.noise(px * 0.012 + 9, py * 0.012 + 4, 7.1) - 0.5) * 2;
+      const bx = clampB(wx / BS), by = clampB(wy / BS);
+      let d1 = 1e18, d2 = 1e18, d3 = 1e18, i1 = 0;
+      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+        const gx = bx + ox, gy = by + oy; if (gx < 0 || gy < 0 || gx >= NB || gy >= NB) continue;
+        const arr = buckets[gx + gy * NB];
+        for (let k = 0; k < arr.length; k++) { const i = arr[k], dx = wx - sx[i], dy = wy - sy[i], d = dx * dx + dy * dy;
+          if (d < d1) { d3 = d2; d2 = d1; d1 = d; i1 = i; } else if (d < d2) { d3 = d2; d2 = d; } else if (d < d3) { d3 = d; } }
+      }
+      const e1 = Math.sqrt(d1), e2 = Math.sqrt(d2), e3 = Math.sqrt(d3);
+      const ww = 4.5 + 8 * p.noise(px * 0.016, py * 0.016);           // thick, lumpy wall
+      let wall = e2 - e1 < ww ? 1 - (e2 - e1) / ww : 0; wall = wall * wall * (3 - 2 * wall);
+      const vw = ww * 1.9;
+      let node = e3 - e1 < vw ? 1 - (e3 - e1) / vw : 0; node = node * node;  // fat blobby junctions
+      const w = wall > node ? wall : node;
+      const wallBright = 218 + 37 * p.noise(px * 0.05 + 7, py * 0.05 + 3);
+      const mott = cellDark[i1] + 22 * p.noise(px * 0.06, py * 0.06);  // per-cell dark + mottle
+      const h = Math.sin(px * 12.9898 + py * 78.233 + seed) * 43758.5453;
+      const fr = h - Math.floor(h);
+      const spk = fr > 0.62 ? (fr - 0.62) * 360 : 0;                   // dense fine droplet speckle
+      const base = mott + spk;
+      let g = base + w * (wallBright - base);
+      g = g < 0 ? 0 : g > 255 ? 255 : g;
+      const o = (py * R + px) * 4; data[o] = data[o + 1] = data[o + 2] = g; data[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  // faint filament hairs crossing the cells (the fine fuzz in the photo)
+  const ctx2 = p.drawingContext as CanvasRenderingContext2D;
+  ctx2.lineCap = "round";
+  const hairs = Math.round(R * 2.2);
+  for (let i = 0; i < hairs; i++) {
+    const x = p.random() * R, y = p.random() * R, a = p.random() * Math.PI * 2, len = 3 + p.random() * 14;
+    ctx2.strokeStyle = `rgba(255,255,255,${0.04 + p.random() * 0.1})`;
+    ctx2.lineWidth = 0.6;
+    ctx2.beginPath(); ctx2.moveTo(x, y); ctx2.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); ctx2.stroke();
+  }
+  // bright wet droplets — dense, small, scattered (pop against the dark cells)
+  p.noStroke();
+  const drops = Math.round(R * 8);
+  for (let i = 0; i < drops; i++) {
+    p.fill(255, 255, 255, p.random() * 150 + 40);
+    p.circle(p.random() * R, p.random() * R, p.random() * 1.6 + 0.4);
+  }
+  return () => { /* static */ };
+}
+
 // Mycelium — fungal network growth, after the Neighbour-Sensing model (Meškauskas &
 // Moore) and space-colonization venation (Runions et al.). Hyphal TIPS are agents that
 // extend one step per frame, steered by chemotropism up a nutrient field, negative
@@ -1549,6 +1639,11 @@ const dla: Gen = (p, seed, size, params) => {
 // Monochrome by default; coloured runs use a magma ramp keyed to hierarchy.
 const mycelium: Gen = (p, seed, size, params) => {
   p.randomSeed(seed); p.noiseSeed(seed);
+  // The "reticulum" preset is a different beast — a static foam/cellular mat, not
+  // line-growth — so it has its own renderer.
+  if (params && (params as Record<string, unknown>).preset === "reticulum") {
+    return foamReticulum(p, seed, size);
+  }
   const colored = !MONO_MODE;
   const TAU = Math.PI * 2;
   // Six growth habits — biased toward the dense, intricate end. RANDOMISE rolls
@@ -1633,7 +1728,7 @@ const mycelium: Gen = (p, seed, size, params) => {
   //    cords ring fine inner fuzz, low radial bias so it fills the frame evenly.
   type CfgT = typeof CFG.colony;
   const PRESETS: Record<string, Partial<CfgT> & { habit: Habit }> = {
-    reticulum: { habit: "coral", maxTurn: 0.36, Kchemo: 0.5, Kauto: 1.18, Kwander: 0.27, Kbias: 0.1, branch: 0.33, latFrac: 0.62, latAng: 1.0, fuseD: 1.0, fuseP: 0.93, wBase: 2.9, maxAge: 1500 },
+    // (reticulum is handled by foamReticulum above, not here)
     filigree:  { habit: "veil", maxTurn: 0.24, Kchemo: 0.46, Kauto: 0.72, Kwander: 0.26, Kbias: 0.3, branch: 0.30, latFrac: 0.72, latAng: 0.86, fuseD: 1.25, fuseP: 0.55, wBase: 1.5, maxAge: 1600 },
     cords:     { habit: "cord", maxTurn: 0.16, Kchemo: 0.64, Kauto: 0.95, Kwander: 0.1, Kbias: 0.5, branch: 0.22, latFrac: 0.82, latAng: 0.7, fuseD: 1.8, fuseP: 0.45, wBase: 3.8, maxAge: 1600 },
     bloom:     { habit: "colony", maxTurn: 0.26, Kbias: 0.45 },
