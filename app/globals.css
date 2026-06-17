@@ -522,3 +522,21 @@ button {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ── Instruments (ported Web-Audio rack) ─────────────────────────────────
+   Same token bridge as the algorithms page: the engine markup uses
+   --bg/--fg2..4/--lw/--panel/--band, mapped to Frond's theme tokens so the
+   rack inverts with the site. */
+.inst-root {
+  --bg: var(--bg-0);
+  --fg2: var(--fg-dim);
+  --fg3: color-mix(in srgb, var(--fg-dim) 80%, var(--fg-faint));
+  --fg4: var(--fg-faint);
+  --lw: var(--algo-lw);
+  --panel: rgba(var(--algo-lw), 0.03);
+  --band: var(--bg-1);
+  color: var(--fg);
+  background: var(--bg-0);
+  display: block;
+  min-height: 70vh;
+}
