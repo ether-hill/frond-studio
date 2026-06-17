@@ -17,7 +17,7 @@
 
 import {
   instrumentPage, panel, slider, segmented, powerButton,
-  Keyboard, mtof, noteName, ensureAudio, noiseBuffer, tapeCurve, MONO,
+  Keyboard, mtof, noteName, ensureAudio, suspendAudio, noiseBuffer, tapeCurve, MONO,
 } from "./shared";
 
 export function mount(root: HTMLElement) {
@@ -92,8 +92,8 @@ class Juno106 {
   }
 
   async start(): Promise<void> {
+    const ctx = await ensureAudio();   // always resume the shared context, even if already built
     if (this.started) return;
-    const ctx = await ensureAudio();
     this.ctx = ctx;
 
     const comp = ctx.createDynamicsCompressor();
@@ -547,7 +547,7 @@ const controls: Partial<Record<keyof JunoParams, { set(v: number): void }>> = {}
 const transport = panel("TRANSPORT");
 const trow = document.createElement("div");
 trow.style.cssText = "display:flex;flex-wrap:wrap;gap:16px;align-items:center";
-const power = powerButton(async (on) => { if (on) { await synth.start(); applyAllFx(); } synth.setMuted(!on); });
+const power = powerButton(async (on) => { if (on) { await ensureAudio(); await synth.start(); applyAllFx(); synth.setMuted(false); } else { synth.setMuted(true); setTimeout(() => { if (power.el.dataset.on !== "1") suspendAudio(); }, 240); } });
 const presetSeg = segmented({
   label: "PATCH", value: "Init" as string,
   options: [{ value: "Init", label: "INIT" }, ...Object.keys(PRESETS).map((k) => ({ value: k, label: k.toUpperCase() }))],

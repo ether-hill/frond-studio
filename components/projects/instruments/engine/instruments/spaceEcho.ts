@@ -12,7 +12,7 @@
 
 import {
   instrumentPage, panel, controlGrid, slider, segmented, powerButton,
-  Keyboard, mtof, ensureAudio, tapeCurve, MONO,
+  Keyboard, mtof, ensureAudio, suspendAudio, tapeCurve, MONO,
 } from "./shared";
 
 export function mount(root: HTMLElement) {
@@ -72,8 +72,8 @@ class SpaceEcho {
   }
 
   async start(): Promise<void> {
+    const ctx = await ensureAudio();   // always resume the shared context, even if already built
     if (this.started) return;
-    const ctx = await ensureAudio();
     this.ctx = ctx;
 
     const comp = ctx.createDynamicsCompressor();
@@ -267,7 +267,7 @@ const page = instrumentPage(root, {
 const transport = panel("TRANSPORT · SOURCE");
 const trow = document.createElement("div");
 trow.style.cssText = "display:flex;flex-wrap:wrap;gap:18px;align-items:center";
-const power = powerButton(async (on) => { if (on) await echo.start(); echo.setMuted(!on); });
+const power = powerButton(async (on) => { if (on) { await ensureAudio(); await echo.start(); echo.setMuted(false); } else { echo.setMuted(true); setTimeout(() => { if (power.el.dataset.on !== "1") suspendAudio(); }, 240); } });
 const auditionBtn = document.createElement("button");
 auditionBtn.className = "inst-link"; auditionBtn.type = "button"; auditionBtn.textContent = "▶ AUDITION";
 auditionBtn.addEventListener("click", async () => { await echo.start(); power.el.dataset.on = "1"; echo.audition(); });

@@ -32,6 +32,12 @@ export async function ensureAudio(): Promise<AudioContext> {
   return ctx;
 }
 
+/** Hard-stop all audio (used on power-off): suspends the shared context so every
+ *  oscillator and node is frozen — guaranteed silence, not just a gain ramp. */
+export function suspendAudio(): void {
+  try { const ctx = getAudioContext(); if (ctx.state === "running") ctx.suspend(); } catch { /* no context yet */ }
+}
+
 // ---- one-time CSS ----------------------------------------------------------
 
 let cssDone = false;

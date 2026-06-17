@@ -7,7 +7,7 @@
 
 import {
   instrumentPage, panel, controlGrid, slider, segmented, powerButton,
-  mtof, noteName, ensureAudio, MONO, reduceMotion,
+  mtof, noteName, ensureAudio, suspendAudio, MONO, reduceMotion,
 } from "./shared";
 
 export function mount(root: HTMLElement) {
@@ -71,8 +71,8 @@ class Theremin {
   setPan(p: number): void { if (this.started) this.panner.pan.setTargetAtTime(clamp(p, -1, 1), this.ctx.currentTime, 0.05); }
 
   async start(): Promise<void> {
+    const ctx = await ensureAudio();   // always resume the shared context, even if already built
     if (this.started) return;
-    const ctx = await ensureAudio();
     this.ctx = ctx;
 
     const comp = ctx.createDynamicsCompressor();
@@ -260,7 +260,7 @@ function masterLevel(): number {
 const transport = panel("TRANSPORT · VOICES · MIX");
 const trow = document.createElement("div");
 trow.style.cssText = "display:flex;flex-wrap:wrap;gap:18px;align-items:center";
-const power = powerButton(async (on) => { if (on) await powerOn(); else powerOff(); });
+const power = powerButton(async (on) => { if (on) { await ensureAudio(); await powerOn(); } else { powerOff(); setTimeout(() => { if (power.el.dataset.on !== "1") suspendAudio(); }, 240); } });
 const voicesSeg = segmented<string>({
   label: "VOICES", value: "1",
   options: ["1", "2", "3", "4"].map((n) => ({ value: n, label: n })),

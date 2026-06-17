@@ -12,7 +12,7 @@
 // relaxation instrument, not a medical device.
 
 import {
-  instrumentPage, panel, slider, segmented, powerButton, ensureAudio, MONO,
+  instrumentPage, panel, slider, segmented, powerButton, ensureAudio, suspendAudio, MONO,
 } from "./shared";
 
 export function mount(root: HTMLElement) {
@@ -123,8 +123,8 @@ class Biome {
   get state(): Strand[] { return this.strands; }
 
   async start(): Promise<void> {
-    if (this.started) return;
-    const ctx = await ensureAudio(); this.ctx = ctx;
+    const ctx = await ensureAudio();   // always resume the shared context, even if already built
+    if (this.started) return; this.ctx = ctx;
     this.brown = this.brownNoise(ctx, 4);
 
     const comp = ctx.createDynamicsCompressor();
@@ -426,7 +426,7 @@ document.head.appendChild(style);
 // ---- transport -------------------------------------------------------------
 const transport = panel("TRANSPORT · SPAWN");
 const trow = document.createElement("div"); trow.className = "bm-row";
-const power = powerButton(async (on) => { if (on) await biome.start(); biome.setMuted(!on); });
+const power = powerButton(async (on) => { if (on) { await ensureAudio(); await biome.start(); biome.setMuted(false); } else { biome.setMuted(true); setTimeout(() => { if (power.el.dataset.on !== "1") suspendAudio(); }, 240); } });
 const growBtn = document.createElement("button"); growBtn.className = "inst-link"; growBtn.type = "button"; growBtn.textContent = "❀ SPAWN";
 let growing = false;
 growBtn.addEventListener("click", async () => {
