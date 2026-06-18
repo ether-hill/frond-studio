@@ -223,11 +223,13 @@ button {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
-/* Homepage + light theme: the bar floats over the dark hero, where a transparent
-   top state would hide the (dark) nav text. Keep it solid white-90% at every
-   scroll position. Dark theme keeps the transparent top state. The hide-on-
-   scroll-down transform still applies (it only sets transform, not background). */
-[data-theme="light"] .nav-bar[data-home="true"] {
+/* Light theme: the bar can float over the dark hero (homepage) where a
+   transparent top state would hide the dark nav text, so keep it solid
+   white-90% at every scroll position. Keyed on the theme (set before paint),
+   NOT route detection — usePathname doesn't resolve reliably in the static
+   build. Dark theme keeps its transparent top state. The hide-on-scroll-down
+   transform still applies (it only sets transform, not background). */
+[data-theme="light"] .nav-bar {
   background: var(--nav);
   border-bottom-color: var(--line);
   backdrop-filter: blur(18px);
