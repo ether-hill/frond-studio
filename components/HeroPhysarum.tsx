@@ -19,13 +19,34 @@ export default function HeroPhysarum() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const RES = 2048; // high-res sim/display grid for crisp veins
-    const AGENTS = 1024; // agentTexW → ~1M agents for dense detail
+    const AGENTS = 256; // agentTexW → 65k agents, matches the reference's light footprint
 
     let eng: { render: () => void; dispose: () => void } | null = null;
     let raf = 0;
     let disposed = false;
     let scenes: P[] = [];
+    let lastParams: P | null = null; // last-built scene, so a resize rebuilds it (not the hero default)
+    let dims = { w: 1920, h: 800 }; // current rectangular sim size, matched to the viewport aspect
+
+    // Sim dimensions from the canvas's real on-screen size: crisp 1:1 with the
+    // viewport, capped DPR and a ≤1920 long edge so wide monitors stay light.
+    const computeDims = () => {
+      const rect = canvas.getBoundingClientRect();
+      const rectW = rect.width || window.innerWidth || 1920;
+      const rectH = rect.height || window.innerHeight || 800;
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      let w = Math.round(rectW * dpr);
+      let h = Math.round(rectH * dpr);
+      if (!Number.isFinite(w) || w < 1) w = 1920;
+      if (!Number.isFinite(h) || h < 1) h = 800;
+      const long = Math.max(w, h);
+      if (long > 1920) {
+        const k = 1920 / long;
+        w = Math.round(w * k);
+        h = Math.round(h * k);
+      }
+      return { w, h };
+    };
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
     const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
@@ -47,23 +68,25 @@ export default function HeroPhysarum() {
     const buildParams = (p: P): P => ({
       ...p,
       agentTexW: AGENTS,
-      stepsPerFrame: Math.min(Number(p.stepsPerFrame) || 2, 2),
+      stepsPerFrame: Math.min(Number(p.stepsPerFrame) || 2, 3),
       mouseFood: 0,
     });
 
-    let Engine: new (c: HTMLCanvasElement, res: number, p: unknown) => {
+    let Engine: new (c: HTMLCanvasElement, res: { w: number; h: number }, p: unknown) => {
       render: () => void;
       dispose: () => void;
     };
 
     const build = (p: P) => {
+      lastParams = p;
+      dims = computeDims();
       try {
         eng?.dispose();
       } catch {
         /* noop */
       }
       try {
-        eng = new Engine(canvas, RES, buildParams(p));
+        eng = new Engine(canvas, dims, buildParams(p));
       } catch {
         eng = null; // WebGL2 unavailable
       }
@@ -73,6 +96,20 @@ export default function HeroPhysarum() {
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    // Start driving the freshly-built engine: ~90 static frames if reduced
+    // motion, otherwise a RAF loop. Reused by first paint and resize rebuilds.
+    const run = () => {
+      if (reduce) {
+        for (let k = 0; k < 90 && eng; k++) eng.render();
+      } else {
+        const loop = () => {
+          eng?.render();
+          raf = requestAnimationFrame(loop);
+        };
+        raf = requestAnimationFrame(loop);
+      }
+    };
+
     Promise.all([import("./projects/algorithms/engine/physarum"), import("./projects/algorithms/engine/versions")])
       .then(([{ Physarum }, { VERSIONS, HERO_VERSION_ID }]) => {
         if (disposed) return;
@@ -81,16 +118,7 @@ export default function HeroPhysarum() {
         scenes = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => v.params as unknown as P);
         const hero = VERSIONS.find((v) => v.id === HERO_VERSION_ID) || VERSIONS[0];
         build(hero.params as unknown as P); // canonical Monochrome Drift on first paint
-
-        if (reduce) {
-          for (let k = 0; k < 90 && eng; k++) eng.render();
-        } else {
-          const loop = () => {
-            eng?.render();
-            raf = requestAnimationFrame(loop);
-          };
-          raf = requestAnimationFrame(loop);
-        }
+        run();
       })
       .catch(() => {
         /* engine failed to load — leave background empty */
@@ -99,12 +127,32 @@ export default function HeroPhysarum() {
     const onReseed = () => {
       if (!Engine || !scenes.length) return;
       build(jitter(pick(scenes)));
+      if (reduce) run(); // RAF loop is already live otherwise
     };
     window.addEventListener("hero-physarum-reseed", onReseed);
+
+    // Debounced resize: rebuild (same scene) only when the viewport aspect/size
+    // shifts enough to matter — the >12% gate avoids reflowing on minor jitter.
+    let resizeT = 0;
+    const onResize = () => {
+      window.clearTimeout(resizeT);
+      resizeT = window.setTimeout(() => {
+        if (!Engine || disposed) return;
+        const next = computeDims();
+        const dw = Math.abs(next.w - dims.w) / dims.w;
+        const dh = Math.abs(next.h - dims.h) / dims.h;
+        if (dw < 0.12 && dh < 0.12) return;
+        build((lastParams ?? {}) as P); // computeDims() runs inside build()
+        if (reduce) run();
+      }, 250);
+    };
+    window.addEventListener("resize", onResize);
 
     return () => {
       disposed = true;
       cancelAnimationFrame(raf);
+      window.clearTimeout(resizeT);
+      window.removeEventListener("resize", onResize);
       window.removeEventListener("hero-physarum-reseed", onReseed);
       try {
         eng?.dispose();

@@ -67,7 +67,8 @@ const D2R = Math.PI / 180;
 
 export class Physarum {
   readonly gl: WebGL2RenderingContext;
-  private res: number;
+  private resW: number;
+  private resH: number;
   private p: Params;
 
   private progUpdate: WebGLProgram;
@@ -92,16 +93,18 @@ export class Physarum {
   private prevSpawn: Params["spawn"];
   private prevSpecies: number;
 
-  constructor(canvas: HTMLCanvasElement, res: number, params: Params) {
+  constructor(canvas: HTMLCanvasElement, res: number | { w: number; h: number }, params: Params) {
     const gl = getContext(canvas);
     this.gl = gl;
-    this.res = res;
+    // a plain number means a square sim; an object gives a rectangular one
+    this.resW = typeof res === "number" ? res : res.w;
+    this.resH = typeof res === "number" ? res : res.h;
     this.p = params;
     this.prevAgentTexW = params.agentTexW;
     this.prevSpawn = params.spawn;
     this.prevSpecies = params.species;
-    canvas.width = res;
-    canvas.height = res;
+    canvas.width = this.resW;
+    canvas.height = this.resH;
 
     this.progUpdate = createProgram(gl, FULLSCREEN_VERT, UPDATE_FRAG);
     this.progDeposit = createProgram(gl, DEPOSIT_VERT, DEPOSIT_FRAG);
@@ -116,34 +119,35 @@ export class Physarum {
 
   private initTrails() {
     const gl = this.gl;
-    const r = this.res;
-    this.trailA = createTarget(gl, r, r, gl.RGBA16F, gl.HALF_FLOAT, null, gl.LINEAR);
-    this.trailB = createTarget(gl, r, r, gl.RGBA16F, gl.HALF_FLOAT, null, gl.LINEAR);
+    const w = this.resW, h = this.resH;
+    this.trailA = createTarget(gl, w, h, gl.RGBA16F, gl.HALF_FLOAT, null, gl.LINEAR);
+    this.trailB = createTarget(gl, w, h, gl.RGBA16F, gl.HALF_FLOAT, null, gl.LINEAR);
   }
 
   private seedAgents(): Float32Array {
     const w = this.p.agentTexW;
     const n = w * w;
     const data = new Float32Array(n * 4);
-    const r = this.res;
+    const rw = this.resW, rh = this.resH;
+    const min = Math.min(rw, rh); // radii scale with the short edge
     const species = Math.max(1, Math.round(this.p.species));
     for (let i = 0; i < n; i++) {
       let x: number, y: number, a: number;
       if (this.p.spawn === "center") {
-        const rad = Math.random() * r * 0.04;
+        const rad = Math.random() * min * 0.04;
         const t = Math.random() * Math.PI * 2;
-        x = r / 2 + Math.cos(t) * rad;
-        y = r / 2 + Math.sin(t) * rad;
+        x = rw / 2 + Math.cos(t) * rad;
+        y = rh / 2 + Math.sin(t) * rad;
         a = Math.random() * Math.PI * 2;
       } else if (this.p.spawn === "ring") {
-        const rad = r * 0.36;
+        const rad = min * 0.36;
         const t = Math.random() * Math.PI * 2;
-        x = r / 2 + Math.cos(t) * rad;
-        y = r / 2 + Math.sin(t) * rad;
+        x = rw / 2 + Math.cos(t) * rad;
+        y = rh / 2 + Math.sin(t) * rad;
         a = t + Math.PI + (Math.random() - 0.5);
       } else {
-        x = Math.random() * r;
-        y = Math.random() * r;
+        x = Math.random() * rw;
+        y = Math.random() * rh;
         a = Math.random() * Math.PI * 2;
       }
       data[i * 4] = x;
@@ -200,7 +204,7 @@ export class Physarum {
   private step() {
     const gl = this.gl;
     const p = this.p;
-    const r = this.res;
+    const rw = this.resW, rh = this.resH;
     const w = p.agentTexW;
     gl.bindVertexArray(this.vao);
 
@@ -214,7 +218,7 @@ export class Physarum {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.trailA.tex);
     gl.uniform1i(this.u(this.progUpdate, "uTrail"), 1);
-    gl.uniform2f(this.u(this.progUpdate, "uRes"), r, r);
+    gl.uniform2f(this.u(this.progUpdate, "uRes"), rw, rh);
     gl.uniform1f(this.u(this.progUpdate, "uSensorAngle"), p.sensorAngle * D2R);
     gl.uniform1f(this.u(this.progUpdate, "uSensorDist"), p.sensorDist);
     gl.uniform1f(this.u(this.progUpdate, "uTurnSpeed"), p.turnSpeed * D2R);
@@ -226,14 +230,14 @@ export class Physarum {
     // --- Pass 2: deposit (agentsB -> trailA, additive) ---
     gl.useProgram(this.progDeposit);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.trailA.fbo);
-    gl.viewport(0, 0, r, r);
+    gl.viewport(0, 0, rw, rh);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.agentsB.tex);
     gl.uniform1i(this.u(this.progDeposit, "uAgents"), 0);
     gl.uniform1f(this.u(this.progDeposit, "uAgentTexW"), w);
-    gl.uniform2f(this.u(this.progDeposit, "uRes"), r, r);
+    gl.uniform2f(this.u(this.progDeposit, "uRes"), rw, rh);
     gl.uniform1f(this.u(this.progDeposit, "uDeposit"), p.deposit);
     gl.drawArrays(gl.POINTS, 0, w * w);
 
@@ -246,7 +250,7 @@ export class Physarum {
     if (n > 0) {
       for (let k = n * 3; k < food.length; k++) food[k] = 0;
       gl.useProgram(this.progFood);
-      gl.uniform2f(this.u(this.progFood, "uRes"), r, r);
+      gl.uniform2f(this.u(this.progFood, "uRes"), rw, rh);
       gl.uniform1i(this.u(this.progFood, "uCount"), n);
       gl.uniform3fv(this.u(this.progFood, "uPoints"), food);
       gl.uniform1f(this.u(this.progFood, "uRadius"), p.foodRadius);
@@ -257,11 +261,11 @@ export class Physarum {
     // --- Pass 3: diffuse + decay (trailA -> trailB) ---
     gl.useProgram(this.progDecay);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.trailB.fbo);
-    gl.viewport(0, 0, r, r);
+    gl.viewport(0, 0, rw, rh);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.trailA.tex);
     gl.uniform1i(this.u(this.progDecay, "uTrail"), 0);
-    gl.uniform2f(this.u(this.progDecay, "uRes"), r, r);
+    gl.uniform2f(this.u(this.progDecay, "uRes"), rw, rh);
     gl.uniform1f(this.u(this.progDecay, "uDecay"), p.decay);
     gl.uniform1f(this.u(this.progDecay, "uDiffuse"), p.diffuse);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -280,7 +284,7 @@ export class Physarum {
     gl.useProgram(this.progDisplay);
     gl.bindVertexArray(this.vao);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, this.res, this.res);
+    gl.viewport(0, 0, this.resW, this.resH);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.trailA.tex);
     gl.uniform1i(this.u(this.progDisplay, "uTrail"), 0);
