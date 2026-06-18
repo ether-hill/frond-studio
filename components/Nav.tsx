@@ -78,7 +78,7 @@ export default function Nav() {
                 fontSize: 11,
                 letterSpacing: "0.16em",
                 textTransform: "uppercase",
-                color: "var(--fg-dim)",
+                color: "var(--fg)",
               }}
             >
               {NAV_LINKS.map((l) => (
@@ -99,21 +99,20 @@ export default function Nav() {
               aria-controls="mobile-menu"
               style={{
                 alignItems: "center",
-                gap: 9,
+                justifyContent: "center",
+                width: 44,
+                height: 44,
                 border: "1px solid var(--line)",
                 background: "transparent",
                 color: "var(--fg)",
                 borderRadius: 999,
-                padding: "10px 17px",
+                padding: 0,
                 cursor: "pointer",
-                ...labelStyle,
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
               }}
             >
-              Menu
+              <svg width="20" height="13" viewBox="0 0 20 13" fill="none" aria-hidden="true">
+                <path d="M0 1h20M0 6.5h20M0 12h20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
             </button>
           </div>
         </div>

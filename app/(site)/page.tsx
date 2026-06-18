@@ -1,4 +1,3 @@
-import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import HeroPhysarum from "@/components/HeroPhysarum";
 import RandomiseButton from "@/components/RandomiseButton";
@@ -36,15 +35,15 @@ export default async function Home() {
             maxWidth: "var(--maxw)",
             margin: "0 auto",
             minHeight: "100svh",
-            padding: "120px var(--gutter) 96px",
+            padding: "120px var(--gutter) clamp(116px,16vh,168px)",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
+            justifyContent: "flex-end",
             alignItems: "flex-start",
             textShadow: "0 2px 44px rgba(0,0,0,0.62)",
           }}
         >
-          <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(48px,8.8vw,152px)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
+          <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(36px,6.6vw,114px)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
             <span className="mask-line">
               <span style={{ transitionDelay: "0.06s" }}>Natural</span>
             </span>
@@ -61,39 +60,21 @@ export default async function Home() {
               marginTop: "clamp(22px,3vh,38px)",
               fontSize: "clamp(16px,1.35vw,19px)",
               lineHeight: 1.55,
-              color: "var(--fg-dim)",
+              color: "var(--fg)",
             }}
           >
-            <span style={{ color: "var(--fg)" }}>Things that matter to us:</span> transdisciplinary and biophilic design,
+            <span style={{ fontWeight: 500 }}>Things that matter to us:</span> transdisciplinary and biophilic design,
             meandering, ethical AI, design systems, working remotely worldwide…
           </p>
-
-          <div data-rv style={{ transitionDelay: "0.3s", marginTop: "clamp(24px,3.2vh,38px)", display: "flex", flexWrap: "wrap", gap: 14 }}>
-            <Link href="/work" className="pill pill-solid" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", padding: "14px 26px" }}>
-              View selected work
-            </Link>
-            <Link href="/contact" className="pill pill-ghost" style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", padding: "14px 26px" }}>
-              Start a project
-            </Link>
-          </div>
         </div>
 
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 30, zIndex: 2 }}>
           <div style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter)" }}>
-            <span
-              data-rv
-              style={{
-                transitionDelay: "0.42s",
-                display: "inline-block",
-                fontFamily: "var(--font-mono)",
-                fontSize: 10.5,
-                fontWeight: 500,
-                letterSpacing: "0.22em",
-                textTransform: "uppercase",
-                color: "var(--fg-faint)",
-              }}
-            >
-              Scroll to explore &#8595;
+            <span data-rv className="scroll-cue" style={{ transitionDelay: "0.42s" }}>
+              <span className="scroll-cue-label">Scroll to explore</span>
+              <svg className="scroll-cue-arrow" width="20" height="26" viewBox="0 0 20 26" fill="none" aria-hidden="true">
+                <path d="M10 1v22M2 16l8 8 8-8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </span>
           </div>
         </div>

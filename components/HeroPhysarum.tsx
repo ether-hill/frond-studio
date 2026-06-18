@@ -20,9 +20,11 @@ export default function HeroPhysarum() {
     if (!canvas) return;
 
     const AGENTS = 256; // agentTexW → 65k agents, matches the reference's light footprint
+    const START_DELAY = 1300; // let the hero text animate in first, then start the sim (avoids load jank)
 
     let eng: { render: () => void; dispose: () => void } | null = null;
     let raf = 0;
+    let startT = 0;
     let disposed = false;
     let scenes: P[] = [];
     let lastParams: P | null = null; // last-built scene, so a resize rebuilds it (not the hero default)
@@ -117,8 +119,16 @@ export default function HeroPhysarum() {
         // every 2D scene is fair game for RANDOMISE (colours + full params)
         scenes = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => v.params as unknown as P);
         const hero = VERSIONS.find((v) => v.id === HERO_VERSION_ID) || VERSIONS[0];
-        build(hero.params as unknown as P); // canonical Monochrome Drift on first paint
-        run();
+        const start = () => {
+          if (disposed) return;
+          build(hero.params as unknown as P); // canonical Monochrome Drift on first paint
+          canvas.style.opacity = "1"; // fade the sim in (CSS transition on the canvas)
+          run();
+        };
+        // Hold the heavy sim until the headline/intro have finished animating in,
+        // so the reveal stays smooth. Reduced-motion has no intro — start at once.
+        if (reduce) start();
+        else startT = window.setTimeout(start, START_DELAY);
       })
       .catch(() => {
         /* engine failed to load — leave background empty */
@@ -151,6 +161,7 @@ export default function HeroPhysarum() {
     return () => {
       disposed = true;
       cancelAnimationFrame(raf);
+      window.clearTimeout(startT);
       window.clearTimeout(resizeT);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("hero-physarum-reseed", onReseed);
@@ -166,7 +177,7 @@ export default function HeroPhysarum() {
     <canvas
       ref={canvasRef}
       aria-hidden
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", objectFit: "cover" }}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", objectFit: "cover", opacity: 0, transition: "opacity 1s ease" }}
     />
   );
 }
