@@ -83,6 +83,16 @@ export default function HeroPhysarum() {
     ];
     const DARK_BGS = ["#050507", "#0a0612", "#120618", "#04060a", "#1a1438", "#2b1226", "#060108"];
 
+    // Spawn mode heavily favours "random" — the sprawling, immediately-eventful
+    // network. ring/center spawn as a circle that's slow to develop (the
+    // "uneventful purple circle"), so they're now rare garnish, not the default.
+    const pickSpawn = () => {
+      const r = Math.random();
+      if (r < 0.82) return "random";
+      if (r < 0.93) return "ring";
+      return "center";
+    };
+
     // Wide movement ranges (more variation than before).
     const movementJitter = (): P => ({
       sensorAngle: rand(8, 45),
@@ -93,7 +103,7 @@ export default function HeroPhysarum() {
       decay: rand(0.8, 0.95),
       diffuse: Math.random() < 0.4 ? 0 : rand(0, 0.5),
       gamma: rand(0.28, 0.6),
-      spawn: pick(["random", "ring", "center"] as const),
+      spawn: pickSpawn(),
     });
 
     // ~55% of fresh draws go multi-species / multi-colour (rgb) for richer,
