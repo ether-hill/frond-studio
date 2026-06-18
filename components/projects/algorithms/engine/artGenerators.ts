@@ -1575,17 +1575,51 @@ const mycelium: Gen = (p, seed, size, params) => {
     const f = (n: number) => { const k = (n + h * 12) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
     return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
   };
+  // Each RANDOMISE rolls a fresh palette: a colour COUNT (2–10) and a SCHEME (hue
+  // relationship + tone family). The colour colony (bloom) draws on the whole range
+  // of schemes so the colony genuinely re-tints each time; the other coloured presets
+  // bias toward their character (filigree pale, cords earthy) but still vary.
   const palette: RGB[] = [];
-  const addc = (h: number, s: number, l: number) => palette.push(hsl(h, s, l));
-  if (presetK === "bloom") {                           // gradient greens, blues, yellows
-    const hs = [52, 96, 138, 168, 202, 64];
-    for (const h of hs) addc(h + (p.random() - 0.5) * 16, 0.55 + p.random() * 0.28, 0.5 + p.random() * 0.16);
-  } else if (presetK === "filigree") {                 // light grey → soft brown (hairline)
-    for (let i = 0; i < 5; i++) { const brown = p.random() < 0.55; addc(30 + p.random() * 14, brown ? 0.16 + p.random() * 0.22 : 0.02, 0.64 + p.random() * 0.24); }
-  } else if (presetK === "cords") {                    // earthy roots — browns and tans
-    for (let i = 0; i < 5; i++) addc(22 + p.random() * 24, 0.32 + p.random() * 0.3, 0.32 + p.random() * 0.32);
-  } else {                                             // wild — a mix of greys
-    for (let i = 0; i < 5; i++) addc(0, 0, 0.5 + p.random() * 0.5);
+  const addc = (h: number, s: number, l: number) =>
+    palette.push(hsl(h, Math.max(0, Math.min(1, s)), Math.max(0.06, Math.min(0.97, l))));
+  type Scheme = "mono" | "analogous" | "complement" | "triad" | "spread" | "warm" | "cool" | "earthy" | "jewel" | "pastel";
+  const pick = <T>(arr: readonly T[]): T => arr[(p.random() * arr.length) | 0];
+  const N = 2 + ((p.random() * 9) | 0);                // 2..10 colours
+  const h0 = p.random() * 360;
+  let scheme: Scheme, satBase: number, ligBase: number, satJit: number, ligJit: number;
+  if (presetK === "filigree") {                        // pale, low-sat hairline web
+    scheme = pick(["mono", "analogous", "pastel", "earthy"] as const);
+    satBase = 0.10 + p.random() * 0.22; ligBase = 0.62 + p.random() * 0.20; satJit = 0.12; ligJit = 0.18;
+  } else if (presetK === "cords") {                    // earthy roots — browns & tans, varied
+    scheme = pick(["earthy", "analogous", "mono", "warm"] as const);
+    satBase = 0.30 + p.random() * 0.30; ligBase = 0.34 + p.random() * 0.26; satJit = 0.20; ligJit = 0.22;
+  } else if (presetK === "bloom") {                    // colour colony — the full range
+    scheme = pick(["analogous", "complement", "triad", "spread", "warm", "cool", "jewel", "pastel", "mono"] as const);
+    satBase = 0.42 + p.random() * 0.40; ligBase = 0.46 + p.random() * 0.22; satJit = 0.20; ligJit = 0.16;
+  } else {                                             // wild — greys
+    scheme = "mono"; satBase = 0; ligBase = 0.5; satJit = 0; ligJit = 0.45;
+  }
+  const hueFor = (i: number): number => {
+    const t = N > 1 ? i / (N - 1) : 0;
+    switch (scheme) {
+      case "analogous":  return h0 + (t - 0.5) * (40 + p.random() * 50);
+      case "complement": return h0 + (i % 2) * 180 + (p.random() - 0.5) * 26;
+      case "triad":      return h0 + (i % 3) * 120 + (p.random() - 0.5) * 24;
+      case "spread":     return h0 + t * (200 + p.random() * 140);
+      case "warm":       return 16 + t * 56 + (p.random() - 0.5) * 30;       // reds→oranges→yellows
+      case "cool":       return 150 + t * 120 + (p.random() - 0.5) * 32;     // greens→blues→violets
+      case "jewel":      return h0 + t * 300;                                // saturated near-rainbow
+      case "pastel":     return h0 + t * (120 + p.random() * 130);
+      case "earthy":     return 24 + (p.random() - 0.5) * 44;                // browns/tans
+      default:           return h0;                                          // mono
+    }
+  };
+  for (let i = 0; i < N; i++) {
+    const sat = scheme === "jewel" ? 0.7 + p.random() * 0.25
+      : scheme === "pastel" ? 0.22 + p.random() * 0.20
+      : Math.max(0, satBase + (p.random() - 0.5) * satJit);
+    const lig = scheme === "pastel" ? 0.72 + p.random() * 0.16 : ligBase + (p.random() - 0.5) * ligJit;
+    addc(hueFor(i), sat, lig);
   }
   // gradient lineage colour, dimmed slightly toward the fine tips
   const shade = (dnorm: number, ci: number): RGB => {
@@ -1609,7 +1643,6 @@ const mycelium: Gen = (p, seed, size, params) => {
 
   // habit parameters
   const rootMode = presetK === "cords";                 // grows from top-centre downward, like roots
-  const cx0 = size / 2, cy0 = rootMode ? size * 0.05 : habit === "bush" ? size * 0.99 : size / 2;
   const CFG = {
     colony: { maxTurn: 0.26, Kchemo: 0.6, Kauto: 0.8, Kwander: 0.18, Kbias: 0.4, branch: 0.17, latFrac: 0.5, latAng: 0.9, fuseD: 1.4, fuseP: 0.78, wBase: 2.6, maxAge: 1100 },
     frost:  { maxTurn: 0.12, Kchemo: 0.4, Kauto: 0.55, Kwander: 0.10, Kbias: 0.7, branch: 0.20, latFrac: 0.82, latAng: 0.62, fuseD: 2.6, fuseP: 0.30, wBase: 2.2, maxAge: 1400 },
@@ -1639,13 +1672,43 @@ const mycelium: Gen = (p, seed, size, params) => {
     bloom:    { habit: "colony", maxTurn: 0.26, Kbias: 0.42, branch: 0.2, wBase: 2.4, maxAge: 1300 },
   };
   const presetActive = Object.prototype.hasOwnProperty.call(PRESETS, presetK);
-  if (presetActive) {
-    const { habit: ph, ...over } = PRESETS[presetK];
-    habit = ph;
-    cfg = { ...CFG[habit], ...over };
-  }
-  // Wild (no preset): longer strands — branch less often and live longer.
-  if (!presetActive) cfg = { ...cfg, branch: cfg.branch * 0.6, maxAge: cfg.maxAge * 1.7 };
+  let presetOver: Partial<CfgT> = {};
+  if (presetActive) { const { habit: ph, ...rest } = PRESETS[presetK]; habit = ph; presetOver = rest; }
+
+  // ── style rolls, re-rolled by each RANDOMISE (new seed) and applied on top of
+  // whatever the preset/habit set, so they enrich every preset. ──
+  // (1) line weight — plenty of super-thin hairline variants, fewer bold ones.
+  const wRoll = p.random();
+  const hairline = wRoll < 0.45;
+  const weightK = hairline ? 0.26 + p.random() * 0.42        // 0.26–0.68  hairline
+    : wRoll < 0.78 ? 0.72 + p.random() * 0.56                // 0.72–1.28  medium
+    : 1.35 + p.random() * 0.95;                              // 1.35–2.30  bold
+  const minW = hairline ? 0.3 : 0.5;
+  // (2) growth pattern — radial (circular colony, the classic) vs directional (a
+  // heading with feathery branching → roots/branches). Excludes bush (base-anchored)
+  // and the cords root preset (already top-down).
+  const canDirect = !rootMode && habit !== "bush";
+  const directional = canDirect && p.random() < 0.5;
+  const dirAngle = p.random() * TAU;
+  const dirVec: [number, number] = [Math.cos(dirAngle), Math.sin(dirAngle)];
+  const dirBias = 0.62 + p.random() * 0.32;
+  const applyStyle = (c: CfgT): CfgT => {
+    let o: CfgT = { ...c, wBase: c.wBase * weightK };
+    if (directional) o = { ...o, Kbias: Math.max(o.Kbias, dirBias), fuseP: o.fuseP * 0.5, latFrac: Math.min(0.92, o.latFrac + 0.12), maxTurn: o.maxTurn * 0.85 };
+    return o;
+  };
+  // working config: preset override (or wild longevity) → style. Reused on mid-run
+  // habit rotation so the rolled weight/direction stay consistent across bursts.
+  const buildCfg = (h: Habit): CfgT => applyStyle(
+    presetActive ? { ...CFG[h], ...presetOver }
+                 : { ...CFG[h], branch: CFG[h].branch * 0.6, maxAge: CFG[h].maxAge * 1.7 },
+  );
+  cfg = buildCfg(habit);
+
+  // origin — radial from centre; down from the top for roots; up from the base for
+  // bush; or upstream of the heading for directional growth (so it crosses the frame).
+  const cx0 = directional && !rootMode ? size / 2 - dirVec[0] * size * 0.42 : size / 2;
+  const cy0 = rootMode ? size * 0.05 : habit === "bush" ? size * 0.99 : directional ? size / 2 - dirVec[1] * size * 0.42 : size / 2;
 
   // denser, more intricate by default; the finest habits get the most tips
   const intricate = habit === "coral" || habit === "veil" || habit === "cord";
@@ -1677,6 +1740,8 @@ const mycelium: Gen = (p, seed, size, params) => {
         ? Math.PI / 2 + (i / n - 0.5) * 1.0 + (p.random() - 0.5) * 0.25  // downward fan from the top
         : habit === "bush"
         ? -Math.PI / 2 + (p.random() - 0.5) * 1.1
+        : directional
+        ? dirAngle + (i / n - 0.5) * 1.2 + (p.random() - 0.5) * 0.3       // fan along the heading
         : (i / n) * TAU + p.random() * 0.3;
       tips.push(newTip(cx0, cy0, ang, 0, 110, ci));
     }
@@ -1687,6 +1752,7 @@ const mycelium: Gen = (p, seed, size, params) => {
   // from the top for roots (cords).
   const bias = (x: number, y: number): [number, number] => {
     if (rootMode) { let dx = (x - cx0) * 0.45, dy = 1.0; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; }
+    if (directional) return dirVec;                       // a steady heading → roots/branches
     if (habit === "bush") { let dx = (x - size / 2) * 0.5, dy = -(cy0 - y); const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; }
     let dx = x - cx0, dy = y - cy0; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l];
   };
@@ -1719,7 +1785,7 @@ const mycelium: Gen = (p, seed, size, params) => {
 
       const dnorm = Math.min(1, t.depth / DCAP);
       const col = shade(dnorm, t.ci);
-      const w = Math.max(0.5, cfg.wBase * (1 - 0.72 * dnorm) - t.age * 0.0008);
+      const w = Math.max(minW, cfg.wBase * (1 - 0.72 * dnorm) - t.age * 0.0008);
 
       // anastomosis: meet established hyphae → fuse into a loop, mark the junction
       if (t.age > 8 && sample(den, nx, ny) > cfg.fuseD && p.random() < cfg.fuseP) {
@@ -1783,10 +1849,18 @@ const mycelium: Gen = (p, seed, size, params) => {
         for (let i = 0; i < n; i++) tips.push(newTip(sx0, sy0, Math.PI / 2 + (i / n - 0.5) * 0.9 + (p.random() - 0.5) * 0.3, 0, 100, ci0));
       } else {
         // most bursts also shift the growth habit, so the morphology keeps evolving
-        if (!presetActive && p.random() < 0.6) { habit = ROTATE[(p.random() * ROTATE.length) | 0]; cfg = { ...CFG[habit], branch: CFG[habit].branch * 0.6, maxAge: CFG[habit].maxAge * 1.7 }; }
-        sx0 = size * (0.1 + p.random() * 0.8); sy0 = size * (0.1 + p.random() * 0.8);
-        const n = 7 + (p.random() * 9 | 0), a0 = p.random() * TAU;
-        for (let i = 0; i < n; i++) tips.push(newTip(sx0, sy0, a0 + (i / n) * TAU + (p.random() - 0.5) * 0.5, 0, 100, ci0));
+        // (buildCfg re-applies the rolled weight + direction so they stay consistent)
+        if (!presetActive && p.random() < 0.6) { habit = ROTATE[(p.random() * ROTATE.length) | 0]; cfg = buildCfg(habit); }
+        if (directional) {
+          // fresh growth enters upstream and heads along the colony's direction
+          sx0 = cx0 + (p.random() - 0.5) * size * 0.5; sy0 = cy0 + (p.random() - 0.5) * size * 0.5;
+          const n = 6 + (p.random() * 7 | 0);
+          for (let i = 0; i < n; i++) tips.push(newTip(sx0, sy0, dirAngle + (i / n - 0.5) * 1.1 + (p.random() - 0.5) * 0.4, 0, 100, ci0));
+        } else {
+          sx0 = size * (0.1 + p.random() * 0.8); sy0 = size * (0.1 + p.random() * 0.8);
+          const n = 7 + (p.random() * 9 | 0), a0 = p.random() * TAU;
+          for (let i = 0; i < n; i++) tips.push(newTip(sx0, sy0, a0 + (i / n) * TAU + (p.random() - 0.5) * 0.5, 0, 100, ci0));
+        }
       }
       const r = (G * 0.18) | 0, cgx = clampC(sx0 / cell), cgy = clampC(sy0 / cell);
       for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {

@@ -364,7 +364,7 @@ const MYC_PRESETS: { key: string; label: string; color: boolean }[] = [
   { key: "cords", label: "Cords — rhizome", color: true },
   { key: "bloom", label: "Bloom — colour colony", color: true },
 ];
-let mycPreset = "wild";
+let mycPreset = "bloom";  // default to the colour colony
 let jonesPreset = JONES_PRESETS.some((p) => p.key === HERO_VERSION_ID) ? HERO_VERSION_ID : JONES_PRESETS[0].key;
 
 const baseSeed = (i: number) => 1000 + i * 131 + 7;
