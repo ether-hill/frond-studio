@@ -573,7 +573,7 @@ button {
    A faithful dark, media-forward recreation of the original editorial page.
    Scoped so it stays starkly black regardless of the global light/dark toggle. */
 .sym-root {
-  background: #050504;
+  background: #000;
   color: var(--fg);
 }
 .sym-wrap {
@@ -582,24 +582,28 @@ button {
   padding: 0 var(--gutter);
 }
 
-/* Hero — full-bleed video with overlaid branding */
+/* Hero — split: text + intro on the left, video bleeding to the right edge
+   (matches the original). The left column is padded to align with the site's
+   centered max-width gutter; the right column runs to the viewport edge. */
 .sym-hero {
   position: relative;
-  height: clamp(560px, 92svh, 1100px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  min-height: 100svh;
+  background: #000;
+  overflow: hidden;
+}
+.sym-hero-text {
+  padding-left: max(var(--gutter), calc((100vw - var(--maxw)) / 2 + var(--gutter)));
+  padding-right: clamp(28px, 4vw, 72px);
+  padding-block: clamp(120px, 16vh, 200px);
+}
+.sym-hero-media {
+  position: relative;
+  align-self: stretch;
   overflow: hidden;
   background: #000;
-}
-.sym-hero-scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 26%, transparent 52%, rgba(5,5,4,0.85) 100%);
-}
-.sym-hero-brand {
-  position: absolute;
-  left: 0; right: 0; bottom: clamp(40px, 8vh, 96px);
-  z-index: 2;
 }
 .sym-eyebrow {
   font-family: var(--font-mono);
@@ -609,7 +613,22 @@ button {
   text-transform: uppercase;
   color: var(--fg);
 }
-.sym-eyebrow span { color: var(--fg-faint); letter-spacing: 0.3em; }
+.sym-eyebrow span { display: block; margin-top: 8px; color: var(--fg-faint); letter-spacing: 0.3em; }
+.sym-ig {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: clamp(20px, 3vh, 30px);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim);
+}
+@media (max-width: 860px) {
+  .sym-hero { grid-template-columns: 1fr; min-height: 0; }
+  .sym-hero-media { order: -1; aspect-ratio: 1 / 1; }
+  .sym-hero-text { padding-block: clamp(48px, 9vh, 88px) clamp(56px, 10vh, 96px); padding-right: var(--gutter); }
+}
 
 /* Section rhythm */
 .sym-section { padding-block: clamp(72px, 13vh, 168px); }
@@ -702,7 +721,7 @@ button {
   padding: 14px 26px;
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
-.sym-readbtn:hover { background: var(--fg); color: #050504; border-color: var(--fg); }
+.sym-readbtn:hover { background: var(--fg); color: #000; border-color: var(--fg); }
 .sym-arrow {
   position: absolute;
   top: 50%;

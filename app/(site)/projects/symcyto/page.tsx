@@ -54,58 +54,47 @@ export default function SymcytoPage() {
   return (
     <RevealRoot>
       <div className="sym-root" data-theme="dark">
-        {/* Hero — full-bleed signature timelapse with overlaid branding */}
+        {/* Hero — split: branding + opening statement on the left, the signature
+            timelapse bleeding to the right edge (matches the original). */}
         <section className="sym-hero">
-          <div data-par="0.12" data-par-scale="0.1" style={{ position: "absolute", inset: "-8% 0", willChange: "transform" }}>
-            <AutoVideo src="/symcyto/symcyto-001.mp4" poster="/symcyto/symcyto-001-poster.jpg" style={{ objectPosition: "center" }} />
-          </div>
-          <div className="sym-hero-scrim" aria-hidden />
-          <div className="sym-hero-brand">
-            <div className="sym-wrap" data-stag>
-              <div className="sym-eyebrow">
-                Symcyto <span>— New Forms of Harvest</span>
-              </div>
-              <h1
-                style={{
-                  margin: "clamp(18px,3vh,30px) 0 0",
-                  fontFamily: "var(--font-display), sans-serif",
-                  fontWeight: 600,
-                  fontSize: "clamp(54px,10vw,168px)",
-                  lineHeight: 0.9,
-                  letterSpacing: "-0.04em",
-                  color: "var(--fg)",
-                }}
-              >
-                <span className="mask-line">
-                  <span>Symcyto</span>
-                </span>
-              </h1>
-              <a
-                href="https://www.instagram.com/symcyto/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="linku"
-                style={{ display: "inline-block", marginTop: 20, fontFamily: "var(--font-mono)", fontSize: 13, letterSpacing: "0.1em", color: "var(--fg-dim)" }}
-              >
-                @symcyto ↗
-              </a>
+          <div className="sym-hero-text" data-stag>
+            <div className="sym-eyebrow">
+              S Y M C Y T O <span>New Forms of Harvest</span>
             </div>
+            <a href="https://www.instagram.com/symcyto/" target="_blank" rel="noopener noreferrer" className="sym-ig linku">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="2.5" y="2.5" width="19" height="19" rx="5.2" stroke="currentColor" strokeWidth="1.7" />
+                <circle cx="12" cy="12" r="4.4" stroke="currentColor" strokeWidth="1.7" />
+                <circle cx="17.6" cy="6.4" r="1.25" fill="currentColor" />
+              </svg>
+              @symcyto
+            </a>
+            <h1
+              style={{
+                margin: "clamp(28px,5vh,52px) 0 0",
+                fontFamily: "var(--font-display), sans-serif",
+                fontWeight: 600,
+                fontSize: "clamp(40px,5.4vw,68px)",
+                lineHeight: 1.0,
+                letterSpacing: "-0.03em",
+                color: "var(--fg)",
+              }}
+            >
+              <span className="mask-line">
+                <span>Ancient algorithms</span>
+              </span>
+            </h1>
+            <p className="sym-lead" data-rvs style={{ marginTop: "clamp(22px,3.5vh,36px)", maxWidth: "52ch" }}>
+              Just as AI is creeping into our lives, nature poetically accelerates the endorsement of a lesser-known form of
+              intelligence. As if to remind the world that hidden amongst ancient organisms is an organic intelligence — an OI —
+              that demonstrates the power of evolutionary programming. This is slime mould: a left-field, decentralised,
+              single-celled, pulsating problem solver.
+            </p>
           </div>
-        </section>
 
-        {/* Ancient algorithms — opening statement */}
-        <section className="sym-section">
-          <div className="sym-wrap">
-            <div style={{ maxWidth: 920 }}>
-              <h2 className="sym-h2" data-rvs>
-                Ancient algorithms
-              </h2>
-              <p className="sym-lead" data-rvs style={{ marginTop: "clamp(24px,4vh,40px)", maxWidth: "60ch" }}>
-                Just as AI is creeping into our lives, nature poetically accelerates the endorsement of a lesser-known form of
-                intelligence. As if to remind the world that hidden amongst ancient organisms is an organic intelligence — an OI —
-                that demonstrates the power of evolutionary programming. This is slime mould: a left-field, decentralised,
-                single-celled, pulsating problem solver.
-              </p>
+          <div className="sym-hero-media">
+            <div data-par-scale="0.3" style={{ position: "absolute", inset: 0, willChange: "transform" }}>
+              <AutoVideo src="/symcyto/symcyto-001.mp4" poster="/symcyto/symcyto-001-poster.jpg" style={{ objectPosition: "center" }} />
             </div>
           </div>
         </section>
@@ -115,7 +104,7 @@ export default function SymcytoPage() {
           <div className="sym-wrap">
             <div className="sym-feature">
               <div className="sym-media sq" data-rvs>
-                <div data-par="0.08" data-par-scale="0.08" style={{ position: "absolute", inset: "-6% 0", willChange: "transform" }}>
+                <div data-par="0.08" data-par-scale="0.3" style={{ position: "absolute", inset: "-6% 0", willChange: "transform" }}>
                   <AutoVideo src="/symcyto/erasmus-polypore.mp4" poster="/symcyto/erasmus-polypore-poster.jpg" />
                 </div>
               </div>
@@ -137,7 +126,7 @@ export default function SymcytoPage() {
           <div className="sym-wrap">
             <div className="sym-feature rev">
               <div className="sym-media port" data-rvs>
-                <div data-par="0.1" data-par-scale="0.08" style={{ position: "absolute", inset: "-6% 0", willChange: "transform" }}>
+                <div data-par="0.1" data-par-scale="0.3" style={{ position: "absolute", inset: "-6% 0", willChange: "transform" }}>
                   <AutoVideo src="/symcyto/sym-2-hero.mp4" poster="/symcyto/sym-2-poster.jpg" />
                 </div>
               </div>
