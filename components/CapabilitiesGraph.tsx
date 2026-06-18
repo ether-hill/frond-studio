@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { CAP_NODES as NODES, CAP_LINKS as LINKS, GROUP_COLORS as COLORS } from "@/lib/capabilities";
+import { CAP_NODES as NODES, CAP_LINKS as LINKS, GROUP_COLORS as COLORS, GROUP_COLORS_LIGHT as COLORS_LIGHT } from "@/lib/capabilities";
 
 /**
  * Capabilities as an interactive 3D force-directed graph, rendered on a plain 2D
@@ -97,7 +97,7 @@ export default function CapabilitiesGraph() {
     // view state
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     let W = 0, H = 0;
-    let rotX = -0.35, rotY = 0.4, zoom = 1, hover = -1;
+    let rotX = -0.35, rotY = 0.4, hover = -1;
     let dragging = false, lastX = 0, lastY = 0;
     const proj = NODES.map(() => ({ sx: 0, sy: 0, depth: 0, persp: 1, fs: 12 }));
 
@@ -111,10 +111,11 @@ export default function CapabilitiesGraph() {
 
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
+      const COL = document.documentElement.dataset.theme === "light" ? COLORS_LIGHT : COLORS;
       const cX = Math.cos(rotX), sX = Math.sin(rotX), cY = Math.cos(rotY), sY = Math.sin(rotY);
-      const R = Math.min(W, H) * 0.46 * zoom;
-      // widen the graph to fill a wide stage (the cluster is ~spherical)
-      const xStretch = Math.min(1.5, Math.max(1, (W / H) * 0.72));
+      const R = Math.min(W, H) * 0.46;
+      // widen the graph to fill a wider stage (the cluster is ~spherical)
+      const xStretch = Math.min(1.45, Math.max(1, (W / H) * 0.74));
       const focal = 2.7, ox = W / 2, oy = H / 2;
       for (let i = 0; i < n; i++) {
         const p = pos[i];
@@ -125,7 +126,8 @@ export default function CapabilitiesGraph() {
         proj[i].sy = oy + y2 * R * persp;
         proj[i].depth = z2;
         proj[i].persp = persp;
-        proj[i].fs = (10 + NODES[i].val * 1.55) * persp;
+        // exaggerated word-size metric: micro words stay small, hubs read big
+        proj[i].fs = (4 + NODES[i].val * 3) * persp;
       }
 
       // edges (behind), faded by depth; brighter when touching the hovered node
@@ -136,7 +138,7 @@ export default function CapabilitiesGraph() {
         const dep = (pa.depth + pb.depth) / 2;
         const base = 0.07 + 0.16 * (0.5 + dep * 0.5);
         const alpha = near ? 0.6 : dim ? base * 0.3 : base;
-        ctx.strokeStyle = rgba(COLORS[NODES[a].group], alpha);
+        ctx.strokeStyle = rgba(COL[NODES[a].group], alpha);
         ctx.lineWidth = (near ? 1.1 : 0.6) * ((pa.persp + pb.persp) / 2);
         ctx.beginPath();
         ctx.moveTo(pa.sx, pa.sy);
@@ -148,7 +150,7 @@ export default function CapabilitiesGraph() {
       const order = [...proj.keys()].sort((i, j) => proj[i].depth - proj[j].depth);
       ctx.textBaseline = "middle";
       for (const i of order) {
-        const p = proj[i], nd = NODES[i], col = COLORS[nd.group];
+        const p = proj[i], nd = NODES[i], col = COL[nd.group];
         const depthT = 0.5 + p.depth * 0.5;
         const hot = hover === i || (hover >= 0 && adj[hover].has(i));
         const dim = hover >= 0 && !hot && hover !== i;
@@ -159,8 +161,12 @@ export default function CapabilitiesGraph() {
         ctx.arc(p.sx, p.sy, Math.max(1.4, fs * 0.12), 0, Math.PI * 2);
         ctx.fill();
         ctx.font = FONT.replace("16px", `${fs.toFixed(1)}px`);
-        ctx.fillText(nd.label, p.sx + fs * 0.34, p.sy);
+        // labels grow inward near the right edge so they never clip off-canvas
+        const rightSide = p.sx > W * 0.62;
+        ctx.textAlign = rightSide ? "right" : "left";
+        ctx.fillText(nd.label, p.sx + (rightSide ? -1 : 1) * fs * 0.34, p.sy);
       }
+      ctx.textAlign = "left";
     };
 
     const hitTest = (mx: number, my: number) => {
@@ -199,15 +205,10 @@ export default function CapabilitiesGraph() {
       canvas.style.cursor = "grab";
     };
     const onLeave = () => { hover = -1; };
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      zoom = Math.max(0.55, Math.min(2.4, zoom * (e.deltaY > 0 ? 0.92 : 1.08)));
-    };
     canvas.addEventListener("pointerdown", onDown);
     canvas.addEventListener("pointermove", onMove);
     canvas.addEventListener("pointerup", onUp);
     canvas.addEventListener("pointerleave", onLeave);
-    canvas.addEventListener("wheel", onWheel, { passive: false });
     canvas.style.cursor = "grab";
 
     // render loop, paused while off-screen
@@ -254,7 +255,6 @@ export default function CapabilitiesGraph() {
       canvas.removeEventListener("pointermove", onMove);
       canvas.removeEventListener("pointerup", onUp);
       canvas.removeEventListener("pointerleave", onLeave);
-      canvas.removeEventListener("wheel", onWheel);
     };
   }, []);
 
@@ -262,7 +262,7 @@ export default function CapabilitiesGraph() {
     <canvas
       ref={canvasRef}
       aria-label="Interactive 3D graph of studio capabilities"
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", touchAction: "none" }}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", touchAction: "pan-y" }}
     />
   );
 }

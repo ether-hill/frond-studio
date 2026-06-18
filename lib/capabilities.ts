@@ -4,8 +4,10 @@
 // generative/creative coding, biophilic + systems design; lighter on commodity
 // bits like stock photography). `LINKS` wire up how the disciplines cross over.
 
-export type CapGroup = "design" | "dev" | "consult" | "ai" | "data" | "media";
+export type CapGroup = "design" | "dev" | "consult" | "ai" | "data" | "media" | "sound" | "space";
 
+// Two palettes: vivid for a dark background, deeper/saturated so the same nodes
+// still read against the light (cream) theme. CapabilitiesGraph picks by theme.
 export const GROUP_COLORS: Record<CapGroup, [number, number, number]> = {
   design: [255, 94, 160], // pink
   dev: [52, 211, 153], // green
@@ -13,6 +15,19 @@ export const GROUP_COLORS: Record<CapGroup, [number, number, number]> = {
   ai: [34, 211, 238], // cyan
   data: [244, 196, 76], // gold
   media: [251, 139, 60], // orange
+  sound: [255, 107, 107], // red
+  space: [124, 156, 255], // periwinkle
+};
+
+export const GROUP_COLORS_LIGHT: Record<CapGroup, [number, number, number]> = {
+  design: [200, 30, 99],
+  dev: [14, 143, 94],
+  consult: [103, 65, 199],
+  ai: [10, 138, 163],
+  data: [168, 119, 8],
+  media: [194, 90, 18],
+  sound: [196, 51, 51],
+  space: [58, 82, 192],
 };
 
 export const CAP_GROUPS: { key: CapGroup; label: string; color: string }[] = [
@@ -22,6 +37,8 @@ export const CAP_GROUPS: { key: CapGroup; label: string; color: string }[] = [
   { key: "ai", label: "Positive AI", color: "rgb(34,211,238)" },
   { key: "data", label: "Data & viz", color: "rgb(244,196,76)" },
   { key: "media", label: "Media & art", color: "rgb(251,139,60)" },
+  { key: "sound", label: "Sound", color: "rgb(255,107,107)" },
+  { key: "space", label: "Spatial", color: "rgb(124,156,255)" },
 ];
 
 export type CapNode = { id: string; label: string; group: CapGroup; val: number };
@@ -61,7 +78,26 @@ export const CAP_NODES: CapNode[] = [
 
   { id: "bioart", label: "Bio-art", group: "media", val: 7 },
   { id: "timelapse", label: "Timelapse & film", group: "media", val: 6 },
+  { id: "cymatics", label: "Cymatics", group: "media", val: 6 },
   { id: "photography", label: "Photography", group: "media", val: 4 },
+  { id: "performance", label: "Performance", group: "media", val: 3 },
+
+  { id: "sounddesign", label: "Sound design", group: "sound", val: 7 },
+  { id: "audioproduction", label: "Audio production", group: "sound", val: 5 },
+  { id: "sonification", label: "Sonification", group: "sound", val: 3 },
+
+  { id: "spacedesign", label: "Space design", group: "space", val: 6 },
+  { id: "events", label: "Events", group: "space", val: 5 },
+  { id: "installations", label: "Installations", group: "space", val: 5 },
+  { id: "setdesign", label: "Set design", group: "space", val: 3 },
+
+  { id: "horticulture", label: "Horticulture", group: "design", val: 6 },
+  { id: "cultivation", label: "Cultivation", group: "design", val: 5 },
+  { id: "biomimicry", label: "Biomimicry", group: "design", val: 6 },
+  { id: "fashion", label: "Fashion", group: "design", val: 4 },
+
+  { id: "productproto", label: "Product prototyping", group: "dev", val: 6 },
+  { id: "facilitation", label: "Facilitation", group: "consult", val: 4 },
 ];
 
 export const CAP_LINKS: [string, string][] = [
@@ -87,4 +123,17 @@ export const CAP_LINKS: [string, string][] = [
   ["positiveai", "creativecoding"], ["positiveai", "research"], ["designsystems", "frontend"], ["uxui", "frontend"],
   ["motion", "webgl"], ["creativedirection", "artdirection"], ["biophilic", "research"], ["aitooling", "creativecoding"],
   ["techdirection", "frontend"], ["product", "uxui"],
+  // sound
+  ["audioproduction", "sounddesign"], ["sonification", "sounddesign"], ["sonification", "dataviz"],
+  ["sounddesign", "webaudio"], ["sounddesign", "creativecoding"], ["cymatics", "sounddesign"],
+  ["cymatics", "bioart"], ["cymatics", "generative"],
+  // spatial
+  ["events", "spacedesign"], ["installations", "spacedesign"], ["setdesign", "spacedesign"], ["setdesign", "events"],
+  ["installations", "bioart"], ["spacedesign", "biophilic"], ["performance", "installations"], ["performance", "events"],
+  // nature-craft + fashion (design)
+  ["horticulture", "biophilic"], ["cultivation", "biophilic"], ["cultivation", "bioart"], ["horticulture", "cultivation"],
+  ["biomimicry", "biophilic"], ["biomimicry", "generative"], ["fashion", "brand"], ["fashion", "artdirection"],
+  // product + facilitation
+  ["productproto", "prototyping"], ["productproto", "uxui"], ["productproto", "designsystems"],
+  ["facilitation", "workshops"], ["facilitation", "research"],
 ];

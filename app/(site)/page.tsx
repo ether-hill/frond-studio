@@ -4,7 +4,6 @@ import RandomiseButton from "@/components/RandomiseButton";
 import SelectedWork from "@/components/SelectedWork";
 import SelectedProjects from "@/components/SelectedProjects";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
-import { CAP_GROUPS } from "@/lib/capabilities";
 import Cta from "@/components/Cta";
 import { getProjects } from "@/sanity/lib/queries";
 
@@ -98,46 +97,35 @@ export default async function Home() {
 
       <SelectedProjects />
 
-      {/* Capabilities — interactive 3D node graph */}
+      {/* Capabilities — interactive 3D node cloud */}
       <section id="services" style={{ background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}>
         <div className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}>
-          <div data-rvs style={{ maxWidth: "30ch" }}>
-            <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
-              Capabilities
-            </h2>
-          </div>
-          <p
-            data-rvs
-            style={{
-              marginTop: "clamp(20px,3vh,32px)",
-              maxWidth: "64ch",
-              fontFamily: "var(--font-display), sans-serif",
-              fontSize: "clamp(20px,2vw,30px)",
-              fontWeight: 400,
-              lineHeight: 1.32,
-              letterSpacing: "-0.01em",
-              color: "var(--fg-dim)",
-            }}
-          >
-            The interesting problems don&apos;t fit inside one discipline. We work across design, engineering, strategy and AI
-            as a single craft — so an idea moves from sketch to shipped without changing hands. Running through all of it is a{" "}
-            <span style={{ color: "var(--fg)" }}>biophilic</span> instinct: we borrow the patterns of living systems to make
-            things that grow, adapt and last.
-          </p>
-
-          <div data-rvs style={{ marginTop: "clamp(36px,5vh,60px)" }}>
-            <div className="cap-graph">
+          <div className="cap-layout">
+            <div className="cap-text" data-stag>
+              <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
+                Capabilities
+              </h2>
+              <p
+                style={{
+                  marginTop: "clamp(20px,3vh,32px)",
+                  maxWidth: "42ch",
+                  fontFamily: "var(--font-display), sans-serif",
+                  fontSize: "clamp(19px,1.7vw,27px)",
+                  fontWeight: 400,
+                  lineHeight: 1.34,
+                  letterSpacing: "-0.01em",
+                  color: "var(--fg-dim)",
+                }}
+              >
+                The interesting problems don&apos;t fit inside one discipline. We work across design, engineering, strategy and
+                AI as a single craft — so an idea moves from sketch to shipped without changing hands. Running through all of it
+                is a <span style={{ color: "var(--fg)" }}>biophilic</span> instinct: we borrow the patterns of living systems to
+                make things that grow, adapt and last.
+              </p>
+            </div>
+            <div className="cap-stage" data-rvs>
               <CapabilitiesGraph />
             </div>
-            <div className="cap-legend">
-              {CAP_GROUPS.map((g) => (
-                <span key={g.key} className="cap-legend-item">
-                  <i style={{ background: g.color }} />
-                  {g.label}
-                </span>
-              ))}
-            </div>
-            <p className="cap-hint">Drag to rotate · scroll to zoom · hover a capability. Node size reflects where our depth sits.</p>
           </div>
         </div>
       </section>
