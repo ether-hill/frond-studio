@@ -613,6 +613,39 @@ button {
   .cta-timer-arc { animation: none; stroke-dashoffset: 0; }
 }
 
+/* ── CTA statement thumbs (sit just left of the RANDOMISE chip) ───────────── */
+.cta-votes {
+  position: absolute;
+  z-index: 4;
+  top: clamp(20px, 3vw, 32px);
+  right: calc(clamp(20px, 3vw, 32px) + 128px);
+  display: flex;
+  gap: 8px;
+}
+.cta-vote {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--bg-0) 55%, transparent);
+  color: var(--fg-dim);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s, transform 0.2s;
+}
+.cta-vote svg { width: 15px; height: 15px; }
+.cta-vote:hover { color: var(--fg); border-color: var(--accent); }
+.cta-vote.voted { color: var(--bg-0); background: var(--accent); border-color: var(--accent); transform: scale(1.1); }
+@media (max-width: 600px) {
+  .cta-votes { right: calc(clamp(20px, 3vw, 32px) + 112px); gap: 6px; }
+  .cta-vote { width: 32px; height: 30px; }
+}
+
 /* On phones the intro sits bottom-left and the RANDOMISE circle bottom-right;
    add bottom room (and shrink the circle a touch) so they never overlap. */
 @media (max-width: 640px) {

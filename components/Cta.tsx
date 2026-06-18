@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import CtaCanvas from "./CtaCanvas";
 import RandomiseButton from "./RandomiseButton";
 import { BLURBS } from "@/lib/blurbs";
+import { loadVotes, recordVote, pickWeighted, type VoteMap } from "@/lib/blurbVotes";
 
 const RESEED_EVENT = "cta-mycelium-reseed";
 const CYCLE_MS = 11000;
@@ -21,15 +22,20 @@ export default function Cta() {
   const [idx, setIdx] = useState(0);
   const [vis, setVis] = useState(true);
   const [cycle, setCycle] = useState(0); // re-keys the countdown ring so it restarts each round
+  const [flash, setFlash] = useState<"up" | "down" | null>(null); // brief vote confirmation
   const idxRef = useRef(0);
+  const votesRef = useRef<VoteMap>({});
+  const reduceRef = useRef(false);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const reduce =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    reduceRef.current = reduce;
 
-    const start = Math.floor(Math.random() * BLURBS.length);
+    votesRef.current = loadVotes();
+    const start = pickWeighted(BLURBS, votesRef.current);
     idxRef.current = start;
     setIdx(start);
     if (reduce) return; // hold a single line + a static field
@@ -46,8 +52,7 @@ export default function Cta() {
       setVis(false);
       clearTimeout(fadeT);
       fadeT = setTimeout(() => {
-        let n = Math.floor(Math.random() * BLURBS.length);
-        if (n === idxRef.current) n = (n + 1) % BLURBS.length;
+        const n = pickWeighted(BLURBS, votesRef.current, idxRef.current);
         idxRef.current = n;
         setIdx(n);
         setVis(true);
@@ -90,6 +95,22 @@ export default function Cta() {
     };
   }, []);
 
+  // Thumbs feedback on the line currently on screen — records the vote (which
+  // re-weights future picks) then moves on to the next statement.
+  const onVote = (dir: "up" | "down") => {
+    votesRef.current = recordVote(BLURBS[idxRef.current], dir);
+    setFlash(dir);
+    window.setTimeout(() => setFlash(null), 520);
+    if (reduceRef.current) {
+      // No auto-cycle in reduced motion — advance the line directly.
+      const n = pickWeighted(BLURBS, votesRef.current, idxRef.current);
+      idxRef.current = n;
+      setIdx(n);
+    } else {
+      window.setTimeout(() => window.dispatchEvent(new CustomEvent(RESEED_EVENT)), 360);
+    }
+  };
+
   return (
     <section ref={sectionRef} data-theme="dark" style={{ position: "relative", overflow: "hidden", borderTop: "1px solid var(--line)", background: "var(--bg-0)", color: "var(--fg)" }}>
       <div data-par="0.14" style={{ position: "absolute", inset: "-14% 0", zIndex: 0, willChange: "transform" }}>
@@ -107,6 +128,33 @@ export default function Cta() {
             "radial-gradient(60% 70% at 50% 50%, color-mix(in srgb, var(--bg-0) 78%, transparent) 0%, color-mix(in srgb, var(--bg-0) 38%, transparent) 55%, transparent 100%)",
         }}
       />
+      {/* Teach the rotation: thumbs sit just left of RANDOMISE and vote on the
+          statement on screen. Down-voted lines gradually surface less. */}
+      <div className="cta-votes" role="group" aria-label="Rate this statement">
+        <button
+          type="button"
+          className={`cta-vote${flash === "down" ? " voted" : ""}`}
+          onClick={() => onVote("down")}
+          aria-label="This statement isn't working"
+          title="Show this one less"
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M17 3v10M7 13.5l1.4 5.3a2 2 0 0 0 3.86-.5l-.5-3.3H17a2 2 0 0 0 2-2.3l-1-6A2 2 0 0 0 16 3H8.2A2 2 0 0 0 6.2 4.7L5 10.5A2 2 0 0 0 7 13.5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" transform="rotate(180 12 12)" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className={`cta-vote${flash === "up" ? " voted" : ""}`}
+          onClick={() => onVote("up")}
+          aria-label="This statement is working"
+          title="Show this one more"
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M17 3v10M7 13.5l1.4 5.3a2 2 0 0 0 3.86-.5l-.5-3.3H17a2 2 0 0 0 2-2.3l-1-6A2 2 0 0 0 16 3H8.2A2 2 0 0 0 6.2 4.7L5 10.5A2 2 0 0 0 7 13.5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+
       <RandomiseButton event={RESEED_EVENT} title="Randomise the field + statement" />
       <div
         className="hero-glow"
