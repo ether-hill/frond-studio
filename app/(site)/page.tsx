@@ -3,7 +3,8 @@ import HeroPhysarum from "@/components/HeroPhysarum";
 import RandomiseButton from "@/components/RandomiseButton";
 import SelectedWork from "@/components/SelectedWork";
 import SelectedProjects from "@/components/SelectedProjects";
-import CapabilityRows from "@/components/CapabilityRows";
+import CapabilitiesGraph from "@/components/CapabilitiesGraph";
+import { CAP_GROUPS } from "@/lib/capabilities";
 import Cta from "@/components/Cta";
 import { getProjects } from "@/sanity/lib/queries";
 
@@ -97,40 +98,46 @@ export default async function Home() {
 
       <SelectedProjects />
 
-      {/* Capabilities */}
+      {/* Capabilities — interactive 3D node graph */}
       <section id="services" style={{ background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}>
         <div className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}>
-          <div data-rvs style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 24, flexWrap: "wrap", marginBottom: "clamp(44px,6vh,72px)" }}>
-            <div style={{ display: "flex", gap: 18, alignItems: "baseline" }}>
-              <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>Capabilities</h2>
-            </div>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-dim)" }}>
-              Design · Development · Consulting
-            </span>
+          <div data-rvs style={{ maxWidth: "30ch" }}>
+            <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
+              Capabilities
+            </h2>
           </div>
+          <p
+            data-rvs
+            style={{
+              marginTop: "clamp(20px,3vh,32px)",
+              maxWidth: "64ch",
+              fontFamily: "var(--font-display), sans-serif",
+              fontSize: "clamp(20px,2vw,30px)",
+              fontWeight: 400,
+              lineHeight: 1.32,
+              letterSpacing: "-0.01em",
+              color: "var(--fg-dim)",
+            }}
+          >
+            The interesting problems don&apos;t fit inside one discipline. We work across design, engineering, strategy and AI
+            as a single craft — so an idea moves from sketch to shipped without changing hands. Running through all of it is a{" "}
+            <span style={{ color: "var(--fg)" }}>biophilic</span> instinct: we borrow the patterns of living systems to make
+            things that grow, adapt and last.
+          </p>
 
-          <div className="services-grid" style={{ display: "grid", gridTemplateColumns: "0.85fr 1.15fr", gap: "clamp(40px,5vw,90px)" }}>
-            <div data-stag>
-              <p style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(24px,2.5vw,38px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.012em" }}>
-                We move between design, development and consulting — so an idea can go from sketch to shipped without ever changing hands.
-              </p>
-              <div data-stag style={{ marginTop: "clamp(34px,4vh,52px)", display: "flex", flexDirection: "column", gap: 24 }}>
-                {[
-                  { t: "Design", d: "Art direction, identity, editorial & interface design." },
-                  { t: "Development", d: "Front-end, full-stack & platform engineering." },
-                  { t: "Consulting", d: "Creative & technical direction for teams and founders." },
-                ].map((r) => (
-                  <div key={r.t}>
-                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 7 }}>
-                      {r.t}
-                    </div>
-                    <p style={{ color: "var(--fg-dim)", fontSize: 15, lineHeight: 1.5 }}>{r.d}</p>
-                  </div>
-                ))}
-              </div>
+          <div data-rvs style={{ marginTop: "clamp(36px,5vh,60px)" }}>
+            <div className="cap-graph">
+              <CapabilitiesGraph />
             </div>
-
-            <CapabilityRows />
+            <div className="cap-legend">
+              {CAP_GROUPS.map((g) => (
+                <span key={g.key} className="cap-legend-item">
+                  <i style={{ background: g.color }} />
+                  {g.label}
+                </span>
+              ))}
+            </div>
+            <p className="cap-hint">Drag to rotate · scroll to zoom · hover a capability. Node size reflects where our depth sits.</p>
           </div>
         </div>
       </section>
