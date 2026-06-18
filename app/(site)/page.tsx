@@ -97,35 +97,41 @@ export default async function Home() {
 
       <SelectedProjects />
 
-      {/* Capabilities — interactive 3D node cloud */}
-      <section id="services" style={{ background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}>
-        <div className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}>
-          <div className="cap-layout">
-            <div className="cap-text" data-stag>
-              <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
-                Capabilities
-              </h2>
-              <p
-                style={{
-                  marginTop: "clamp(20px,3vh,32px)",
-                  maxWidth: "42ch",
-                  fontFamily: "var(--font-display), sans-serif",
-                  fontSize: "clamp(19px,1.7vw,27px)",
-                  fontWeight: 400,
-                  lineHeight: 1.34,
-                  letterSpacing: "-0.01em",
-                  color: "var(--fg-dim)",
-                }}
-              >
-                The interesting problems don&apos;t fit inside one discipline. We work across design, engineering, strategy and
-                AI as a single craft — so an idea moves from sketch to shipped without changing hands. Running through all of it
-                is a <span style={{ color: "var(--fg)" }}>biophilic</span> instinct: we borrow the patterns of living systems to
-                make things that grow, adapt and last.
-              </p>
-            </div>
-            <div className="cap-stage" data-rvs>
-              <CapabilitiesGraph />
-            </div>
+      {/* Capabilities — interactive 3D node cloud, full-bleed behind the copy */}
+      <section
+        id="services"
+        className="cap-section"
+        style={{ position: "relative", overflow: "hidden", background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}
+      >
+        <div className="cap-cloud" data-rvs>
+          <CapabilitiesGraph />
+        </div>
+        <div className="cap-scrim" aria-hidden />
+        <div
+          className="page-gutter"
+          style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}
+        >
+          <div className="cap-text" data-stag style={{ maxWidth: "40ch" }}>
+            <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
+              Capabilities
+            </h2>
+            <p
+              style={{
+                marginTop: "clamp(20px,3vh,32px)",
+                maxWidth: "40ch",
+                fontFamily: "var(--font-display), sans-serif",
+                fontSize: "clamp(19px,1.7vw,27px)",
+                fontWeight: 400,
+                lineHeight: 1.34,
+                letterSpacing: "-0.01em",
+                color: "var(--fg-dim)",
+              }}
+            >
+              The interesting problems don&apos;t fit inside one discipline. We work across design, engineering, strategy and AI
+              as a single craft — so an idea moves from sketch to shipped without changing hands. Running through all of it is a{" "}
+              <span style={{ color: "var(--fg)" }}>biophilic</span> instinct: we borrow the patterns of living systems to make
+              things that grow, adapt and last.
+            </p>
           </div>
         </div>
       </section>

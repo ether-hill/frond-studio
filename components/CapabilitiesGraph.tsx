@@ -113,9 +113,11 @@ export default function CapabilitiesGraph() {
       ctx.clearRect(0, 0, W, H);
       const COL = document.documentElement.dataset.theme === "light" ? COLORS_LIGHT : COLORS;
       const cX = Math.cos(rotX), sX = Math.sin(rotX), cY = Math.cos(rotY), sY = Math.sin(rotY);
-      const R = Math.min(W, H) * 0.46;
-      // widen the graph to fill a wider stage (the cluster is ~spherical)
-      const xStretch = Math.min(1.45, Math.max(1, (W / H) * 0.74));
+      // ~40% bigger than before so it fills the section, runs behind the copy
+      // and spills off the edges.
+      const R = Math.min(W, H) * 0.64;
+      // widen the cluster (it's ~spherical) to span / overflow a wide section
+      const xStretch = Math.min(1.7, Math.max(1, (W / H) * 0.8));
       const focal = 2.7, ox = W / 2, oy = H / 2;
       for (let i = 0; i < n; i++) {
         const p = pos[i];
@@ -127,7 +129,7 @@ export default function CapabilitiesGraph() {
         proj[i].depth = z2;
         proj[i].persp = persp;
         // exaggerated word-size metric: micro words stay small, hubs read big
-        proj[i].fs = (4 + NODES[i].val * 3) * persp;
+        proj[i].fs = (5 + NODES[i].val * 3.3) * persp;
       }
 
       // edges (behind), faded by depth; brighter when touching the hovered node

@@ -328,21 +328,42 @@ button {
 }
 
 /* ── Capabilities 3D node cloud ───────────────────────────── */
-/* Text on the left, the node cloud free-floating on the right (no box). */
-.cap-layout {
-  display: grid;
-  grid-template-columns: 0.82fr 1.18fr;
-  gap: clamp(28px, 4vw, 72px);
-  align-items: center;
-}
-.cap-stage {
+/* The cloud is a full-bleed layer that runs behind the copy and spills off the
+   edges; a scrim keeps the left-hand text legible over it. */
+.cap-section {
   position: relative;
-  width: 100%;
-  height: clamp(460px, 64vh, 740px);
+  display: flex;
+  align-items: center;
+  min-height: clamp(600px, 88vh, 920px);
+}
+.cap-cloud {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.cap-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    var(--bg-1) 0%,
+    color-mix(in srgb, var(--bg-1) 72%, transparent) 30%,
+    transparent 58%
+  );
 }
 @media (max-width: 900px) {
-  .cap-layout { grid-template-columns: 1fr; gap: clamp(20px, 4vh, 36px); }
-  .cap-stage { height: clamp(400px, 64vh, 600px); }
+  .cap-section { align-items: flex-start; min-height: clamp(560px, 92vh, 780px); }
+  /* text sits up top on narrow screens — wash from the top instead */
+  .cap-scrim {
+    background: linear-gradient(
+      to bottom,
+      var(--bg-1) 0%,
+      color-mix(in srgb, var(--bg-1) 58%, transparent) 36%,
+      transparent 72%
+    );
+  }
 }
 
 /* ── Work cards (grid) ───────────────────────────── */
