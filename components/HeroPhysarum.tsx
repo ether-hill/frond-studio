@@ -30,7 +30,8 @@ export default function HeroPhysarum() {
 
     const AGENTS = 256; // agentTexW → 65k agents, matches the reference's light footprint
     const START_DELAY = 180; // brief beat so first paint/intro start, then build the sim (it fades in)
-    const EXPLORE_FLOOR = 0.5; // always ≥50% fresh draws so the hero never collapses to one look
+    const EXPLORE_FLOOR = 0.72; // ~72% fresh draws — keep strong variety, repeat favourites only occasionally
+    const MIN_LIKED_TO_EXPLOIT = 4; // don't repeat from a tiny/seeded pool — explore until it's diverse
 
     let eng: { render: () => void; dispose: () => void } | null = null;
     let raf = 0;
@@ -139,6 +140,7 @@ export default function HeroPhysarum() {
       deposit: mut(Number(p.deposit) || 0.09, 0.05, 0.13),
       decay: mut(Number(p.decay) || 0.9, 0.85, 0.95),
       gamma: mut(Number(p.gamma) || 0.4, 0.28, 0.55),
+      spawn: pickSpawn(), // re-roll spawn so even a banked ring becomes a (mostly) eventful network
     });
 
     // weighted preset pick — liked presets surface more, disliked fade (never to 0)
@@ -170,7 +172,7 @@ export default function HeroPhysarum() {
 
     // choose the next config: exploit a banked favourite, or explore fresh
     const choose = (): P => {
-      if (liked.length && Math.random() > EXPLORE_FLOOR) {
+      if (liked.length >= MIN_LIKED_TO_EXPLOIT && Math.random() > EXPLORE_FLOOR) {
         const base = pickLiked();
         const params = mutate(base.params);
         current = { id: base.id, params };
