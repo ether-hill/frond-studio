@@ -9,7 +9,8 @@ import { useEffect, useRef } from "react";
  *  - `[data-rv]`         — fade + rise (load / on enter)
  *  - `[data-rvs]`        — fade + rise on scroll-in
  *  - `[data-stag] > *`   — staggered children on scroll-in
- *  - `[data-par]`        — scrubbed parallax
+ *  - `[data-par]`        — scrubbed positional parallax (y)
+ *  - `[data-par-scale]`  — scrubbed scale parallax (slow zoom as it scrolls)
  *
  * Elements start hidden via the `.gsap-on` CSS states (set before paint by the
  * inline script in layout). Respects prefers-reduced-motion: when set, `.gsap-on`
@@ -100,7 +101,7 @@ export default function RevealRoot({ children }: { children: React.ReactNode }) 
             );
           });
 
-          // Scrubbed parallax.
+          // Scrubbed positional parallax.
           gsap.utils.toArray<HTMLElement>("[data-par]").forEach((el) => {
             const f = parseFloat(el.getAttribute("data-par") || "0") || 0;
             if (!f) return;
@@ -110,6 +111,25 @@ export default function RevealRoot({ children }: { children: React.ReactNode }) 
               {
                 y: -f * 120,
                 ease: "none",
+                scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: true },
+              }
+            );
+          });
+
+          // Scrubbed scale parallax — a subtle slow zoom as the element travels
+          // the viewport. Stays >= 1 so an overflow-clipped media frame never
+          // reveals its edges. Composes with [data-par] (GSAP tweens y + scale
+          // as independent transform components on the same element).
+          gsap.utils.toArray<HTMLElement>("[data-par-scale]").forEach((el) => {
+            const f = parseFloat(el.getAttribute("data-par-scale") || "0") || 0;
+            if (!f) return;
+            gsap.fromTo(
+              el,
+              { scale: 1 },
+              {
+                scale: 1 + f,
+                ease: "none",
+                transformOrigin: "center center",
                 scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: true },
               }
             );

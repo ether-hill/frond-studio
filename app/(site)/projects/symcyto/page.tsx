@@ -56,7 +56,7 @@ export default function SymcytoPage() {
       <div className="sym-root" data-theme="dark">
         {/* Hero — full-bleed signature timelapse with overlaid branding */}
         <section className="sym-hero">
-          <div data-par="0.12" style={{ position: "absolute", inset: "-8% 0", willChange: "transform" }}>
+          <div data-par="0.12" data-par-scale="0.1" style={{ position: "absolute", inset: "-8% 0", willChange: "transform" }}>
             <AutoVideo src="/symcyto/symcyto-001.mp4" poster="/symcyto/symcyto-001-poster.jpg" style={{ objectPosition: "center" }} />
           </div>
           <div className="sym-hero-scrim" aria-hidden />
@@ -115,7 +115,7 @@ export default function SymcytoPage() {
           <div className="sym-wrap">
             <div className="sym-feature">
               <div className="sym-media sq" data-rvs>
-                <div data-par="0.08" style={{ position: "absolute", inset: "-6% 0", willChange: "transform" }}>
+                <div data-par="0.08" data-par-scale="0.08" style={{ position: "absolute", inset: "-6% 0", willChange: "transform" }}>
                   <AutoVideo src="/symcyto/erasmus-polypore.mp4" poster="/symcyto/erasmus-polypore-poster.jpg" />
                 </div>
               </div>
@@ -137,7 +137,7 @@ export default function SymcytoPage() {
           <div className="sym-wrap">
             <div className="sym-feature rev">
               <div className="sym-media port" data-rvs>
-                <div data-par="0.1" style={{ position: "absolute", inset: "-6% 0", willChange: "transform" }}>
+                <div data-par="0.1" data-par-scale="0.08" style={{ position: "absolute", inset: "-6% 0", willChange: "transform" }}>
                   <AutoVideo src="/symcyto/sym-2-hero.mp4" poster="/symcyto/sym-2-poster.jpg" />
                 </div>
               </div>
