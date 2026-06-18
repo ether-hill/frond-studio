@@ -1,16 +1,25 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { blurbWeight } from "@/lib/blurbVotes";
+import { fetchHeroLearning } from "@/app/hero-vote-actions";
 
 /**
  * Homepage hero background — the Jones (2010) agent Physarum model running live.
  * First paint is the studio default, "Monochrome Drift" (stark white veins on
  * black; it stays dark regardless of site theme — the inverse reads poorly).
- * RANDOMISE (the `hero-physarum-reseed` event) explores the FULL space: it draws
- * a random curated scene — colours, sensing, deposition, everything — and jitters
- * its movement for extra variation. WebGL2-only; falls back to an empty bg.
+ *
+ * RANDOMISE (the `hero-physarum-reseed` event) is now *learned*: visitors' 👍/👎
+ * (from <HeroVote>, relayed via the `hero-feedback` event) weight which curated
+ * preset is drawn AND bank the exact config of liked renders. Each randomise then
+ * either explores fresh (weighted preset + jitter) or, up to half the time but
+ * never more (a hard exploration floor), exploits — mutating from a banked
+ * favourite. It emits `hero-render` {id, params} so <HeroVote> always knows
+ * what's on screen. WebGL2-only; falls back to an empty bg.
  */
 type P = Record<string, unknown>;
+type Vote = { up: number; down: number };
+type Liked = { id: string; params: P };
 
 export default function HeroPhysarum() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -21,6 +30,7 @@ export default function HeroPhysarum() {
 
     const AGENTS = 256; // agentTexW → 65k agents, matches the reference's light footprint
     const START_DELAY = 180; // brief beat so first paint/intro start, then build the sim (it fades in)
+    const EXPLORE_FLOOR = 0.5; // always ≥50% fresh draws so the hero never collapses to one look
 
     let eng: { render: () => void; dispose: () => void } | null = null;
     let raf = 0;
@@ -28,12 +38,15 @@ export default function HeroPhysarum() {
     let disposed = false;
     let visible = true; // pause the WebGL sim when the hero is scrolled off-screen
     let looping = false;
-    let scenes: P[] = [];
+    let sceneList: { id: string; params: P }[] = [];
     let lastParams: P | null = null; // last-built scene, so a resize rebuilds it (not the hero default)
     let dims = { w: 1920, h: 800 }; // current rectangular sim size, matched to the viewport aspect
 
-    // Sim dimensions from the canvas's real on-screen size: crisp 1:1 with the
-    // viewport, capped DPR and a ≤1920 long edge so wide monitors stay light.
+    // Learning state (effect-local; fed by the server on mount + `hero-feedback`).
+    let sceneVotes: Record<string, Vote> = {};
+    let liked: Liked[] = [];
+    let current: Liked | null = null; // the config on screen, for voting
+
     const computeDims = () => {
       const rect = canvas.getBoundingClientRect();
       const rectW = rect.width || window.innerWidth || 1920;
@@ -54,6 +67,7 @@ export default function HeroPhysarum() {
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
     const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
+    const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
     // full-space variation layered on top of a curated scene's own palette/params
     const jitter = (p: P): P => ({
@@ -68,6 +82,51 @@ export default function HeroPhysarum() {
       gamma: rand(0.28, 0.55),
       spawn: pick(["random", "ring", "center"] as const),
     });
+
+    // small perturbation of a liked config's movement params (palette/spawn kept)
+    const mut = (v: number, a: number, b: number, frac = 0.18) =>
+      clamp(v + (Math.random() * 2 - 1) * (b - a) * frac, a, b);
+    const mutate = (p: P): P => ({
+      ...p,
+      sensorAngle: mut(Number(p.sensorAngle) || 25, 12, 38),
+      sensorDist: mut(Number(p.sensorDist) || 14, 7, 22),
+      turnSpeed: mut(Number(p.turnSpeed) || 27, 12, 42),
+      stepSize: mut(Number(p.stepSize) || 1.5, 1.0, 2.0),
+      deposit: mut(Number(p.deposit) || 0.09, 0.05, 0.13),
+      decay: mut(Number(p.decay) || 0.9, 0.85, 0.95),
+      gamma: mut(Number(p.gamma) || 0.4, 0.28, 0.55),
+    });
+
+    // weighted preset pick — liked presets surface more, disliked fade (never to 0)
+    const pickScene = () => {
+      if (!sceneList.length) return null;
+      const ws = sceneList.map((s) => blurbWeight(sceneVotes[s.id]));
+      const total = ws.reduce((a, b) => a + b, 0);
+      let r = Math.random() * total;
+      for (let i = 0; i < sceneList.length; i++) {
+        r -= ws[i];
+        if (r <= 0) return sceneList[i];
+      }
+      return sceneList[sceneList.length - 1];
+    };
+
+    // choose the next config: exploit a banked favourite, or explore fresh
+    const choose = (): P => {
+      if (liked.length && Math.random() > EXPLORE_FLOOR) {
+        const base = pick(liked);
+        const params = mutate(base.params);
+        current = { id: base.id, params };
+        return params;
+      }
+      const s = pickScene() || sceneList[0];
+      const params = jitter(s.params);
+      current = { id: s.id, params };
+      return params;
+    };
+
+    const announce = () => {
+      if (current) window.dispatchEvent(new CustomEvent("hero-render", { detail: current }));
+    };
 
     const buildParams = (p: P): P => ({
       ...p,
@@ -100,9 +159,6 @@ export default function HeroPhysarum() {
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Start driving the freshly-built engine: ~90 static frames if reduced
-    // motion, otherwise a RAF loop that self-stops while off-screen (so the
-    // heavy WebGL sim costs nothing once you scroll past the hero).
     const loop = () => {
       if (disposed || !visible) {
         looping = false;
@@ -124,7 +180,6 @@ export default function HeroPhysarum() {
       }
     };
 
-    // Pause/resume with viewport visibility.
     let io: IntersectionObserver | null = null;
     if (!reduce && "IntersectionObserver" in window) {
       io = new IntersectionObserver(
@@ -139,22 +194,40 @@ export default function HeroPhysarum() {
       io.observe(canvas);
     }
 
+    // Pull the learned signal early; refs update in place so the next randomise uses it.
+    fetchHeroLearning()
+      .then((d) => {
+        if (disposed) return;
+        sceneVotes = d.sceneVotes || {};
+        liked = (d.liked || []).map((c) => ({ id: c.id, params: c.params as P }));
+      })
+      .catch(() => {});
+
+    // Relay from <HeroVote>: update the in-memory weighting so this session's
+    // randomises feel the vote immediately (the server is the durable record).
+    const onFeedback = (ev: Event) => {
+      const d = (ev as CustomEvent).detail as { id?: string; dir?: "up" | "down"; params?: P } | undefined;
+      if (!d?.id || (d.dir !== "up" && d.dir !== "down")) return;
+      const v = sceneVotes[d.id] || { up: 0, down: 0 };
+      sceneVotes = { ...sceneVotes, [d.id]: { ...v, [d.dir]: v[d.dir] + 1 } };
+      if (d.dir === "up" && d.params) liked = [{ id: d.id, params: d.params }, ...liked].slice(0, 60);
+    };
+    window.addEventListener("hero-feedback", onFeedback);
+
     Promise.all([import("./projects/algorithms/engine/physarum"), import("./projects/algorithms/engine/versions")])
       .then(([{ Physarum }, { VERSIONS, HERO_VERSION_ID }]) => {
         if (disposed) return;
         Engine = Physarum as typeof Engine;
-        // every 2D scene is fair game for RANDOMISE (colours + full params)
-        scenes = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => v.params as unknown as P);
+        sceneList = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => ({ id: v.id, params: v.params as unknown as P }));
         const hero = VERSIONS.find((v) => v.id === HERO_VERSION_ID) || VERSIONS[0];
         const start = () => {
           if (disposed) return;
-          build(hero.params as unknown as P); // canonical Monochrome Drift on first paint
+          current = { id: hero.id, params: hero.params as unknown as P }; // canonical Monochrome Drift on first paint
+          build(current.params);
           canvas.style.opacity = "1"; // fade the sim in (CSS transition on the canvas)
+          announce();
           run();
         };
-        // Defer one short beat so the first paint + intro can kick off, then
-        // build. (The intro now animates on the compositor and can't be stalled
-        // by the WebGL sim, so there's no need to hold the background back.)
         if (reduce) start();
         else startT = window.setTimeout(start, START_DELAY);
       })
@@ -163,8 +236,9 @@ export default function HeroPhysarum() {
       });
 
     const onReseed = () => {
-      if (!Engine || !scenes.length) return;
-      build(jitter(pick(scenes)));
+      if (!Engine || !sceneList.length) return;
+      build(choose());
+      announce();
       if (reduce) run(); // RAF loop is already live otherwise
     };
     window.addEventListener("hero-physarum-reseed", onReseed);
@@ -194,6 +268,7 @@ export default function HeroPhysarum() {
       window.clearTimeout(resizeT);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("hero-physarum-reseed", onReseed);
+      window.removeEventListener("hero-feedback", onFeedback);
       try {
         eng?.dispose();
       } catch {

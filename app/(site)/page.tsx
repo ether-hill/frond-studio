@@ -1,6 +1,7 @@
 import RevealRoot from "@/components/RevealRoot";
 import HeroPhysarum from "@/components/HeroPhysarum";
 import RandomiseButton from "@/components/RandomiseButton";
+import HeroVote from "@/components/HeroVote";
 import SelectedWork from "@/components/SelectedWork";
 import SelectedProjects from "@/components/SelectedProjects";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
@@ -32,6 +33,7 @@ export default async function Home() {
           caption="Visualising a slime mold algorithm"
           label="Randomise"
         />
+        <HeroVote />
 
         <div
           className="hero-inner"
