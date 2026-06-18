@@ -118,7 +118,8 @@ export default function CapabilitiesGraph() {
       const R = Math.min(W, H) * 0.64;
       // widen the cluster (it's ~spherical) to span / overflow a wide section
       const xStretch = Math.min(1.7, Math.max(1, (W / H) * 0.8));
-      const focal = 2.7, ox = W / 2, oy = H / 2;
+      // shifted right so it sits more to the right of the copy
+      const focal = 2.7, ox = W * 0.6, oy = H / 2;
       for (let i = 0; i < n; i++) {
         const p = pos[i];
         const x1 = p.x * cY - p.z * sY, z1 = p.x * sY + p.z * cY;
@@ -128,8 +129,8 @@ export default function CapabilitiesGraph() {
         proj[i].sy = oy + y2 * R * persp;
         proj[i].depth = z2;
         proj[i].persp = persp;
-        // exaggerated word-size metric: micro words stay small, hubs read big
-        proj[i].fs = (5 + NODES[i].val * 3.3) * persp;
+        // smaller on average; micro words (val 3) land ~9px, hubs ~28px
+        proj[i].fs = (1 + NODES[i].val * 2.7) * persp;
       }
 
       // edges (behind), faded by depth; brighter when touching the hovered node
@@ -264,7 +265,7 @@ export default function CapabilitiesGraph() {
     <canvas
       ref={canvasRef}
       aria-label="Interactive 3D graph of studio capabilities"
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", touchAction: "pan-y" }}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", touchAction: "pan-y", userSelect: "none" }}
     />
   );
 }

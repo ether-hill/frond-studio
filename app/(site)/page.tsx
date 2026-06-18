@@ -105,15 +105,15 @@ export default async function Home() {
         className="cap-section"
         style={{ position: "relative", overflow: "hidden", background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}
       >
-        <div className="cap-cloud" data-rvs>
+        <div className="cap-cloud">
           <CapabilitiesGraph />
         </div>
         <div className="cap-scrim" aria-hidden />
         <div
           className="page-gutter"
-          style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}
+          style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)", pointerEvents: "none" }}
         >
-          <div className="cap-text" data-stag style={{ maxWidth: "40ch" }}>
+          <div className="cap-text" data-stag style={{ maxWidth: "40ch", userSelect: "none" }}>
             <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
               Capabilities
             </h2>
