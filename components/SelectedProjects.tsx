@@ -2,9 +2,12 @@ import Link from "next/link";
 import { PERSONAL_PROJECTS } from "@/lib/projects";
 
 /**
- * Homepage "Selected Projects" — the studio's own experiments and tools, shown
- * three-up with their 16:9 covers. Mirrors the /projects index but compact.
+ * Homepage "Recent Projects" — the studio's own experiments and tools, shown
+ * three-up with their 16:9 covers (first six). Mirrors the /projects index but
+ * compact.
  */
+const RECENT = PERSONAL_PROJECTS.slice(0, 6);
+
 export default function SelectedProjects() {
   return (
     <section style={{ borderTop: "1px solid var(--line)" }}>
@@ -26,7 +29,7 @@ export default function SelectedProjects() {
           }}
         >
           <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
-            Selected Projects
+            Recent Projects
           </h2>
           <Link
             href="/projects"
@@ -53,7 +56,7 @@ export default function SelectedProjects() {
             gap: "clamp(20px,2.4vw,40px)",
           }}
         >
-          {PERSONAL_PROJECTS.map((p) => {
+          {RECENT.map((p) => {
             const inner = (
               <>
                 {p.image && (

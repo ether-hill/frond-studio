@@ -11,7 +11,7 @@ export const revalidate = 60;
 
 export default async function Home() {
   const projects = await getProjects();
-  const featured = projects.slice(0, 4);
+  const featured = projects.slice(0, 6);
 
   return (
     <RevealRoot>

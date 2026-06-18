@@ -30,7 +30,7 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
       >
         <div style={{ display: "flex", gap: 18, alignItems: "baseline" }}>
           <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
-            Selected Work
+            Recent Work
           </h2>
         </div>
         <div
@@ -83,27 +83,55 @@ function disciplineLine(p: ProjectCard) {
 }
 
 function WorkGrid({ projects }: { projects: ProjectCard[] }) {
+  // Same card language as Recent Projects: a 16:9 cover, a caps discipline
+  // kicker, the title, and an "Open →" affordance — three-up.
   return (
-    <div className="vwork-grid" data-stag style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(26px,3vw,52px)" }}>
+    <div className="sp-grid" data-stag style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "clamp(20px,2.4vw,40px)" }}>
       {projects.map((p) => (
-        <Link key={p._id} className="vwork" href={`/work/${p.slug}`} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div
-            className="vwork-media"
-            style={{ position: "relative", aspectRatio: "16/9", borderRadius: 6, overflow: "hidden", background: "var(--media)", border: "1px solid var(--line-2)" }}
-          >
+        <Link key={p._id} className="vwork" href={`/work/${p.slug}`} style={{ display: "flex", flexDirection: "column", textDecoration: "none", color: "inherit" }}>
+          <span className="proj-shot">
             {p.thumbnailVideo ? <AutoVideo src={p.thumbnailVideo} poster={`/posters/${p.slug}.jpg`} /> : <MediaPlaceholder label={p.title} />}
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 14 }}>
-            <h3 className="vwork-name" style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(22px,2.5vw,36px)", fontWeight: 500, letterSpacing: "-0.015em" }}>
-              {p.title}
-            </h3>
-            <span className="vwork-arrow" style={{ fontSize: 19, color: "var(--accent)" }}>
-              &#8599;
-            </span>
-          </div>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-dim)" }}>
+          </span>
+          <div
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--fg-faint)",
+              marginBottom: 12,
+            }}
+          >
             {disciplineLine(p)}
           </div>
+          <h3
+            className="vwork-name"
+            style={{
+              margin: 0,
+              fontFamily: "var(--font-display), sans-serif",
+              fontWeight: 500,
+              fontSize: "clamp(24px,2.4vw,34px)",
+              lineHeight: 1.02,
+              letterSpacing: "-0.018em",
+            }}
+          >
+            {p.title}
+          </h3>
+          <span
+            className="linku"
+            style={{
+              marginTop: 20,
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              fontWeight: 500,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--accent)",
+            }}
+          >
+            Open →
+          </span>
         </Link>
       ))}
     </div>

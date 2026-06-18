@@ -547,6 +547,37 @@ button {
   .rand-circle { animation: none; opacity: 1; }
 }
 
+/* ── CTA countdown ring (re-keyed each cycle to restart the 8s sweep) ─ */
+.cta-timer {
+  display: inline-flex;
+  line-height: 0;
+}
+.cta-timer-arc {
+  fill: none;
+  /* circumference of r=8.2 ≈ 51.5 */
+  stroke-dasharray: 51.5;
+  stroke-dashoffset: 51.5;
+  animation: ctaSweep 8s linear forwards;
+}
+@keyframes ctaSweep {
+  to { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta-timer-arc { animation: none; stroke-dashoffset: 0; }
+}
+
+/* On phones the intro sits bottom-left and the RANDOMISE circle bottom-right;
+   add bottom room (and shrink the circle a touch) so they never overlap. */
+@media (max-width: 640px) {
+  .hero-inner { padding-bottom: clamp(170px, 25vh, 232px) !important; }
+  .rand-circle {
+    width: 104px;
+    height: 104px;
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
 /* ── Responsive ───────────────────────────── */
 @media (max-width: 980px) {
   .sp-grid {
@@ -600,7 +631,8 @@ button {
   .hero-inner {
     padding-left: 16px !important;
     padding-right: 16px !important;
-    padding-bottom: 84px !important;
+    /* bottom-anchored intro must clear the bottom-right RANDOMISE circle */
+    padding-bottom: clamp(168px, 24vh, 220px) !important;
   }
   .vwork-grid {
     gap: 32px !important;

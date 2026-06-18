@@ -1,14 +1,77 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import CtaCanvas from "./CtaCanvas";
 import RandomiseButton from "./RandomiseButton";
+import { BLURBS } from "@/lib/blurbs";
 
+const RESEED_EVENT = "cta-mycelium-reseed";
+const CYCLE_MS = 8000;
+
+/**
+ * Closing CTA — a living statement panel. The headline cycles the studio's
+ * shared pool of points of view (lib/blurbs) and the Field Dynamics background
+ * re-seeds, both every 8s. RANDOMISE forces the change. A small ring counts
+ * down the cycle. The `cta-mycelium-reseed` event is the single "randomise now"
+ * signal: the timer and the button both dispatch it; this panel swaps the line
+ * and CtaCanvas re-seeds the field off the same event.
+ */
 export default function Cta() {
+  const [idx, setIdx] = useState(0);
+  const [vis, setVis] = useState(true);
+  const [cycle, setCycle] = useState(0); // re-keys the countdown ring so it restarts each round
+  const idxRef = useRef(0);
+
+  useEffect(() => {
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const start = Math.floor(Math.random() * BLURBS.length);
+    idxRef.current = start;
+    setIdx(start);
+    if (reduce) return; // hold a single line + a static field
+
+    let fadeT: ReturnType<typeof setTimeout>;
+    let nextT: ReturnType<typeof setTimeout>;
+
+    const schedule = () => {
+      clearTimeout(nextT);
+      nextT = setTimeout(() => window.dispatchEvent(new CustomEvent(RESEED_EVENT)), CYCLE_MS);
+    };
+
+    const onReseed = () => {
+      setVis(false);
+      clearTimeout(fadeT);
+      fadeT = setTimeout(() => {
+        let n = Math.floor(Math.random() * BLURBS.length);
+        if (n === idxRef.current) n = (n + 1) % BLURBS.length;
+        idxRef.current = n;
+        setIdx(n);
+        setVis(true);
+      }, 480);
+      setCycle((c) => c + 1); // restart the ring + reset the clock
+      schedule();
+    };
+
+    window.addEventListener(RESEED_EVENT, onReseed);
+    setCycle((c) => c + 1);
+    schedule();
+
+    return () => {
+      clearTimeout(fadeT);
+      clearTimeout(nextT);
+      window.removeEventListener(RESEED_EVENT, onReseed);
+    };
+  }, []);
+
   return (
     <section style={{ position: "relative", overflow: "hidden", borderTop: "1px solid var(--line)" }}>
       <div data-par="0.14" style={{ position: "absolute", inset: "-14% 0", zIndex: 0, willChange: "transform" }}>
         <CtaCanvas />
       </div>
-      {/* scrim: keep the headline legible over the living network */}
+      {/* scrim: keep the headline legible over the living field */}
       <div
         aria-hidden
         style={{
@@ -20,7 +83,7 @@ export default function Cta() {
             "radial-gradient(60% 70% at 50% 50%, color-mix(in srgb, var(--bg-0) 78%, transparent) 0%, color-mix(in srgb, var(--bg-0) 38%, transparent) 55%, transparent 100%)",
         }}
       />
-      <RandomiseButton event="cta-mycelium-reseed" title="Randomise the mycelium background" />
+      <RandomiseButton event={RESEED_EVENT} title="Randomise the field + statement" />
       <div
         className="hero-glow"
         style={{
@@ -48,30 +111,60 @@ export default function Cta() {
           textAlign: "center",
         }}
       >
+        {/* timer indicator eyebrow */}
         <div
           style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 11,
+            marginBottom: "clamp(22px,4vh,38px)",
             fontFamily: "var(--font-mono)",
             fontSize: 12,
             fontWeight: 500,
-            letterSpacing: "0.24em",
+            letterSpacing: "0.22em",
             textTransform: "uppercase",
             color: "var(--accent)",
-            marginBottom: "clamp(22px,4vh,38px)",
           }}
         >
-          Have a project in mind?
+          <span key={cycle} className="cta-timer" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="8.2" stroke="var(--line)" strokeWidth="1.7" />
+              <circle
+                className="cta-timer-arc"
+                cx="10"
+                cy="10"
+                r="8.2"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                transform="rotate(-90 10 10)"
+              />
+            </svg>
+          </span>
+          A new thought every 8 seconds
         </div>
-        <h2
-          style={{
-            fontFamily: "var(--font-display), sans-serif",
-            fontSize: "clamp(46px,8.4vw,134px)",
-            fontWeight: 500,
-            lineHeight: 0.92,
-            letterSpacing: "-0.032em",
-          }}
-        >
-          Let&apos;s make something <em style={{ fontWeight: 400 }}>ambitious.</em>
-        </h2>
+
+        {/* headline wrapper is the GSAP-revealed element; the inner line fades on
+            its own React-driven opacity, so the two never fight over opacity. */}
+        <div>
+          <h2
+            style={{
+              margin: "0 auto",
+              maxWidth: "22ch",
+              fontFamily: "var(--font-display), sans-serif",
+              fontSize: "clamp(32px,5.2vw,78px)",
+              fontWeight: 500,
+              lineHeight: 1.02,
+              letterSpacing: "-0.026em",
+              minHeight: "calc(1.02em * 3)",
+              opacity: vis ? 1 : 0,
+              transition: "opacity .5s ease",
+            }}
+          >
+            {BLURBS[idx]}
+          </h2>
+        </div>
+
         <div
           style={{
             marginTop: "clamp(36px,5vh,62px)",
