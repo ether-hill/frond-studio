@@ -25,7 +25,13 @@ export default async function Home() {
         <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(100deg, var(--bg-0) 0%, rgba(0,0,0,0.0) 70%)", opacity: 0.9 }} />
         <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(to top, var(--bg-0) 4%, rgba(0,0,0,0) 50%)", opacity: 0.95 }} />
         <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(180deg, var(--bg-0) 0%, transparent 22%)", opacity: 0.6 }} />
-        <RandomiseButton event="hero-physarum-reseed" title="Spawn a new Jones-agent render" position="bottom-right" />
+        <RandomiseButton
+          event="hero-physarum-reseed"
+          title="Spawn a new Jones-agent render"
+          variant="circle"
+          caption="Visualising a slime mold algorithm"
+          label="Randomise"
+        />
 
         <div
           className="hero-inner"
@@ -70,7 +76,7 @@ export default async function Home() {
 
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 30, zIndex: 2 }}>
           <div style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter)" }}>
-            <span data-rv className="scroll-cue" style={{ transitionDelay: "0.42s" }}>
+            <span className="scroll-cue">
               <span className="scroll-cue-label">Scroll to explore</span>
               <svg className="scroll-cue-arrow" width="20" height="26" viewBox="0 0 20 26" fill="none" aria-hidden="true">
                 <path d="M10 1v22M2 16l8 8 8-8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
