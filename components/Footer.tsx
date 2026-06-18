@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NAV_LINKS } from "@/lib/site";
 import CurrentYear from "./CurrentYear";
+import NewsletterSignup from "./NewsletterSignup";
 
 const label = (text: string) => (
   <div
@@ -57,7 +58,7 @@ export default function Footer() {
                 Studio
               </span>
             </div>
-            <p style={{ color: "var(--fg-dim)", fontSize: 15, lineHeight: 1.55, maxWidth: "34ch" }}>
+            <p style={{ color: "var(--fg-dim)", fontSize: 19, lineHeight: 1.5, maxWidth: "34ch" }}>
               A transdisciplinary design &amp; technology studio working remotely worldwide.
             </p>
           </div>
@@ -76,17 +77,11 @@ export default function Footer() {
           </div>
 
           <div>
-            {label("Start a project")}
+            {label("News & updates")}
             <p style={{ color: "var(--fg-dim)", fontSize: 15, lineHeight: 1.55, maxWidth: "30ch", marginBottom: 20 }}>
-              Tell us what you&apos;re building — we&apos;d love to hear about it.
+              Sign up for news and fun updates from the studio.
             </p>
-            <Link
-              href="/contact"
-              className="pill pill-ghost"
-              style={{ fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", padding: "10px 18px" }}
-            >
-              Get in touch
-            </Link>
+            <NewsletterSignup />
           </div>
         </div>
 
@@ -115,7 +110,6 @@ export default function Footer() {
               Privacy
             </a>
           </div>
-          <span>Working remotely worldwide</span>
         </div>
       </div>
     </footer>

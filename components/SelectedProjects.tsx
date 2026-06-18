@@ -20,7 +20,7 @@ export default function SelectedProjects() {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "baseline",
+            alignItems: "center",
             gap: 24,
             flexWrap: "wrap",
             borderTop: "1px solid var(--line)",
@@ -33,17 +33,10 @@ export default function SelectedProjects() {
           </h2>
           <Link
             href="/projects"
-            className="linku"
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11,
-              fontWeight: 500,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: "var(--fg-dim)",
-            }}
+            className="pill pill-ghost"
+            style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", padding: "12px 22px" }}
           >
-            All projects →
+            View all
           </Link>
         </div>
 
