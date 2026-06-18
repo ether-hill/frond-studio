@@ -30,6 +30,17 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     image: "/cards/symcyto.jpg",
   },
   {
+    slug: "timelapse-media-production",
+    title: "Timelapse Media Production",
+    kicker: "FILM · TIMELAPSE · PRODUCTION",
+    summary:
+      "Process design, rigging, content creation and consulting for timelapse photography and film — focussed on the kingdoms of plants, fungi and slime mould, with deep experience in architecture, events and industrial work.",
+    year: "2026",
+    tags: ["Timelapse", "Film", "Production"],
+    href: "/projects/timelapse-media-production",
+    image: "/cards/timelapse-media-production.jpg",
+  },
+  {
     slug: "sma-config",
     title: "SMA Config",
     kicker: "GENERATIVE · GPU · LIVE TOOL",

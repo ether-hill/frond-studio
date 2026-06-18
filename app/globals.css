@@ -810,3 +810,148 @@ button {
   .sym-grid { grid-template-columns: 1fr; }
   .sym-carousel { padding: 0 36px; }
 }
+
+/* Timelapse Media Production — full-bleed video hero (the opening inkcaps
+   timelapse) with title + statement overlaid bottom-left. */
+.tlmp-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 100svh;
+  background: #000;
+  overflow: hidden;
+}
+.tlmp-hero-media { position: absolute; inset: 0; }
+.tlmp-hero-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.86) 0%,
+    rgba(0, 0, 0, 0.4) 34%,
+    rgba(0, 0, 0, 0.12) 64%,
+    rgba(0, 0, 0, 0.42) 100%
+  );
+}
+.tlmp-hero-inner {
+  position: relative;
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--gutter) clamp(56px, 11vh, 132px);
+}
+
+/* Blog — three featured posts */
+.tlmp-blog {
+  margin-top: clamp(40px, 6vh, 72px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(18px, 2vw, 32px);
+}
+.tlmp-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: rgba(255, 255, 255, 0.015);
+}
+.tlmp-card-shot {
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #000;
+}
+.tlmp-card-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tlmp-card-body { padding: clamp(20px, 2vw, 28px); }
+.tlmp-card-body h3 {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: clamp(19px, 1.7vw, 24px);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--fg);
+}
+.tlmp-card-body p {
+  font-family: var(--font-body), sans-serif;
+  font-weight: 300;
+  font-size: clamp(14px, 1.05vw, 16px);
+  line-height: 1.6;
+  color: var(--fg-dim);
+  margin: 12px 0 0;
+}
+
+@media (max-width: 860px) {
+  .tlmp-hero { min-height: 0; aspect-ratio: 4 / 5; }
+  .tlmp-blog { grid-template-columns: 1fr; }
+}
+
+/* ── Cymatics R&D article (/projects/cymatics-bubbles) ──────────────────────
+   Editorial layout: full-bleed banner video, then a centered article column —
+   wide 16:9 video players (shared .sym-player) interleaved with narrower prose.
+   Reuses the .sym-root dark canvas. */
+.cym-hero {
+  position: relative;
+  width: 100%;
+  height: clamp(340px, 56vh, 680px);
+  overflow: hidden;
+  background: #000;
+}
+.cym-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 28%;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, #000);
+}
+.cym-article {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(44px, 7vh, 88px) var(--gutter) clamp(56px, 9vh, 120px);
+}
+.cym-prose {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.cym-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.cym-meta {
+  margin-top: clamp(16px, 2.6vh, 26px);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--fg-faint);
+}
+.cym-media { margin: clamp(34px, 5.5vh, 66px) auto; }
+.cym-refs {
+  margin-top: clamp(36px, 5.5vh, 64px);
+  padding-top: clamp(24px, 3.5vh, 36px);
+  border-top: 1px solid var(--line-2);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.cym-refs .lbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  margin-bottom: 3px;
+}
+.cym-refs a {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg-dim);
+  width: fit-content;
+}
