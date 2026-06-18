@@ -41,6 +41,17 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     image: "/cards/timelapse-media-production.jpg",
   },
   {
+    slug: "cymatics-bubbles",
+    title: "Cymatics in Bubbles",
+    kicker: "R&D · SOUND MADE VISIBLE",
+    summary:
+      "Spherical cymatics in hard-to-pop, high-performance bubbles — sound vibrations visualised as 3D patterns in thin films, swirling with thin-film interference colour. A multisensory study where scientific research meets artistic expression.",
+    year: "2024",
+    tags: ["Cymatics", "R&D", "Sound"],
+    href: "/projects/cymatics-bubbles",
+    image: "/cards/cymatics.jpg",
+  },
+  {
     slug: "sma-config",
     title: "SMA Config",
     kicker: "GENERATIVE · GPU · LIVE TOOL",
