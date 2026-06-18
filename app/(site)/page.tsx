@@ -49,19 +49,23 @@ export default async function Home() {
             textShadow: "0 2px 44px rgba(0,0,0,0.62)",
           }}
         >
+          {/* Hero intro animates via compositor-driven CSS (see globals.css
+              .hero-rise/.hero-fade), NOT GSAP — so the heavy WebGL sim on the
+              main thread can't stall it. Triggered by `.intro-ready` (added by
+              RevealRoot once fonts are ready), pre-hidden only under `.gsap-on`. */}
           <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(36px,6.6vw,114px)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
-            <span className="mask-line">
-              <span style={{ transitionDelay: "0.06s" }}>Natural</span>
+            <span className="hero-clip">
+              <span className="hero-rise" style={{ animationDelay: "0.04s" }}>Natural</span>
             </span>
-            <span className="mask-line">
-              <span style={{ transitionDelay: "0.15s" }}>selections.</span>
+            <span className="hero-clip">
+              <span className="hero-rise" style={{ animationDelay: "0.12s" }}>selections.</span>
             </span>
           </h1>
 
           <p
-            data-rv
+            className="hero-fade"
             style={{
-              transitionDelay: "0.22s",
+              animationDelay: "0.26s",
               maxWidth: 560,
               marginTop: "clamp(22px,3vh,38px)",
               fontSize: "clamp(16px,1.35vw,19px)",

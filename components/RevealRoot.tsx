@@ -54,6 +54,11 @@ export default function RevealRoot({ children }: { children: React.ReactNode }) 
         );
         if (killed) return;
 
+        // Release the compositor-driven hero intro (CSS keyframes, see
+        // globals.css .hero-rise/.hero-fade) at this font-stable, post-paint
+        // moment — independent of the main-thread GSAP work below.
+        document.documentElement.classList.add("intro-ready");
+
         ctx = gsap.context(() => {
           const vh = window.innerHeight || 800;
           // Is the element's (untransformed) trigger already in the first view?

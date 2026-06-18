@@ -166,6 +166,41 @@ button {
   opacity: 0;
 }
 
+/* ── Hero intro (compositor-driven) ─────────────────────────────────────────
+   The homepage headline + intro line animate with pure CSS keyframes on
+   transform/opacity, so they run on the compositor and stay smooth even while
+   the hero's WebGL sim saturates the main thread (GSAP's rAF tweens stutter
+   against it). Pre-hidden only when JS+motion is on (`.gsap-on`, set before
+   paint), then released by `.intro-ready` (added by RevealRoot once the display
+   font is ready). No JS / reduced-motion → fully visible, no animation. */
+.hero-clip {
+  display: block;
+  overflow: hidden;
+  padding-top: 0.24em;
+  margin-top: -0.24em;
+  padding-bottom: 0.12em;
+}
+.hero-rise { display: block; will-change: transform, opacity; }
+.gsap-on .hero-rise { opacity: 0; transform: translate3d(0, 110%, 0); }
+.gsap-on .hero-fade { opacity: 0; transform: translate3d(0, 22px, 0); }
+.gsap-on.intro-ready .hero-rise {
+  animation: heroRise 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.gsap-on.intro-ready .hero-fade {
+  animation: heroFade 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes heroRise {
+  from { opacity: 0; transform: translate3d(0, 110%, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes heroFade {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise, .hero-fade { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
+
 /* ── Nav ───────────────────────────────── */
 .nav-bar {
   position: fixed;
