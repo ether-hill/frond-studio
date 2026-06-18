@@ -69,19 +69,53 @@ export default function HeroPhysarum() {
     const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
     const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
-    // full-space variation layered on top of a curated scene's own palette/params
-    const jitter = (p: P): P => ({
-      ...p,
-      sensorAngle: rand(12, 38),
-      sensorDist: rand(7, 22),
-      turnSpeed: rand(12, 42),
-      stepSize: rand(1.0, 2.0),
-      deposit: rand(0.05, 0.13),
-      decay: rand(0.85, 0.95),
-      diffuse: Math.random() < 0.45 ? 0 : rand(0, 0.4),
-      gamma: rand(0.28, 0.55),
+    // Vivid multi-species palettes (each reads well on the dark hero) + deep
+    // tinted backgrounds — the randomiser leans into these for bubblegum /
+    // starseed-style colour and complexity.
+    const PALETTES: string[][] = [
+      ["#ff2d6b", "#22e0c8", "#ffd23d"], // RGB pop
+      ["#f47c94", "#c7527b", "#b65e77"], // bubblegum pinks
+      ["#ffd23d", "#e1c45b", "#937a34"], // starseed golds
+      ["#7df3ff", "#3a7bd5", "#9d7bff"], // cosmic blue/violet
+      ["#ff8af0", "#a86bff", "#5ad1ff"], // candy violet/cyan
+      ["#ff5e5e", "#ffb14e", "#ffe66d"], // warm ember
+      ["#5ad1ff", "#22e0c8", "#b6ff8a"], // lagoon
+    ];
+    const DARK_BGS = ["#050507", "#0a0612", "#120618", "#04060a", "#1a1438", "#2b1226", "#060108"];
+
+    // Wide movement ranges (more variation than before).
+    const movementJitter = (): P => ({
+      sensorAngle: rand(8, 45),
+      sensorDist: rand(5, 26),
+      turnSpeed: rand(8, 48),
+      stepSize: rand(0.9, 2.6),
+      deposit: rand(0.04, 0.46),
+      decay: rand(0.8, 0.95),
+      diffuse: Math.random() < 0.4 ? 0 : rand(0, 0.5),
+      gamma: rand(0.28, 0.6),
       spawn: pick(["random", "ring", "center"] as const),
     });
+
+    // ~55% of fresh draws go multi-species / multi-colour (rgb) for richer,
+    // more complex scenes; the rest keep the preset's own palette + new movement.
+    const jitter = (p: P): P => {
+      const base = { ...p, ...movementJitter() };
+      if (Math.random() < 0.55) {
+        const pal = pick(PALETTES);
+        return {
+          ...base,
+          species: Math.random() < 0.5 ? 2 : 3,
+          displayMode: "rgb",
+          avoid: rand(0, 0.6),
+          bg: pick(DARK_BGS),
+          colR: pal[0],
+          colG: pal[1],
+          colB: pal[2],
+          intensity: rand(0.85, 3.0),
+        };
+      }
+      return base;
+    };
 
     // small perturbation of a liked config's movement params (palette/spawn kept)
     const mut = (v: number, a: number, b: number, frac = 0.18) =>
@@ -110,10 +144,24 @@ export default function HeroPhysarum() {
       return sceneList[sceneList.length - 1];
     };
 
+    // pick a banked favourite, weighted by its preset's score — so a down-voted
+    // look surfaces less here too, not just in fresh exploration.
+    const pickLiked = (): Liked => {
+      const ws = liked.map((c) => blurbWeight(sceneVotes[c.id]));
+      const total = ws.reduce((a, b) => a + b, 0);
+      if (total <= 0) return pick(liked);
+      let r = Math.random() * total;
+      for (let i = 0; i < liked.length; i++) {
+        r -= ws[i];
+        if (r <= 0) return liked[i];
+      }
+      return liked[liked.length - 1];
+    };
+
     // choose the next config: exploit a banked favourite, or explore fresh
     const choose = (): P => {
       if (liked.length && Math.random() > EXPLORE_FLOOR) {
-        const base = pick(liked);
+        const base = pickLiked();
         const params = mutate(base.params);
         current = { id: base.id, params };
         return params;
@@ -215,10 +263,24 @@ export default function HeroPhysarum() {
     window.addEventListener("hero-feedback", onFeedback);
 
     Promise.all([import("./projects/algorithms/engine/physarum"), import("./projects/algorithms/engine/versions")])
-      .then(([{ Physarum }, { VERSIONS, HERO_VERSION_ID }]) => {
+      .then(([{ Physarum, DEFAULTS }, { VERSIONS, HERO_VERSION_ID }]) => {
         if (disposed) return;
         Engine = Physarum as typeof Engine;
-        sceneList = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => ({ id: v.id, params: v.params as unknown as P }));
+        const base2d = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => ({ id: v.id, params: v.params as unknown as P }));
+        // Hero-only multi-species / multi-colour presets (ported from sma-config)
+        // so the rotation includes these richer looks and they're directly votable.
+        const D = DEFAULTS as unknown as P;
+        const extra: { id: string; params: P }[] = [
+          {
+            id: "bubblegum",
+            params: { ...D, sensorAngle: 26, sensorDist: 24, turnSpeed: 45.4, stepSize: 2.6, deposit: 0.5888, decay: 0.899, diffuse: 0.1, stepsPerFrame: 3, intensity: 0.865, gamma: 0.4859, bg: "#2b1226", spawn: "center", species: 3, avoid: 0.28, displayMode: "rgb", colR: "#b65e77", colG: "#c7527b", colB: "#f47c94" },
+          },
+          {
+            id: "starseed",
+            params: { ...D, sensorAngle: 10, sensorDist: 7, turnSpeed: 23, stepSize: 1.5, deposit: 0.04, decay: 0.815, diffuse: 0, stepsPerFrame: 3, intensity: 3.15, gamma: 0.3, bg: "#1a1438", spawn: "ring", species: 2, avoid: 0, displayMode: "rgb", colR: "#e1c45b", colG: "#937a34", colB: "#ffd23d" },
+          },
+        ];
+        sceneList = [...base2d, ...extra];
         const hero = VERSIONS.find((v) => v.id === HERO_VERSION_ID) || VERSIONS[0];
         const start = () => {
           if (disposed) return;
