@@ -37,6 +37,23 @@ export default function RevealRoot({ children }: { children: React.ReactNode }) 
         if (killed) return;
         gsap.registerPlugin(ScrollTrigger);
 
+        // Hold the intro until the display font is ready AND the browser has
+        // painted a clean frame. Otherwise the load animation starts mid-FOUT
+        // (the headline re-measures when the font swaps in) and competes with
+        // hydration — both read as a choppy/jumpy reveal. Content stays hidden
+        // via `.gsap-on` until then, so there's no flash; the font wait is
+        // capped so a slow font can never strand the page hidden.
+        const fontsReady =
+          typeof document !== "undefined" && document.fonts?.ready
+            ? document.fonts.ready
+            : Promise.resolve();
+        await Promise.race([fontsReady, new Promise((r) => setTimeout(r, 1200))]);
+        if (killed) return;
+        await new Promise<void>((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => r()))
+        );
+        if (killed) return;
+
         ctx = gsap.context(() => {
           const vh = window.innerHeight || 800;
           // Is the element's (untransformed) trigger already in the first view?
