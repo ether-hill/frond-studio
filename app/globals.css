@@ -737,7 +737,7 @@ button {
   position: absolute;
   z-index: 4;
   top: clamp(20px, 3vw, 32px);
-  right: calc(clamp(20px, 3vw, 32px) + 128px);
+  right: calc(var(--content-edge) + 132px);
   display: flex;
   gap: 8px;
 }
@@ -746,10 +746,10 @@ button {
   align-items: center;
   justify-content: center;
   width: 34px;
-  height: 32px;
+  height: 34px;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: 50%;
   background: color-mix(in srgb, var(--bg-0) 55%, transparent);
   color: var(--fg-dim);
   cursor: pointer;
@@ -761,8 +761,8 @@ button {
 .cta-vote:hover { color: var(--fg); border-color: var(--accent); }
 .cta-vote.voted { color: var(--bg-0); background: var(--accent); border-color: var(--accent); transform: scale(1.1); }
 @media (max-width: 600px) {
-  .cta-votes { right: calc(clamp(20px, 3vw, 32px) + 112px); gap: 6px; }
-  .cta-vote { width: 32px; height: 30px; }
+  .cta-votes { right: calc(var(--content-edge) + 116px); gap: 6px; }
+  .cta-vote { width: 32px; height: 32px; }
 }
 
 /* On phones the intro sits bottom-left and the RANDOMISE circle bottom-right;
