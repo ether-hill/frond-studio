@@ -74,14 +74,20 @@ export function buildShareUrl(origin: string, snap: Snapshot): string {
   return `${origin}/projects/instruments/biome#s=${encodeState(snap)}`;
 }
 
+/** Recommended iframe dimensions [width, height] for each embed size. */
+export const EMBED_DIMS: Record<"micro" | "compact" | "mini", [number, number]> = {
+  micro: [360, 132],
+  compact: [440, 150],
+  mini: [480, 150],
+};
+
+/** The embed page URL (with the snapshot in the query) — for live previews. */
+export function buildEmbedUrl(origin: string, size: "micro" | "compact" | "mini", snap: Snapshot): string {
+  return `${origin}/embed/biome?size=${size}&s=${encodeState(snap)}`;
+}
+
 /** Build an iframe embed snippet at one of the three fixed sizes. */
 export function buildEmbedCode(origin: string, size: "micro" | "compact" | "mini", snap: Snapshot): string {
-  const dims: Record<"micro" | "compact" | "mini", [number, number]> = {
-    micro: [360, 132],
-    compact: [440, 150],
-    mini: [480, 150],
-  };
-  const [w, h] = dims[size];
-  const enc = encodeState(snap);
-  return `<iframe src="${origin}/embed/biome?size=${size}&s=${enc}" width="${w}" height="${h}" style="border:0;border-radius:12px;max-width:100%" loading="lazy" title="Biome — Frond Studio"></iframe>`;
+  const [w, h] = EMBED_DIMS[size];
+  return `<iframe src="${buildEmbedUrl(origin, size, snap)}" width="${w}" height="${h}" style="border:0;border-radius:12px;max-width:100%" loading="lazy" title="Biome — Frond Studio"></iframe>`;
 }

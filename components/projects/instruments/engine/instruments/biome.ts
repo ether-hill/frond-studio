@@ -18,7 +18,7 @@ import {
   Biome, ATLAS, BANDS, CARRIERS, PRESETS, NSTRANDS, randomConfig,
 } from "./biomeEngine";
 import type { Strand, StrandType, MasterState } from "./biomeEngine";
-import { readSharedFromLocation, buildShareUrl, buildEmbedCode } from "./biomeShare";
+import { readSharedFromLocation, buildShareUrl, buildEmbedCode, buildEmbedUrl, EMBED_DIMS } from "./biomeShare";
 
 export function mount(root: HTMLElement) {
 
@@ -213,10 +213,25 @@ embedField.style.cssText = ioStyle + ";font-size:10px;line-height:1.5;resize:ver
 const copyEmbedBtn = document.createElement("button"); copyEmbedBtn.className = "inst-link"; copyEmbedBtn.type = "button"; copyEmbedBtn.textContent = "⧉ COPY EMBED";
 copyEmbedBtn.setAttribute("aria-label", "Copy the embed snippet");
 copyEmbedBtn.style.marginTop = "12px";
+
+// LIVE PREVIEW — the real embed at the selected size, so you can see how it looks.
+const previewWrap = document.createElement("div"); previewWrap.style.marginTop = "14px";
+const previewLab = document.createElement("div");
+previewLab.style.cssText = `font-family:${MONO};font-size:9px;letter-spacing:0.14em;color:var(--fg4);margin-bottom:9px`;
+previewLab.textContent = "PREVIEW · LIVE — RESELECT A SIZE TO REFRESH";
+const previewFrame = document.createElement("iframe");
+previewFrame.title = "Biome embed preview"; previewFrame.loading = "lazy";
+previewFrame.style.cssText = "border:0;border-radius:12px;max-width:100%;display:block;background:var(--bg)";
+previewWrap.append(previewLab, previewFrame);
+
 let embedRestore: ReturnType<typeof setTimeout> | undefined;
 function updateEmbed(size: "micro" | "compact" | "mini"): void {
   embedSize = size;
-  embedField.value = buildEmbedCode(location.origin, embedSize, biome.snapshot());
+  const snap = biome.snapshot();
+  embedField.value = buildEmbedCode(location.origin, embedSize, snap);
+  const [w, h] = EMBED_DIMS[size];
+  previewFrame.width = String(w); previewFrame.height = String(h);
+  previewFrame.src = buildEmbedUrl(location.origin, size, snap);
 }
 copyEmbedBtn.addEventListener("click", async () => {
   updateEmbed(embedSize);
@@ -230,7 +245,7 @@ copyEmbedBtn.addEventListener("click", async () => {
   }
 });
 
-share.body.append(shareIntro, linkRow, embedSeg.el, embedField, copyEmbedBtn);
+share.body.append(shareIntro, linkRow, embedSeg.el, previewWrap, embedField, copyEmbedBtn);
 refreshShareUrl();
 updateEmbed("compact");
 
