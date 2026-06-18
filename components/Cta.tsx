@@ -22,6 +22,7 @@ export default function Cta() {
   const [vis, setVis] = useState(true);
   const [cycle, setCycle] = useState(0); // re-keys the countdown ring so it restarts each round
   const idxRef = useRef(0);
+  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const reduce =
@@ -56,18 +57,41 @@ export default function Cta() {
     };
 
     window.addEventListener(RESEED_EVENT, onReseed);
-    setCycle((c) => c + 1);
-    schedule();
+
+    // Only cycle (text swap + field re-seed) while the CTA is on screen —
+    // otherwise we'd be remounting the p5 field every 8s for nobody.
+    let io: IntersectionObserver | null = null;
+    const sec = sectionRef.current;
+    if (sec && "IntersectionObserver" in window) {
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              setCycle((c) => c + 1);
+              schedule();
+            } else {
+              clearTimeout(nextT);
+            }
+          }
+        },
+        { threshold: 0 }
+      );
+      io.observe(sec);
+    } else {
+      setCycle((c) => c + 1);
+      schedule();
+    }
 
     return () => {
       clearTimeout(fadeT);
       clearTimeout(nextT);
+      io?.disconnect();
       window.removeEventListener(RESEED_EVENT, onReseed);
     };
   }, []);
 
   return (
-    <section style={{ position: "relative", overflow: "hidden", borderTop: "1px solid var(--line)" }}>
+    <section ref={sectionRef} data-theme="dark" style={{ position: "relative", overflow: "hidden", borderTop: "1px solid var(--line)", background: "var(--bg-0)", color: "var(--fg)" }}>
       <div data-par="0.14" style={{ position: "absolute", inset: "-14% 0", zIndex: 0, willChange: "transform" }}>
         <CtaCanvas />
       </div>
@@ -141,7 +165,7 @@ export default function Cta() {
               />
             </svg>
           </span>
-          A new thought every 8 seconds
+          Letting things flow
         </div>
 
         {/* headline wrapper is the GSAP-revealed element; the inner line fades on
@@ -180,7 +204,7 @@ export default function Cta() {
             className="pill pill-solid"
             style={{ fontSize: 13, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", padding: "16px 30px" }}
           >
-            Start a project
+            Let&apos;s collaborate
           </Link>
         </div>
       </div>

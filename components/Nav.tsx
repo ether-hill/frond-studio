@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { NAV_LINKS } from "@/lib/site";
 import Wordmark from "./Wordmark";
@@ -11,6 +12,10 @@ export default function Nav() {
   const burgerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  // On the homepage the nav floats over the always-dark hero. In light theme a
+  // transparent top-state nav reads as black-on-dark (invisible), so we flag the
+  // home route and keep the light-mode bar solid (white 90%) regardless of scroll.
+  const isHome = usePathname() === "/";
 
   // Scroll-direction show/hide with a few px hysteresis.
   useEffect(() => {
@@ -52,7 +57,7 @@ export default function Nav() {
 
   return (
     <>
-      <header ref={navRef} className="nav-bar" data-nav="top">
+      <header ref={navRef} className="nav-bar" data-nav="top" data-home={isHome ? "true" : undefined}>
         <div
           style={{
             maxWidth: "var(--maxw)",

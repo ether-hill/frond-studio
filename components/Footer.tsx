@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { NAV_LINKS } from "@/lib/site";
 import CurrentYear from "./CurrentYear";
-import FooterBlurb from "./FooterBlurb";
 
 const label = (text: string) => (
   <div
@@ -29,8 +28,6 @@ export default function Footer() {
           padding: "clamp(64px,9vh,110px) var(--gutter) clamp(40px,5vh,56px)",
         }}
       >
-        <FooterBlurb />
-
         <div
           className="footer-grid"
           data-stag

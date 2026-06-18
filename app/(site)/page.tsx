@@ -73,8 +73,11 @@ export default async function Home() {
               color: "var(--fg)",
             }}
           >
-            <span style={{ fontWeight: 500 }}>Things that matter to us:</span> transdisciplinary and biophilic design,
-            meandering, ethical AI, design systems, working remotely worldwide…
+            <span style={{ display: "block", marginBottom: 9, fontSize: "clamp(10px,0.8vw,12px)", fontWeight: 600, letterSpacing: "0.08em", color: "var(--fg-dim)" }}>
+              Things that matter to us:
+            </span>
+            transdisciplinary and biophilic design, meandering, ethical AI, design systems, working remotely worldwide… the
+            planet, animal welfare, social justice…
           </p>
         </div>
 

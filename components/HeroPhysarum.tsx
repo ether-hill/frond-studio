@@ -26,6 +26,8 @@ export default function HeroPhysarum() {
     let raf = 0;
     let startT = 0;
     let disposed = false;
+    let visible = true; // pause the WebGL sim when the hero is scrolled off-screen
+    let looping = false;
     let scenes: P[] = [];
     let lastParams: P | null = null; // last-built scene, so a resize rebuilds it (not the hero default)
     let dims = { w: 1920, h: 800 }; // current rectangular sim size, matched to the viewport aspect
@@ -99,18 +101,43 @@ export default function HeroPhysarum() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // Start driving the freshly-built engine: ~90 static frames if reduced
-    // motion, otherwise a RAF loop. Reused by first paint and resize rebuilds.
+    // motion, otherwise a RAF loop that self-stops while off-screen (so the
+    // heavy WebGL sim costs nothing once you scroll past the hero).
+    const loop = () => {
+      if (disposed || !visible) {
+        looping = false;
+        return;
+      }
+      eng?.render();
+      raf = requestAnimationFrame(loop);
+    };
+    const startLoop = () => {
+      if (looping || reduce || disposed) return;
+      looping = true;
+      raf = requestAnimationFrame(loop);
+    };
     const run = () => {
       if (reduce) {
         for (let k = 0; k < 90 && eng; k++) eng.render();
       } else {
-        const loop = () => {
-          eng?.render();
-          raf = requestAnimationFrame(loop);
-        };
-        raf = requestAnimationFrame(loop);
+        startLoop();
       }
     };
+
+    // Pause/resume with viewport visibility.
+    let io: IntersectionObserver | null = null;
+    if (!reduce && "IntersectionObserver" in window) {
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            visible = e.isIntersecting;
+            if (visible) startLoop();
+          }
+        },
+        { threshold: 0 }
+      );
+      io.observe(canvas);
+    }
 
     Promise.all([import("./projects/algorithms/engine/physarum"), import("./projects/algorithms/engine/versions")])
       .then(([{ Physarum }, { VERSIONS, HERO_VERSION_ID }]) => {
@@ -161,6 +188,7 @@ export default function HeroPhysarum() {
     return () => {
       disposed = true;
       cancelAnimationFrame(raf);
+      io?.disconnect();
       window.clearTimeout(startT);
       window.clearTimeout(resizeT);
       window.removeEventListener("resize", onResize);

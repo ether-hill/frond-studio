@@ -20,11 +20,20 @@ export default function CtaCanvas() {
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    let inst: { remove: () => void; noLoop?: () => void } | null = null;
+    let inst: { remove: () => void; noLoop?: () => void; loop?: () => void } | null = null;
     let render: typeof import("./projects/algorithms/engine/artGenerators").renderArt | null = null;
     let disposed = false;
     let seed = 1;
     let stillT = 0;
+    let visible = false; // CTA starts below the fold — don't burn CPU until it's in view
+
+    // p5 keeps a rAF loop running regardless of visibility, so gate it on the
+    // viewport: the field only animates while the CTA is actually on screen.
+    const applyVisibility = () => {
+      if (!inst || reduce) return;
+      if (visible) inst.loop?.();
+      else inst.noLoop?.();
+    };
 
     // square sim canvas (stretched to fill the wide banner via 100%/100%); sized
     // to the larger edge so the field still reads after the cover-stretch.
@@ -43,9 +52,12 @@ export default function CtaCanvas() {
         /* noop */
       }
       host.replaceChildren();
-      inst = render(host, "field-dynamics", seed, simSize(), reduce ? 24 : 30, { color: 1 });
+      // Lighter than the Algorithms-page default (fewer particles, 24fps) — it's
+      // a backdrop behind a scrim, not the hero of the page.
+      inst = render(host, "field-dynamics", seed, simSize(), 24, { color: 1, particles: 600 });
       // reduced motion: let it trace the field briefly, then hold a still frame.
       if (reduce && inst?.noLoop) stillT = window.setTimeout(() => inst?.noLoop?.(), 1600);
+      else applyVisibility(); // a freshly mounted instance must respect current visibility
     };
 
     import("./projects/algorithms/engine/artGenerators")
@@ -57,6 +69,20 @@ export default function CtaCanvas() {
       .catch(() => {
         /* engine failed to load — leave the CTA bg empty */
       });
+
+    let io: IntersectionObserver | null = null;
+    if (!reduce && "IntersectionObserver" in window) {
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            visible = e.isIntersecting;
+            applyVisibility();
+          }
+        },
+        { threshold: 0 }
+      );
+      io.observe(host);
+    }
 
     const onReseed = () => mount(Math.floor(Math.random() * 1e9));
     window.addEventListener("cta-mycelium-reseed", onReseed);
@@ -70,6 +96,7 @@ export default function CtaCanvas() {
 
     return () => {
       disposed = true;
+      io?.disconnect();
       window.clearTimeout(stillT);
       window.clearTimeout(resizeT);
       window.removeEventListener("cta-mycelium-reseed", onReseed);
