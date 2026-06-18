@@ -41,6 +41,17 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     image: "/cards/timelapse-media-production.jpg",
   },
   {
+    slug: "cymatics",
+    title: "Cymatics Simulator",
+    kicker: "INTERACTIVE · LIVE IN BROWSER",
+    summary:
+      "An interactive cymatics simulator and live-display research rig — vibrating water at key frequencies to induce complex geometry. Turn on the sound, scrub the timeline and bounce between frequencies to see how tone and resonance shape matter.",
+    year: "2024",
+    tags: ["Interactive", "Cymatics", "Web Audio"],
+    href: "/projects/cymatics",
+    image: "/cards/cymatics-sim.jpg",
+  },
+  {
     slug: "cymatics-bubbles",
     title: "Cymatics in Bubbles",
     kicker: "R&D · SOUND MADE VISIBLE",

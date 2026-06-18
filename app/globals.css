@@ -1056,3 +1056,130 @@ button {
   color: var(--fg-dim);
   width: fit-content;
 }
+
+/* ── Cymatics interactive page (/projects/cymatics) ─────────────────────────
+   Dark page (reuses .sym-root). .cyma-* = layout, .csim-* = the live simulator. */
+.cyma-hero {
+  position: relative;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: var(--pad-top) var(--gutter) clamp(40px, 7vh, 90px);
+  min-height: clamp(440px, 76svh, 820px);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.cyma-orb {
+  position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  pointer-events: none;
+}
+.cyma-orb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cyma-orb.tr { top: clamp(96px, 14vh, 170px); right: clamp(-60px, -2vw, 0px); width: clamp(180px, 24vw, 360px); aspect-ratio: 1; animation: cymaSpin 64s linear infinite; }
+.cyma-orb.bl { bottom: clamp(20px, 5vh, 70px); left: clamp(-50px, -1vw, 8px); width: clamp(110px, 13vw, 190px); aspect-ratio: 1; opacity: 0.6; animation: cymaSpin 90s linear infinite reverse; }
+@keyframes cymaSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .cyma-orb.tr, .cyma-orb.bl { animation: none; } }
+
+.cyma-section { max-width: var(--maxw); margin: 0 auto; padding: clamp(56px,10vh,120px) var(--gutter); }
+.cyma-narrow { max-width: 760px; }
+
+/* Live simulator */
+.csim {
+  margin-top: clamp(28px, 4.5vh, 52px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #000;
+  overflow: hidden;
+}
+.csim-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px clamp(16px, 2vw, 26px);
+  border-bottom: 1px solid var(--line-2);
+}
+.csim-title { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg); }
+.csim-time { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; color: var(--fg-faint); }
+.csim-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  cursor: none;
+}
+.csim-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.csim-sound {
+  position: absolute;
+  left: clamp(16px, 2vw, 28px);
+  bottom: clamp(16px, 2vw, 28px);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(8,8,8,0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+.csim-sound:hover { background: rgba(8,8,8,0.85); border-color: #fff; }
+.csim-cursor {
+  position: absolute;
+  top: 0; left: 0;
+  z-index: 4;
+  margin: -16px 0 0 14px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--fg);
+  color: #000;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.csim-scrub { position: relative; height: 3px; background: var(--line-2); cursor: pointer; }
+.csim-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); }
+.csim-tabs { display: grid; grid-template-columns: repeat(5, 1fr); }
+.csim-tab {
+  position: relative;
+  padding: clamp(18px, 2.4vw, 30px) 10px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--line-2);
+  color: var(--fg-faint);
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.csim-tab:last-child { border-right: none; }
+.csim-tab .hz { display: block; font-family: var(--font-display), sans-serif; font-size: clamp(18px, 1.9vw, 26px); font-weight: 500; letter-spacing: -0.01em; }
+.csim-tab .hz i { font-style: normal; font-size: 0.55em; opacity: 0.7; margin-left: 1px; }
+.csim-tab .sub { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; opacity: 0.8; }
+.csim-tab:hover { color: var(--fg-dim); background: rgba(255,255,255,0.02); }
+.csim-tab.on { color: var(--fg); background: rgba(255,255,255,0.05); }
+.csim-tab.on::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--accent); }
+
+/* 40Hz / medicine split */
+.cyma-med { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(36px, 6vw, 96px); align-items: center; }
+.cyma-med-media { position: relative; aspect-ratio: 1; border-radius: 50%; overflow: hidden; border: 1px solid var(--line-2); background: #000; }
+.cyma-med-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; animation: cymaSpin 120s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .cyma-med-media video { animation: none; } }
+
+@media (max-width: 860px) {
+  .csim-tab .sub { display: none; }
+  .cyma-med { grid-template-columns: 1fr; gap: 32px; }
+  .cyma-med-media { max-width: 320px; margin: 0 auto; }
+  .cyma-orb.tr { width: 150px; top: 80px; right: -30px; }
+}
