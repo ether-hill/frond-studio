@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import CtaCanvas from "./CtaCanvas";
 import RandomiseButton from "./RandomiseButton";
 import { BLURBS } from "@/lib/blurbs";
-import { loadVotes, recordVote, pickWeighted, type VoteMap } from "@/lib/blurbVotes";
+import { loadVotes, recordVote, pickWeighted, keyFor, type VoteMap } from "@/lib/blurbVotes";
+import { fetchBlurbVotes, submitBlurbVote } from "@/app/blurb-vote-actions";
 
 const RESEED_EVENT = "cta-mycelium-reseed";
 const CYCLE_MS = 11000;
@@ -34,10 +35,20 @@ export default function Cta() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     reduceRef.current = reduce;
 
+    // Weight on the local fallback first (instant), then swap to the live global
+    // aggregate once it arrives — the studio-wide store is the source of truth.
     votesRef.current = loadVotes();
     const start = pickWeighted(BLURBS, votesRef.current);
     idxRef.current = start;
     setIdx(start);
+
+    let cancelled = false;
+    fetchBlurbVotes()
+      .then((server) => {
+        if (!cancelled && server && Object.keys(server).length) votesRef.current = server;
+      })
+      .catch(() => {});
+
     if (reduce) return; // hold a single line + a static field
 
     let fadeT: ReturnType<typeof setTimeout>;
@@ -88,6 +99,7 @@ export default function Cta() {
     }
 
     return () => {
+      cancelled = true;
       clearTimeout(fadeT);
       clearTimeout(nextT);
       io?.disconnect();
@@ -95,10 +107,16 @@ export default function Cta() {
     };
   }, []);
 
-  // Thumbs feedback on the line currently on screen — records the vote (which
-  // re-weights future picks) then moves on to the next statement.
+  // Thumbs feedback on the line currently on screen — writes to the global
+  // store (and a local fallback), nudges the in-memory weight so the change is
+  // felt immediately, then moves on to the next statement.
   const onVote = (dir: "up" | "down") => {
-    votesRef.current = recordVote(BLURBS[idxRef.current], dir);
+    const text = BLURBS[idxRef.current];
+    recordVote(text, dir); // per-browser fallback when the store is offline
+    const k = keyFor(text);
+    const cur = votesRef.current[k] || { up: 0, down: 0 };
+    votesRef.current = { ...votesRef.current, [k]: { ...cur, [dir]: cur[dir] + 1 } };
+    submitBlurbVote(k, dir).catch(() => {}); // fire-and-forget to the aggregate
     setFlash(dir);
     window.setTimeout(() => setFlash(null), 520);
     if (reduceRef.current) {
