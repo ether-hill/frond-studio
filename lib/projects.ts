@@ -19,6 +19,17 @@ export type PersonalProject = {
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
   {
+    slug: "symcyto",
+    title: "Symcyto",
+    kicker: "BIO-ART · LIVING MEDIA",
+    summary:
+      "New forms of harvest — a collaboration with the slime mould Physarum polycephalum. Timelapse bio-art and documentary content grown in smart-enabled studio ecosystems, where an ancient organic intelligence becomes the medium.",
+    year: "2026",
+    tags: ["Bio-art", "Slime mould", "Timelapse"],
+    href: "/projects/symcyto",
+    image: "/cards/symcyto.jpg",
+  },
+  {
     slug: "sma-config",
     title: "SMA Config",
     kicker: "GENERATIVE · GPU · LIVE TOOL",
