@@ -1069,18 +1069,16 @@ button {
   align-items: center;
   overflow: hidden;
 }
+/* Hero capture discs — circular cymatics video content on black, bleeding off
+   the edges (no ring/mask; the video's own black blends into the page). */
 .cyma-orb {
   position: absolute;
-  border-radius: 50%;
   overflow: hidden;
-  border: 1px solid var(--line-2);
   pointer-events: none;
 }
 .cyma-orb video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.cyma-orb.tr { top: clamp(96px, 14vh, 170px); right: clamp(-60px, -2vw, 0px); width: clamp(180px, 24vw, 360px); aspect-ratio: 1; animation: cymaSpin 64s linear infinite; }
-.cyma-orb.bl { bottom: clamp(20px, 5vh, 70px); left: clamp(-50px, -1vw, 8px); width: clamp(110px, 13vw, 190px); aspect-ratio: 1; opacity: 0.6; animation: cymaSpin 90s linear infinite reverse; }
-@keyframes cymaSpin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .cyma-orb.tr, .cyma-orb.bl { animation: none; } }
+.cyma-orb.tr { top: clamp(40px, 8vh, 130px); right: clamp(-110px, -6vw, -40px); width: clamp(320px, 38vw, 580px); aspect-ratio: 1; }
+.cyma-orb.bl { bottom: clamp(16px, 5vh, 90px); left: clamp(-90px, -5vw, -36px); width: clamp(200px, 22vw, 360px); aspect-ratio: 1; opacity: 0.9; }
 
 .cyma-section { max-width: var(--maxw); margin: 0 auto; padding: clamp(56px,10vh,120px) var(--gutter); }
 .cyma-narrow { max-width: 760px; }
@@ -1104,7 +1102,7 @@ button {
 .csim-time { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; color: var(--fg-faint); }
 .csim-stage {
   position: relative;
-  aspect-ratio: 16 / 9;
+  height: clamp(320px, 52vh, 560px);
   background: #000;
   cursor: none;
 }
@@ -1173,9 +1171,8 @@ button {
 
 /* 40Hz / medicine split */
 .cyma-med { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(36px, 6vw, 96px); align-items: center; }
-.cyma-med-media { position: relative; aspect-ratio: 1; border-radius: 50%; overflow: hidden; border: 1px solid var(--line-2); background: #000; }
-.cyma-med-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; animation: cymaSpin 120s linear infinite; }
-@media (prefers-reduced-motion: reduce) { .cyma-med-media video { animation: none; } }
+.cyma-med-media { position: relative; aspect-ratio: 1; overflow: hidden; background: #000; border-radius: 12px; }
+.cyma-med-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
 @media (max-width: 860px) {
   .csim-tab .sub { display: none; }

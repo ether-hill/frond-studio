@@ -33,25 +33,22 @@ export default function CymaticsPage() {
           <div className="cyma-orb bl">
             <AutoVideo src="/cymatics-lab/hero-b.mp4" />
           </div>
-          <div style={{ position: "relative", zIndex: 2, maxWidth: 900 }}>
-            <div className="sym-eyebrow">
-              C Y M A T I C S <span>Sound made visible</span>
-            </div>
+          <div style={{ position: "relative", zIndex: 2, maxWidth: 980 }}>
             <h1
               data-rvs
               style={{
-                margin: "clamp(22px,3.5vh,40px) 0 0",
+                margin: 0,
                 fontFamily: "var(--font-display), sans-serif",
                 fontWeight: 600,
-                fontSize: "clamp(34px,4.8vw,64px)",
-                lineHeight: 1.06,
+                fontSize: "clamp(36px,5.2vw,76px)",
+                lineHeight: 1.08,
                 letterSpacing: "-0.03em",
                 color: "var(--fg)",
-                maxWidth: "20ch",
+                maxWidth: "16ch",
               }}
             >
-              Vibrating water at certain key frequencies induces complex geometry — insight into the way sound, tone and
-              resonance shape our lives and the world around us.
+              Physically dialing in sound frequencies to induce beautiful geometry provides insight into the way sound, tone and
+              resonance can affect our lives.
             </h1>
           </div>
         </section>
@@ -59,10 +56,7 @@ export default function CymaticsPage() {
         {/* The rig */}
         <section className="cyma-section" style={{ paddingTop: 0 }}>
           <div className="cyma-narrow">
-            <h2 className="sym-h2" data-rvs>
-              A live display for sound
-            </h2>
-            <p className="sym-lead" data-rvs style={{ marginTop: "clamp(20px,3vh,32px)" }}>
+            <p className="sym-lead" data-rvs>
               Cymatics is the study of how sound creates form and patterns on surfaces such as water, alcohol and oils. This is
               ongoing prototyping of live display systems for multi-channel cymatics research and entertainment — the intent is to
               build an experience that lets anyone physically explore the realm. Current components include a six-ring array of
@@ -95,12 +89,9 @@ export default function CymaticsPage() {
         <section className="cyma-section" style={{ background: "#000", borderTop: "1px solid var(--line-2)", borderBottom: "1px solid var(--line-2)" }}>
           <div className="cyma-med">
             <div data-stag>
-              <div className="sym-eyebrow" style={{ color: "var(--accent)" }}>
-                Cymatics in medicine
-              </div>
               <h3
                 style={{
-                  margin: "clamp(16px,2.4vh,24px) 0 0",
+                  margin: 0,
                   fontFamily: "var(--font-display), sans-serif",
                   fontWeight: 600,
                   fontSize: "clamp(24px,2.8vw,38px)",
