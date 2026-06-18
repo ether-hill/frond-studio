@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
-import VideoPlayer from "@/components/projects/symcyto/VideoPlayer";
 import CymaticsSimulator from "@/components/projects/cymatics/CymaticsSimulator";
 
 export const metadata: Metadata = {
@@ -10,16 +9,6 @@ export const metadata: Metadata = {
   description:
     "An interactive cymatics simulator and live-display research rig — vibrating water at key frequencies to induce complex geometry, exploring how sound, tone and resonance shape matter.",
 };
-
-// Gallery — the nature timelapse collection (shared assets, already self-hosted).
-const GALLERY = [
-  { title: "Ostrich Ferns — in conversation", src: "/timelapse/ostrich-ferns.mp4", poster: "/timelapse/ostrich-ferns-poster.jpg" },
-  { title: "Oyster Mushrooms are good for you", src: "/timelapse/oyster-mushrooms.mp4", poster: "/timelapse/inkcaps-poster.avif" },
-  { title: "Passionflower Fata Confetto — timelapse drama", src: "/timelapse/passionflower.mp4", poster: "/timelapse/passionflower-poster.avif" },
-  { title: "Sporangia of Rhizopus stolonifer — microscope timelapse", src: "/timelapse/sporangia.mp4", poster: "/timelapse/sporangia-poster.avif" },
-  { title: "Phallus impudicus — the common stinkhorn", src: "/timelapse/phallus-impudicus.mp4", poster: "/timelapse/phallus-impudicus-poster.avif" },
-  { title: "Tendril of a passion flower — passionate indeed", src: "/timelapse/tendril.mp4", poster: "/timelapse/tendril-poster.avif" },
-];
 
 export default function CymaticsPage() {
   return (
@@ -121,21 +110,6 @@ export default function CymaticsPage() {
             <div className="cyma-med-media" data-rvs>
               <AutoVideo src="/cymatics-lab/medicine-40hz.mp4" />
             </div>
-          </div>
-        </section>
-
-        {/* Gallery */}
-        <section className="cyma-section">
-          <h2 className="sym-h2" data-rvs style={{ textAlign: "center" }}>
-            Gallery
-          </h2>
-          <div className="sym-grid" data-stag style={{ marginTop: "clamp(36px,5vh,64px)" }}>
-            {GALLERY.map((v) => (
-              <figure key={v.src} className="sym-figure">
-                <VideoPlayer src={v.src} poster={v.poster} title={v.title} />
-                <figcaption className="sym-cap">{v.title}</figcaption>
-              </figure>
-            ))}
           </div>
         </section>
 
