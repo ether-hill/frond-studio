@@ -602,7 +602,7 @@ button {
   /* circumference of r=8.2 ≈ 51.5 */
   stroke-dasharray: 51.5;
   stroke-dashoffset: 51.5;
-  animation: ctaSweep 8s linear forwards;
+  animation: ctaSweep 11s linear forwards;
 }
 @keyframes ctaSweep {
   to { stroke-dashoffset: 0; }

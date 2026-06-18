@@ -7,7 +7,7 @@ import RandomiseButton from "./RandomiseButton";
 import { BLURBS } from "@/lib/blurbs";
 
 const RESEED_EVENT = "cta-mycelium-reseed";
-const CYCLE_MS = 8000;
+const CYCLE_MS = 11000;
 
 /**
  * Closing CTA — a living statement panel. The headline cycles the studio's
