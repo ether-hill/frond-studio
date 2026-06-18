@@ -20,7 +20,7 @@ export default function HeroPhysarum() {
     if (!canvas) return;
 
     const AGENTS = 256; // agentTexW → 65k agents, matches the reference's light footprint
-    const START_DELAY = 1300; // let the hero text animate in first, then start the sim (avoids load jank)
+    const START_DELAY = 180; // brief beat so first paint/intro start, then build the sim (it fades in)
 
     let eng: { render: () => void; dispose: () => void } | null = null;
     let raf = 0;
@@ -152,8 +152,9 @@ export default function HeroPhysarum() {
           canvas.style.opacity = "1"; // fade the sim in (CSS transition on the canvas)
           run();
         };
-        // Hold the heavy sim until the headline/intro have finished animating in,
-        // so the reveal stays smooth. Reduced-motion has no intro — start at once.
+        // Defer one short beat so the first paint + intro can kick off, then
+        // build. (The intro now animates on the compositor and can't be stalled
+        // by the WebGL sim, so there's no need to hold the background back.)
         if (reduce) start();
         else startT = window.setTimeout(start, START_DELAY);
       })
