@@ -436,17 +436,14 @@ button {
 .myc-bg canvas,
 .cta-bg canvas { object-fit: cover; object-position: center; }
 @media (max-width: 900px) {
-  /* text sits up top on narrow screens — wash the cloud from the top instead,
-     exactly like the homepage Focus-areas section */
-  .about-cloud-scrim {
-    background: linear-gradient(
-      to bottom,
-      var(--bg-1) 0%,
-      color-mix(in srgb, var(--bg-1) 58%, transparent) 36%,
-      transparent 72%
-    );
-  }
-  .about-flow-inner > .ethos-point { max-width: 100%; margin-bottom: clamp(80px, 18vh, 200px); }
+  /* Keep it simple on phones: stack the text blocks, then the node diagram as a
+     plain block beneath them (not pinned behind the copy). */
+  .about-flow { display: flex; flex-direction: column; }
+  .about-flow-inner { order: 1; margin: 0 auto; pointer-events: auto; }
+  .about-flow-inner > .ethos-point { max-width: 100%; margin-bottom: clamp(48px, 9vh, 90px); }
+  .about-cloud { order: 2; position: static; height: min(74vh, 600px); }
+  .about-cloud-inner { position: relative; inset: auto; height: 100%; }
+  .about-cloud-scrim { display: none; }
 }
 
 /* The cloud is a full-bleed layer that runs behind the copy and spills off the
