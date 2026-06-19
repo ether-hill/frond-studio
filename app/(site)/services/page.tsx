@@ -111,8 +111,10 @@ export default function AboutPage() {
           cloud is sticky so it holds, viewport-sized, while the copy scrolls over it. */}
       <section id="services" className="about-flow" style={{ position: "relative", overflow: "hidden", background: "var(--bg-1)" }}>
         <div className="about-cloud">
-          <CapabilitiesGraph />
-          <div className="about-cloud-scrim" aria-hidden />
+          <div className="about-cloud-inner">
+            <CapabilitiesGraph />
+            <div className="about-cloud-scrim" aria-hidden />
+          </div>
         </div>
         <div className="page-gutter about-flow-inner">
           {ETHOS.map((e) => (

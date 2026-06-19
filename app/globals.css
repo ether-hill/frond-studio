@@ -377,7 +377,10 @@ button {
    CapabilitiesGraph (default size) with a left-edge scrim, copy layered over it.
    The cloud is sticky so it holds (viewport-sized) while the copy scrolls. */
 .about-flow { position: relative; }
-.about-cloud { position: sticky; top: 0; height: 100svh; z-index: 0; }
+/* a zero-height sticky anchor whose child is a viewport-tall, pinned cloud — so
+   the copy scrolls over a fixed node structure (scoped to this section). */
+.about-cloud { position: sticky; top: 0; height: 0; z-index: 0; }
+.about-cloud-inner { position: absolute; top: 0; left: 0; right: 0; height: 100svh; overflow: hidden; }
 .about-cloud-scrim {
   position: absolute;
   inset: 0;
@@ -394,7 +397,7 @@ button {
   position: relative;
   z-index: 2;
   max-width: var(--maxw);
-  margin: -100svh auto 0;            /* pull the copy up over the sticky cloud */
+  margin: 0 auto;
   padding: clamp(80px, 16vh, 220px) var(--gutter);
   pointer-events: none;              /* let the exposed cloud stay draggable */
 }
