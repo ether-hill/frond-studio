@@ -675,6 +675,62 @@ button {
   .rand-circle { animation: none; opacity: 1; }
 }
 
+/* ── Hero control cluster — caption + Remix / sound / 👍 / 👎 (equal height) ── */
+.hero-ctl {
+  position: absolute;
+  z-index: 4;
+  right: var(--content-edge);
+  bottom: clamp(22px, 4vh, 46px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  animation: randIn 0.6s ease 1.3s both;
+}
+.hero-ctl-cap {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+.hero-ctl-row {
+  display: flex;
+  gap: 8px;
+}
+.hero-btn {
+  height: 42px;
+  min-width: 42px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(10, 9, 7, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
+}
+.hero-btn:hover { border-color: rgba(255, 255, 255, 0.7); background: rgba(10, 9, 7, 0.7); }
+.hero-btn svg { width: 17px; height: 17px; display: block; }
+.hero-btn.hero-btn-wide { padding: 0 20px; }
+.hero-btn.on { background: #fff; color: #0b0a08; border-color: #fff; }
+.hero-btn.voted { background: #fff; color: #0b0a08; border-color: #fff; transform: scale(1.08); }
+@media (prefers-reduced-motion: reduce) { .hero-ctl { animation: none; } }
+@media (max-width: 600px) {
+  .hero-ctl { right: var(--gutter); }
+  .hero-btn { height: 40px; min-width: 40px; padding: 0 12px; }
+  .hero-btn.hero-btn-wide { padding: 0 16px; }
+}
+
 /* ── Hero pattern thumbs (subtle, just left of the RANDOMISE circle) ──────────
    Teach which generative patterns/configs the randomiser should favour. Fixed
    light values like the circle (the hero is always dark). */

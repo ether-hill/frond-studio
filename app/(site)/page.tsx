@@ -1,7 +1,6 @@
 import RevealRoot from "@/components/RevealRoot";
 import HeroPhysarum from "@/components/HeroPhysarum";
-import RandomiseButton from "@/components/RandomiseButton";
-import HeroVote from "@/components/HeroVote";
+import HeroControls from "@/components/HeroControls";
 import SelectedWork from "@/components/SelectedWork";
 import SelectedProjects from "@/components/SelectedProjects";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
@@ -26,14 +25,7 @@ export default async function Home() {
         <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(100deg, var(--bg-0) 0%, rgba(0,0,0,0.0) 70%)", opacity: 0.9 }} />
         <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(to top, var(--bg-0) 4%, rgba(0,0,0,0) 50%)", opacity: 0.95 }} />
         <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none", background: "linear-gradient(180deg, var(--bg-0) 0%, transparent 22%)", opacity: 0.6 }} />
-        <RandomiseButton
-          event="hero-physarum-reseed"
-          title="Spawn a new Jones-agent render"
-          variant="circle"
-          caption="Visualising a slime mold algorithm"
-          label="Randomise"
-        />
-        <HeroVote />
+        <HeroControls />
 
         <div
           className="hero-inner"
