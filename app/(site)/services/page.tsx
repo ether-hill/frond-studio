@@ -72,52 +72,27 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Ethos — four layouts */}
-      <section className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter) var(--section-y)" }}>
-        {ETHOS.map((e) => (
-          <div key={e.num} className="about-row" data-rv>
-            <div>
-              <div className="about-num">{e.num}</div>
-              <div className="about-kicker">{e.kicker}</div>
-            </div>
-            <div>
-              <h2 className="about-statement">{e.statement}</h2>
-              <p className="about-body">{e.body}</p>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* Capabilities — interactive node graph, full-bleed behind the copy */}
-      <section
-        id="services"
-        className="cap-section"
-        style={{ position: "relative", overflow: "hidden", background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}
-      >
-        <div className="cap-cloud">
+      {/* The four points flow organically down the page and dissolve into the
+          Focus-areas node structure — one continuous movement, no dividers. */}
+      <section id="services" className="about-flow" style={{ position: "relative", overflow: "hidden", background: "var(--bg-1)" }}>
+        <div className="about-flow-cloud">
           <CapabilitiesGraph />
         </div>
-        <div className="cap-scrim" aria-hidden />
-        <div
-          className="page-gutter cap-copy"
-          style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)", pointerEvents: "none" }}
-        >
-          <div className="cap-text" data-stag style={{ maxWidth: "40ch", userSelect: "none" }}>
-            <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
-              Capabilities
-            </h2>
-            <p
-              style={{
-                marginTop: "clamp(20px,3vh,32px)",
-                maxWidth: "40ch",
-                fontFamily: "var(--font-display), sans-serif",
-                fontSize: "clamp(19px,1.7vw,27px)",
-                fontWeight: 400,
-                lineHeight: 1.34,
-                letterSpacing: "-0.01em",
-                color: "var(--fg-dim)",
-              }}
-            >
+        <div className="about-flow-scrim" aria-hidden />
+        <div className="page-gutter about-flow-inner">
+          {ETHOS.map((e, i) => (
+            <div key={e.kicker} className="ethos-point" data-par={["0.12", "-0.08", "0.1", "-0.1"][i]}>
+              <div data-rv>
+                <div className="about-kicker">{e.kicker}</div>
+                <h2 className="ethos-statement">{e.statement}</h2>
+                <p className="about-body">{e.body}</p>
+              </div>
+            </div>
+          ))}
+
+          <div className="about-focus" data-rv>
+            <h2 className="about-focus-title">Focus areas</h2>
+            <p className="about-focus-copy">
               Where the thinking meets the making. The disciplines we move between
               aren&apos;t separate services, they&apos;re{" "}
               <span style={{ color: "var(--fg)" }}>one connected practice</span>, wired

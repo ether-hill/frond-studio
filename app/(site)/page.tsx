@@ -105,7 +105,7 @@ export default async function Home() {
         >
           <div className="cap-text" data-stag style={{ maxWidth: "40ch", userSelect: "none" }}>
             <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
-              Capabilities
+              Focus areas
             </h2>
             <p
               style={{
