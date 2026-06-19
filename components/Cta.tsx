@@ -130,7 +130,7 @@ export default function Cta() {
   };
 
   return (
-    <section ref={sectionRef} data-theme="dark" style={{ position: "relative", overflow: "hidden", borderTop: "1px solid var(--line)", background: "var(--bg-0)", color: "var(--fg)" }}>
+    <section ref={sectionRef} data-theme="dark" style={{ position: "relative", overflow: "hidden", borderTop: "1px solid var(--line)", background: "var(--bg-0)", color: "var(--fg)", minHeight: "100svh", display: "flex", flexDirection: "column", justifyContent: "center" }}>
       <div data-par="0.14" style={{ position: "absolute", inset: "-14% 0", zIndex: 0, willChange: "transform" }}>
         <CtaCanvas />
       </div>

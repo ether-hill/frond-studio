@@ -89,8 +89,6 @@ export default async function Home() {
 
       <SelectedWork projects={featured} />
 
-      <SelectedProjects />
-
       {/* Capabilities — interactive 3D node cloud, full-bleed behind the copy */}
       <section
         id="services"
@@ -129,6 +127,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <SelectedProjects />
 
       <Cta />
     </RevealRoot>

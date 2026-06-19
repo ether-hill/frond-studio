@@ -113,14 +113,18 @@ export default function CapabilitiesGraph() {
       ctx.clearRect(0, 0, W, H);
       const COL = document.documentElement.dataset.theme === "light" ? COLORS_LIGHT : COLORS;
       const cX = Math.cos(rotX), sX = Math.sin(rotX), cY = Math.cos(rotY), sY = Math.sin(rotY);
+      // On narrow (stacked) layouts the copy sits above, so the cluster is
+      // centred and kept a touch tighter so it reads as a contained graph rather
+      // than spilling off the right edge.
+      const narrow = W < 900;
       // ~40% bigger than before so it fills the section, runs behind the copy
-      // and spills off the edges.
-      const R = Math.min(W, H) * 0.64;
+      // and spills off the edges (desktop); contained + smaller on narrow.
+      const R = Math.min(W, H) * (narrow ? 0.5 : 0.64);
       // widen the cluster (it's ~spherical) to span / overflow a wide section
-      const xStretch = Math.min(1.7, Math.max(1, (W / H) * 0.8));
-      // desktop: shifted right so it sits beside the left-hand copy. on narrow
-      // (stacked) layouts the copy is above, so centre the cluster instead.
-      const focal = 2.7, ox = W < 720 ? W * 0.5 : W * 0.6, oy = H / 2;
+      const xStretch = narrow ? 1 : Math.min(1.7, Math.max(1, (W / H) * 0.8));
+      // desktop: shifted right so it sits beside the left-hand copy. narrow:
+      // centred (nudged slightly left to balance the right-hand labels).
+      const focal = 2.7, ox = narrow ? W * 0.45 : W * 0.6, oy = H / 2;
       for (let i = 0; i < n; i++) {
         const p = pos[i];
         const x1 = p.x * cY - p.z * sY, z1 = p.x * sY + p.z * cY;
@@ -207,11 +211,20 @@ export default function CapabilitiesGraph() {
       canvas.style.cursor = "grab";
     };
     const onLeave = () => { hover = -1; };
-    canvas.addEventListener("pointerdown", onDown);
-    canvas.addEventListener("pointermove", onMove);
-    canvas.addEventListener("pointerup", onUp);
-    canvas.addEventListener("pointerleave", onLeave);
-    canvas.style.cursor = "grab";
+    // Touch / mobile: don't intercept pointers at all — dragging the graph would
+    // otherwise swallow the page scroll. It just auto-orbits there.
+    const coarse =
+      typeof window.matchMedia === "function" &&
+      (window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(max-width: 900px)").matches);
+    if (coarse) {
+      canvas.style.pointerEvents = "none";
+    } else {
+      canvas.addEventListener("pointerdown", onDown);
+      canvas.addEventListener("pointermove", onMove);
+      canvas.addEventListener("pointerup", onUp);
+      canvas.addEventListener("pointerleave", onLeave);
+      canvas.style.cursor = "grab";
+    }
 
     // render loop, paused while off-screen or in a hidden tab. Capped to ~30fps
     // (this is a slow decorative orbit — re-rasterising the labels at 60fps is
