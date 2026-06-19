@@ -94,6 +94,7 @@ export function defaultStrand(): Strand {
 export class Biome {
   private ctx!: AudioContext;
   private bus!: GainNode; private masterGain!: GainNode; private analyser!: AnalyserNode;
+  private comp!: DynamicsCompressorNode;
   private reverbWet!: GainNode;
   private masterBreathLfo!: OscillatorNode; private masterBreathGain!: GainNode;
   private brown!: AudioBuffer;
@@ -116,6 +117,7 @@ export class Biome {
 
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(ctx.destination);
+    this.comp = comp;
 
     this.masterGain = ctx.createGain(); this.masterGain.gain.value = this.master.volume * 0.4;
     this.analyser = ctx.createAnalyser(); this.analyser.fftSize = 1024;
@@ -142,6 +144,10 @@ export class Biome {
     this.applyMaster();
     for (let i = 0; i < NSTRANDS; i++) this.applyStrand(i);
   }
+
+  /** Tap the post-compression master mix into an external node (e.g. a recorder
+   *  MediaStreamDestination), in addition to the speakers. */
+  tap(node: AudioNode): void { if (this.started && this.comp) this.comp.connect(node); }
 
   setMuted(m: boolean): void {
     this.muted = m;

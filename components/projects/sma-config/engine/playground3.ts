@@ -1,11 +1,10 @@
 import GUI from "lil-gui";
-import { getAudioContext } from "./audioCtx";
 import { Physarum, DEFAULTS, type Params } from "./physarum";
 import { Cosmic } from "./cosmic";
 import { VERSIONS, VERSION_BY_ID, HERO_VERSION_ID, type Version } from "./versions";
-import { Sonifier, type Band } from "./audio";
-import { AudioInput } from "./audioInput";
 import { VideoRecorder } from "./recorder";
+import { mountMini, type MiniHandle } from "@/components/projects/instruments/engine/instruments/biomeMini";
+import { suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
 import type { Engine } from "./algo";
 import { TeroNetwork, TERO_DEFAULTS, TERO_PRESETS, type TeroParams } from "./teroNetwork";
 
@@ -71,7 +70,6 @@ interface Snapshot {
   v: string;
   p?: Partial<Params>;
   ap?: Record<string, any>;
-  snd?: { t: number[]; vol: number; drive: number; bias: number; wave: OscillatorType };
   auto?: { sense: AutoState; trail: AutoState; look: AutoState };
   aauto?: AutoState;
 }
@@ -204,65 +202,12 @@ const teroDesc: Desc = {
   presets: TERO_PRESETS, presetId: TERO_PRESETS[0].id,
 };
 
-// ---- sonification (visual instrument) ----
-const sonifier = new Sonifier();
-const fSound = gui.addFolder("Sonification");
-const soundCtl = {
-  sound: async () => {
-    if (sonifier.running) await sonifier.stop();
-    else await sonifier.start();
-    soundBtn.name(sonifier.running ? "■ stop sound" : "▶ enable sound");
-  },
-};
-const soundBtn = fSound.add(soundCtl, "sound").name("▶ enable sound");
-fSound.add(sonifier, "masterVolume", 0, 1, 0.01).name("volume");
-fSound.add(sonifier, "drive", 0, 2, 0.05).name("drive");
-fSound.add(sonifier, "motionBias", 0, 1, 0.01).name("motion ↔ presence");
-const waveState = { wave: "sine" as OscillatorType };
-fSound.add(waveState, "wave", ["sine", "triangle", "sawtooth"]).name("waveform")
-  .onChange((w: OscillatorType) => sonifier.setWaveform(w));
-const fFx = fSound.addFolder("Motion FX");
-fFx.add(sonifier, "brightness", 0, 1, 0.01).name("brightness");
-fFx.add(sonifier, "shimmer", 0, 1, 0.01).name("shimmer");
-fFx.add(sonifier, "tremolo", 0, 1, 0.01).name("tremolo");
-fFx.add(sonifier, "reverb", 0, 1, 0.01).name("reverb");
-fFx.add(sonifier, "delay", 0, 1, 0.01).name("delay");
-const fFreq = fSound.addFolder("Frequencies");
-sonifier.tones.forEach((t) => fFreq.add(t, "on").name(t.label));
-
-// ---- audio input (beat-reactive) ----
-const audioInput = new AudioInput();
-const audioState = { gain: 0.6, status: "off" };
-const fInput = gui.addFolder("Audio input (beat-reactive)");
-const inputCtl = {
-  mic: async () => {
-    try { await audioInput.useMic(); audioState.status = "microphone"; }
-    catch (e) { audioState.status = "mic denied"; console.error(e); }
-    syncGui();
-  },
-  file: () => audioFileInput.click(),
-  stop: () => { audioInput.stop(); audioState.status = "off"; syncGui(); },
-};
-fInput.add(inputCtl, "mic").name("🎤 use microphone");
-fInput.add(inputCtl, "file").name("🎵 load mp3 / audio");
-fInput.add(inputCtl, "stop").name("stop input");
-fInput.add(audioState, "gain", 0, 1.2, 0.05).name("reactivity");
-fInput.add(audioState, "status").name("source").disable();
-
-const audioFileInput = document.createElement("input");
-audioFileInput.type = "file";
-audioFileInput.id = "smsAudioFile";
-audioFileInput.accept = "audio/*";
-audioFileInput.style.display = "none";
-audioFileInput.addEventListener("change", async () => {
-  const f = audioFileInput.files?.[0];
-  if (!f) return;
-  try { await audioInput.useFile(f); audioState.status = f.name.slice(0, 22); }
-  catch (e) { audioState.status = "load failed"; console.error(e); }
-  syncGui();
-  audioFileInput.value = "";
-});
-document.body.appendChild(audioFileInput);
+// ---- biome mini player (soundscape) ----
+// A self-contained living soundscape; when it's playing, its audio is mixed into
+// the video export. Mounted into the #biome-mini bar above the visual.
+let biome: MiniHandle | null = null;
+const biomeHost = document.getElementById("biome-mini");
+if (biomeHost) biome = mountMini(biomeHost, { size: "mini" });
 
 // ---- video export ----
 const recorder = new VideoRecorder();
@@ -295,9 +240,11 @@ async function recordVideo() {
   // so the whole growth sequence is captured from the beginning, not mid-development.
   engine.paused = false;
   engine.reset();
+  // If the soundscape is playing, capture its audio into the export too.
+  const audio = biome?.isOn() ? biome.audioStream() : null;
   try {
     const { blob, ext } = await recorder.record(canvas, exportState.width, exportState.height, Number(exportState.fps), exportState.seconds, (p) =>
-      recBtn.name(`● ${Math.round(p * 100)}%`));
+      recBtn.name(`● ${Math.round(p * 100)}%`), audio);
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `sma-${algoId}-${activePresetId()}-${Date.now()}.${ext}`;
@@ -356,7 +303,6 @@ function loadVersion(id: string) {
   setHash(id);
   localStorage.setItem("p3-version", id);
   rebuildAgentSelect();
-  if (v.audio) fSound.open();
   syncGui();
 }
 
@@ -393,7 +339,6 @@ function loadAlgorithm(id: AlgoId, presetId?: string) {
     blurbEl.textContent = v.blurb;
     versionSel.value = v.id;
     rebuildAgentSelect();
-    if (v.audio) fSound.open();
   } else {
     const preset = TERO_PRESETS.find((p) => p.id === (presetId || teroDesc.presetId)) ?? TERO_PRESETS[0];
     Object.assign(teroParams, TERO_DEFAULTS, preset.params);
@@ -407,23 +352,13 @@ function loadAlgorithm(id: AlgoId, presetId?: string) {
 algoSel.addEventListener("change", () => loadAlgorithm(algoSel.value as AlgoId));
 
 // ---- settings snapshot + share ----
-function sndState() {
-  return { t: sonifier.tones.map((t) => (t.on ? 1 : 0)), vol: sonifier.masterVolume, drive: sonifier.drive, bias: sonifier.motionBias, wave: sonifier.waveform };
-}
-function applySnd(s?: Snapshot["snd"]) {
-  if (!s) return;
-  sonifier.masterVolume = s.vol; sonifier.drive = s.drive; sonifier.motionBias = s.bias ?? sonifier.motionBias;
-  waveState.wave = s.wave; sonifier.setWaveform(s.wave);
-  sonifier.tones.forEach((t, i) => (t.on = !!s.t[i]));
-}
 function snapshot(): Snapshot {
   if (slimeFamily(algoId)) {
-    return { alg: algoId, v: current.id, p: { ...params }, snd: sndState(), auto: { sense: { ...autoSense }, trail: { ...autoTrail }, look: { ...autoLook } } };
+    return { alg: algoId, v: current.id, p: { ...params }, auto: { sense: { ...autoSense }, trail: { ...autoTrail }, look: { ...autoLook } } };
   }
-  return { alg: "tero", v: teroDesc.presetId, ap: { ...teroParams }, snd: sndState(), aauto: { ...teroAuto } };
+  return { alg: "tero", v: teroDesc.presetId, ap: { ...teroParams }, aauto: { ...teroAuto } };
 }
 function applySnapshot(s: Snapshot) {
-  applySnd(s.snd);
   if ((s.alg ?? "jones") === "tero") {
     loadAlgorithm("tero", s.v);
     if (s.ap) Object.assign(teroParams, s.ap);
@@ -554,37 +489,6 @@ window.addEventListener("keydown", (e) => {
   else if (e.key === "s") actions.savePNG();
 });
 
-// ---- sonification: derive bands from canvas motion ----
-const COLS = 28;
-const ROWS = sonifier.tones.length;
-const probe = document.createElement("canvas");
-probe.width = COLS; probe.height = ROWS;
-const probeCtx = probe.getContext("2d", { willReadFrequently: true })!;
-let prev = new Float32Array(COLS * ROWS);
-function sampleBands(): Band[] {
-  probeCtx.drawImage(canvas, 0, 0, COLS, ROWS);
-  const d = probeCtx.getImageData(0, 0, COLS, ROWS).data;
-  const bands: Band[] = [];
-  const bias = sonifier.motionBias;
-  for (let toneRow = 0; toneRow < ROWS; toneRow++) {
-    const imgRow = ROWS - 1 - toneRow;
-    let motion = 0, bright = 0, wSum = 0, wx = 0;
-    for (let x = 0; x < COLS; x++) {
-      const px = (imgRow * COLS + x) * 4;
-      const b = (d[px] + d[px + 1] + d[px + 2]) / (3 * 255);
-      const idx = imgRow * COLS + x;
-      const m = Math.abs(b - prev[idx]);
-      prev[idx] = b;
-      motion += m; bright += b; wx += x * m; wSum += m;
-    }
-    motion /= COLS; bright /= COLS;
-    const energy = Math.min(1, motion * 8 * bias + bright * 0.4 * (1 - bias));
-    const pan = wSum > 1e-4 ? (wx / wSum / (COLS - 1)) * 2 - 1 : 0;
-    bands.push({ energy, pan });
-  }
-  return bands;
-}
-
 window.addEventListener("hashchange", () => {
   if (suppressHash) { suppressHash = false; return; }
   const h = location.hash.replace("#", "");
@@ -649,31 +553,6 @@ function applyAutoDesc(d: Desc, t: number) {
   driftSpecs(t, d.autoState, d.autoSpecs, d.params, d.ctl, d.id, autoTick++ % 4 === 0);
 }
 
-// ---- audio beats rhythmically randomise the reactive params ----
-const AUDIO_BANDS = 44;
-const slimeReactive: [string, number, number][] = [
-  ["sensorAngle", 4, 80], ["sensorDist", 3, 30], ["turnSpeed", 6, 70], ["stepSize", 0.4, 2.4], ["avoid", 0, 0.9],
-];
-const slimeReactiveTargets: Record<string, number> = {};
-let prevBass = 0;
-let lastBeat = 0;
-function driveBeats(now: number, target: any, reactive: [string, number, number][], targets: Record<string, number>, ctlMap: Record<string, any>) {
-  if (!audioInput.active) return;
-  const a = audioInput.read(AUDIO_BANDS);
-  if (!a) return;
-  for (const [k] of reactive) if (targets[k] === undefined) targets[k] = target[k];
-  const flux = a.bass - prevBass;
-  prevBass = a.bass;
-  const beat = flux > 0.12 && a.bass > 0.2 && now - lastBeat > 110;
-  if (beat) {
-    lastBeat = now;
-    const chaos = Math.min(1, audioState.gain);
-    for (const [k, lo, hi] of reactive) targets[k] = target[k] * (1 - chaos) + (lo + Math.random() * (hi - lo)) * chaos;
-  }
-  for (const [k] of reactive) target[k] += (targets[k] - target[k]) * 0.35;
-  if (autoTick % 4 === 0) for (const [k] of reactive) ctlMap[k]?.updateDisplay();
-}
-
 // ---- left "about the model" panel · responsive toggles (no live-math here) ----
 const panelBody = document.getElementById("panelbody")!;
 const panelToggle = document.getElementById("paneltoggle")!;
@@ -690,21 +569,17 @@ let last = performance.now();
 let frames = 0;
 let curFps = 60;
 if (initSnap) applySnapshot(initSnap);
-if (slimeFamily(algoId) && current.audio) fSound.open();
 
 function loop(now: number) {
   if (__stopped) return;
   if (slimeFamily(algoId)) {
     applyAutoSlime(now / 1000);
-    driveBeats(now, params, slimeReactive, slimeReactiveTargets, ctl);
     engine.setParams(params);
   } else {
     applyAutoDesc(teroDesc, now / 1000);
-    driveBeats(now, teroParams, teroDesc.reactive, teroDesc.reactiveTargets, teroCtl);
     engine.setParams(teroParams);
   }
   engine.render();
-  if (sonifier.running) sonifier.update(sampleBands());
   frames++;
   if (now - last > 500) {
     curFps = Math.round((frames * 1000) / (now - last));
@@ -715,5 +590,5 @@ function loop(now: number) {
 }
 __rafId = requestAnimationFrame(loop);
 
-  return () => { __stopped = true; cancelAnimationFrame(__rafId); try { getAudioContext().suspend(); } catch { /* no audio */ } };
+  return () => { __stopped = true; cancelAnimationFrame(__rafId); try { biome?.destroy(); suspendAudio(); } catch { /* no audio */ } };
 }

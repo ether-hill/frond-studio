@@ -118,12 +118,24 @@ const ICON = {
 
 // ---- mount -----------------------------------------------------------------
 
-export function mountMini(root: HTMLElement, opts: { size: MiniSize; state?: Snapshot | null }): void {
+/** Handle returned by mountMini — lets a host (e.g. the SMA video export) know
+ *  whether sound is playing and tap its audio, and tear it down. */
+export type MiniHandle = {
+  isOn: () => boolean;
+  audioStream: () => MediaStream | null;
+  destroy: () => void;
+};
+
+export function mountMini(root: HTMLElement, opts: { size: MiniSize; state?: Snapshot | null }): MiniHandle {
   injectCss();
   const { size } = opts;
   const biome = new Biome();
   let poweredOn = false;
   let growing = false;
+  let audioCtx: AudioContext | null = null;
+  let recDest: MediaStreamAudioDestinationNode | null = null;
+  let rafId = 0;
+  let disposed = false;
 
   const card = document.createElement("div");
   card.className = "bmm-card";
@@ -134,7 +146,7 @@ export function mountMini(root: HTMLElement, opts: { size: MiniSize; state?: Sna
   // ---- shared engine actions (wired into every size's controls) ------------
   // Turn audio on from a user gesture; safe to call repeatedly.
   async function powerUp(): Promise<void> {
-    await ensureAudio();
+    audioCtx = await ensureAudio();
     await biome.start();
     biome.setMuted(false);
     poweredOn = true;
@@ -412,6 +424,7 @@ export function mountMini(root: HTMLElement, opts: { size: MiniSize; state?: Sna
   const HIST = 96;
   let frame = 0;
   function loop(): void {
+    if (disposed) return;
     const lvl = biome.level();
     if (meterFill) meterFill.style.width = `${Math.min(100, lvl * 150).toFixed(0)}%`;
 
@@ -424,9 +437,24 @@ export function mountMini(root: HTMLElement, opts: { size: MiniSize; state?: Sna
         drawVisual(cctx, canvas, history, reduce);
       }
     }
-    requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
   }
-  requestAnimationFrame(loop);
+  rafId = requestAnimationFrame(loop);
+
+  return {
+    isOn: () => poweredOn,
+    audioStream: () => {
+      if (!poweredOn || !audioCtx) return null;
+      if (!recDest) { recDest = audioCtx.createMediaStreamDestination(); biome.tap(recDest); }
+      return recDest.stream;
+    },
+    destroy: () => {
+      disposed = true;
+      cancelAnimationFrame(rafId);
+      try { if (poweredOn) powerOff(); } catch { /* noop */ }
+      card.remove();
+    },
+  };
 }
 
 // ---- live visual: a scrolling, breathing monochrome waveform ---------------

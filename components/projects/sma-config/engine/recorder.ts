@@ -38,6 +38,7 @@ export class VideoRecorder {
     fps: number,
     seconds: number,
     onTick?: (progress: number) => void,
+    audioStream?: MediaStream | null,
   ): Promise<{ blob: Blob; ext: string }> {
     // clamp to a size the browser encoders can actually handle (avoids 0-byte
     // files at very large sizes) and pick a codec that suits the resolution.
@@ -62,6 +63,8 @@ export class VideoRecorder {
     };
 
     const stream = out.captureStream(fps);
+    // mix in the soundscape's audio track(s) so the export has sound
+    if (audioStream) for (const tr of audioStream.getAudioTracks()) stream.addTrack(tr);
     const chunks: Blob[] = [];
     // Scale the bitrate with the pixel count so bigger resolutions make bigger
     // files (~0.12 bits/pixel/frame), clamped to a range encoders accept.
