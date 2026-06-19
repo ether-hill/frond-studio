@@ -84,14 +84,20 @@ export default function HeroPhysarum() {
     ];
     const DARK_BGS = ["#050507", "#0a0612", "#120618", "#04060a", "#1a1438", "#2b1226", "#060108"];
 
-    // Spawn mode heavily favours "random" — the sprawling, immediately-eventful
-    // network. ring/center spawn as a circle that's slow to develop (the
-    // "uneventful purple circle"), so they're now rare garnish, not the default.
+    // Even, well-mixed spawn modes via a shuffled bag: each cycle deals one of
+    // "random" (full panel), "ring" and "center" in random order, so it's an
+    // exact third each with no long runs of the same. (The repeated-look issue
+    // was the exploit path repeating a config — fixed separately.)
+    let spawnBag: string[] = [];
     const pickSpawn = () => {
-      const r = Math.random();
-      if (r < 0.82) return "random";
-      if (r < 0.93) return "ring";
-      return "center";
+      if (!spawnBag.length) {
+        spawnBag = ["random", "ring", "center"];
+        for (let i = spawnBag.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [spawnBag[i], spawnBag[j]] = [spawnBag[j], spawnBag[i]];
+        }
+      }
+      return spawnBag.pop() as string;
     };
 
     // Wide movement ranges (more variation than before).
