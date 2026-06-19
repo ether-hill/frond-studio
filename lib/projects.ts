@@ -52,6 +52,16 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     image: "/cards/sma-config.jpg",
   },
   {
+    slug: "algorithm-lab",
+    title: "Algorithm Lab",
+    kicker: "GENERATIVE · LIVE SANDBOX",
+    summary:
+      "A live sandbox for seven nature-inspired generative systems: space colonization, differential growth, phyllotaxis, strange attractors, dielectric breakdown, stable fluids and reaction-diffusion. Each one is seedable, tunable in real time and exportable to hi-res.",
+    year: "2026",
+    tags: ["Generative", "WebGL", "TypeScript"],
+    href: "/projects/algorithm-lab",
+  },
+  {
     slug: "symcyto",
     title: "Symcyto",
     kicker: "BIO-ART · LIVING MEDIA",
