@@ -33,6 +33,7 @@ export default function HeroControls() {
   const RING_R = 9;
   const RING_C = 2 * Math.PI * RING_R;
   const ringRef = useRef<SVGCircleElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<Animation | null>(null);
   const remixRef = useRef<() => void>(() => {});
   const restartRef = useRef<() => void>(() => {});
@@ -69,14 +70,25 @@ export default function HeroControls() {
     restartRef.current();
   };
 
-  // Drive the ring + auto-remix loop. Disabled under reduced-motion; paused when
-  // the tab is hidden so the countdown matches what the visitor actually sees.
+  // Drive the ring + auto-remix loop. Disabled under reduced-motion; the
+  // countdown only advances while the hero is actually on screen AND the tab is
+  // visible — so we never rebuild the (heavy) WebGL sim for a hero nobody's
+  // looking at, which was hitching the rest of the page as you scrolled down.
   useEffect(() => {
     const el = ringRef.current;
     const reduce =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!el || reduce) return;
+
+    let inView = true;
+    const active = () => inView && !document.hidden;
+    const sync = () => {
+      const a = animRef.current;
+      if (!a) return;
+      if (active()) a.play();
+      else a.pause();
+    };
 
     const start = () => {
       animRef.current?.cancel();
@@ -89,18 +101,29 @@ export default function HeroControls() {
         start();
       };
       animRef.current = a;
+      sync(); // don't run the countdown if we start out off-screen/hidden
     };
     restartRef.current = start;
 
-    const onVisibility = () => {
-      if (document.hidden) animRef.current?.pause();
-      else animRef.current?.play();
-    };
+    const onVisibility = () => sync();
     document.addEventListener("visibilitychange", onVisibility);
+
+    let io: IntersectionObserver | null = null;
+    if ("IntersectionObserver" in window && rootRef.current) {
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) inView = e.isIntersecting;
+          sync();
+        },
+        { threshold: 0 }
+      );
+      io.observe(rootRef.current);
+    }
 
     start();
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
+      io?.disconnect();
       animRef.current?.cancel();
     };
   }, [AUTO_MS, RING_C]);
@@ -159,7 +182,7 @@ export default function HeroControls() {
   };
 
   return (
-    <div className="hero-ctl">
+    <div className="hero-ctl" ref={rootRef}>
       <span className="hero-ctl-cap">Slime mold algorithm visualisation</span>
       <div className="hero-ctl-row" role="group" aria-label="Visualisation controls">
         <button type="button" className="hero-btn hero-btn-wide" onClick={onRemixClick} aria-label="Remix the visualisation">

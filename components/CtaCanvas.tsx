@@ -31,7 +31,7 @@ export default function CtaCanvas() {
     // viewport: the field only animates while the CTA is actually on screen.
     const applyVisibility = () => {
       if (!inst || reduce) return;
-      if (visible) inst.loop?.();
+      if (visible && !document.hidden) inst.loop?.();
       else inst.noLoop?.();
     };
 
@@ -84,6 +84,9 @@ export default function CtaCanvas() {
       io.observe(host);
     }
 
+    const onVis = () => applyVisibility(); // also pause in a hidden tab
+    document.addEventListener("visibilitychange", onVis);
+
     const onReseed = () => mount(Math.floor(Math.random() * 1e9));
     window.addEventListener("cta-mycelium-reseed", onReseed);
 
@@ -97,6 +100,7 @@ export default function CtaCanvas() {
     return () => {
       disposed = true;
       io?.disconnect();
+      document.removeEventListener("visibilitychange", onVis);
       window.clearTimeout(stillT);
       window.clearTimeout(resizeT);
       window.removeEventListener("cta-mycelium-reseed", onReseed);

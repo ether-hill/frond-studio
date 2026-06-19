@@ -214,15 +214,15 @@ export default function CapabilitiesGraph() {
     canvas.addEventListener("pointerleave", onLeave);
     canvas.style.cursor = "grab";
 
-    // render loop, paused while off-screen
-    let raf = 0, looping = false, visible = !reduce;
+    // render loop, paused while off-screen or in a hidden tab
+    let raf = 0, looping = false, visible = !reduce, tabHidden = false;
     const loop = () => {
-      if (!visible) { looping = false; return; }
+      if (!visible || tabHidden) { looping = false; return; }
       if (!dragging && hover < 0) rotY += 0.0016; // gentle auto-orbit
       draw();
       raf = requestAnimationFrame(loop);
     };
-    const startLoop = () => { if (!looping && visible) { looping = true; raf = requestAnimationFrame(loop); } };
+    const startLoop = () => { if (!looping && visible && !tabHidden) { looping = true; raf = requestAnimationFrame(loop); } };
 
     if (reduce) {
       draw(); // single still frame
@@ -241,6 +241,9 @@ export default function CapabilitiesGraph() {
       io.observe(canvas);
     }
 
+    const onVis = () => { tabHidden = document.hidden; if (!tabHidden) startLoop(); };
+    document.addEventListener("visibilitychange", onVis);
+
     let resizeT = 0;
     const onResize = () => {
       window.clearTimeout(resizeT);
@@ -252,6 +255,7 @@ export default function CapabilitiesGraph() {
       visible = false;
       cancelAnimationFrame(raf);
       io?.disconnect();
+      document.removeEventListener("visibilitychange", onVis);
       window.clearTimeout(resizeT);
       window.removeEventListener("resize", onResize);
       canvas.removeEventListener("pointerdown", onDown);
