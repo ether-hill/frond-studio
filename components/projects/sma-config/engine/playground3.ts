@@ -3,8 +3,8 @@ import { Physarum, DEFAULTS, type Params } from "./physarum";
 import { Cosmic } from "./cosmic";
 import { VERSIONS, VERSION_BY_ID, HERO_VERSION_ID, type Version } from "./versions";
 import { VideoRecorder } from "./recorder";
-import { mountMini, type MiniHandle } from "@/components/projects/instruments/engine/instruments/biomeMini";
-import { suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
+import { Biome, randomConfig } from "@/components/projects/instruments/engine/instruments/biomeEngine";
+import { ensureAudio, suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
 import type { Engine } from "./algo";
 import { TeroNetwork, TERO_DEFAULTS, TERO_PRESETS, type TeroParams } from "./teroNetwork";
 
@@ -202,12 +202,46 @@ const teroDesc: Desc = {
   presets: TERO_PRESETS, presetId: TERO_PRESETS[0].id,
 };
 
-// ---- biome mini player (soundscape) ----
-// A self-contained living soundscape; when it's playing, its audio is mixed into
-// the video export. Mounted into the #biome-mini bar above the visual.
-let biome: MiniHandle | null = null;
-const biomeHost = document.getElementById("biome-mini");
-if (biomeHost) biome = mountMini(biomeHost, { size: "mini" });
+// ---- biome soundscape (in the controls panel, where sonification was) ----
+// A living generative soundscape; when it's playing, its audio is mixed into the
+// video export. Lives as a lil-gui folder like the old sonification controls.
+const biome = new Biome();
+let biomeOn = false;
+let biomeCtx: AudioContext | null = null;
+let biomeRecDest: MediaStreamAudioDestinationNode | null = null;
+const soundState = { volume: 0.7 };
+const fSound = gui.addFolder("Soundscape");
+async function rollBiome(): Promise<void> {
+  biomeCtx = await ensureAudio();
+  await biome.start();
+  const { strands, master, palette } = randomConfig();
+  biome.setPalette(palette);
+  biome.apply(strands, master);
+  biome.setMaster({ volume: soundState.volume });
+  biome.setMuted(false);
+  biomeOn = true;
+  soundBtn.name("■ stop sound");
+}
+const soundBtn = fSound.add({
+  sound: async () => {
+    if (biomeOn) {
+      biome.setMuted(true);
+      biomeOn = false;
+      setTimeout(() => { if (!biomeOn) suspendAudio(); }, 240);
+      soundBtn.name("▶ enable sound");
+    } else {
+      await rollBiome();
+    }
+  },
+}, "sound").name("▶ enable sound");
+fSound.add({ randomise: () => rollBiome() }, "randomise").name("⟲ new soundscape");
+fSound.add({ grow: false }, "grow").name("❀ grow").onChange((g: boolean) => { if (biomeOn) biome.setGrowing(g); });
+fSound.add(soundState, "volume", 0, 1, 0.01).name("volume").onChange((v: number) => biome.setMaster({ volume: v }));
+function biomeAudioStream(): MediaStream | null {
+  if (!biomeOn || !biomeCtx) return null;
+  if (!biomeRecDest) { biomeRecDest = biomeCtx.createMediaStreamDestination(); biome.tap(biomeRecDest); }
+  return biomeRecDest.stream;
+}
 
 // ---- video export ----
 const recorder = new VideoRecorder();
@@ -241,7 +275,7 @@ async function recordVideo() {
   engine.paused = false;
   engine.reset();
   // If the soundscape is playing, capture its audio into the export too.
-  const audio = biome?.isOn() ? biome.audioStream() : null;
+  const audio = biomeAudioStream();
   try {
     const { blob, ext } = await recorder.record(canvas, exportState.width, exportState.height, Number(exportState.fps), exportState.seconds, (p) =>
       recBtn.name(`● ${Math.round(p * 100)}%`), audio);
@@ -590,5 +624,5 @@ function loop(now: number) {
 }
 __rafId = requestAnimationFrame(loop);
 
-  return () => { __stopped = true; cancelAnimationFrame(__rafId); try { biome?.destroy(); suspendAudio(); } catch { /* no audio */ } };
+  return () => { __stopped = true; cancelAnimationFrame(__rafId); try { biome.setMuted(true); suspendAudio(); } catch { /* no audio */ } };
 }

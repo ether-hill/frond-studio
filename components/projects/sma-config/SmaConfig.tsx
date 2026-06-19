@@ -26,9 +26,6 @@ const CSS = `
 
 /* layout — visual + controls sidebar, within the gutter/maxw column */
 .sma-wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter) var(--pad-bottom); }
-/* biome soundscape player — its own bar above the visual */
-.sma-biome { margin-bottom: clamp(16px, 2vw, 26px); }
-.sma-biome:empty { display: none; }
 .sma-grid { display: grid; grid-template-columns: minmax(0,1fr) 304px; gap: clamp(20px,2.4vw,40px); align-items: start; }
 
 /* the visual — expands to fill the available space (not a fixed square); the
@@ -86,7 +83,6 @@ const CSS = `
 `;
 
 const SCAFFOLD = `
-<div id="biome-mini" class="sma-biome"></div>
 <div class="sma-grid">
   <div class="sma-visual">
     <canvas id="gl"></canvas>

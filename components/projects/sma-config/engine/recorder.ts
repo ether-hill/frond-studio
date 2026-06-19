@@ -44,7 +44,10 @@ export class VideoRecorder {
     // files at very large sizes) and pick a codec that suits the resolution.
     const W = Math.max(2, Math.min(3840, Math.round(width)));
     const H = Math.max(2, Math.min(3840, Math.round(height)));
-    const mime = pickMime(Math.max(W, H) > 1920);
+    // Always prefer WebM/VP9: one codec for every size means file size scales
+    // with resolution (mp4/H.264 was both flipping the size ordering and failing
+    // at large frames). Falls back to mp4 only where WebM recording is absent.
+    const mime = pickMime(true);
     const ext = mime.startsWith("video/mp4") ? "mp4" : "webm";
 
     const out = document.createElement("canvas");
