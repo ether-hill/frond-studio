@@ -260,14 +260,48 @@ export default function HeroPhysarum() {
       io.observe(canvas);
     }
 
-    // Pull the learned signal early; refs update in place so the next randomise uses it.
+    // First-paint coordination: open the hero on a (vote-weighted) liked pattern
+    // once the aggregate arrives — falling back to the studio default only when
+    // there are no likes yet, or the fetch is slow/unavailable.
+    let engineReady = false;
+    let learningReady = false;
+    let started = false;
+    let fallbackFired = false;
+    let heroDefault: Liked | null = null;
+
+    const doStart = () => {
+      if (started || disposed || !engineReady || !heroDefault) return;
+      started = true;
+      window.clearTimeout(startT);
+      // Open on a liked pattern's look (freshly grown so it's eventful + varies
+      // each visit); otherwise the canonical studio default.
+      if (liked.length) {
+        const base = pickLiked();
+        current = { id: base.id, params: mutate(base.params) };
+      } else {
+        current = heroDefault;
+      }
+      build(current.params);
+      canvas.style.opacity = "1"; // fade the sim in (CSS transition on the canvas)
+      announce();
+      run();
+    };
+    const maybeStart = () => {
+      if (engineReady && (learningReady || fallbackFired)) doStart();
+    };
+
+    // Pull the learned signal early; refs update in place so randomises use it too.
     fetchHeroLearning()
       .then((d) => {
         if (disposed) return;
         sceneVotes = d.sceneVotes || {};
         liked = (d.liked || []).map((c) => ({ id: c.id, params: c.params as P }));
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        learningReady = true;
+        maybeStart();
+      });
 
     // Relay from <HeroVote>: update the in-memory weighting so this session's
     // randomises feel the vote immediately (the server is the durable record).
@@ -300,16 +334,15 @@ export default function HeroPhysarum() {
         ];
         sceneList = [...base2d, ...extra];
         const hero = VERSIONS.find((v) => v.id === HERO_VERSION_ID) || VERSIONS[0];
-        const start = () => {
-          if (disposed) return;
-          current = { id: hero.id, params: hero.params as unknown as P }; // canonical Monochrome Drift on first paint
-          build(current.params);
-          canvas.style.opacity = "1"; // fade the sim in (CSS transition on the canvas)
-          announce();
-          run();
-        };
-        if (reduce) start();
-        else startT = window.setTimeout(start, START_DELAY);
+        heroDefault = { id: hero.id, params: hero.params as unknown as P }; // fallback for first paint
+        engineReady = true;
+        // Give the learning fetch a brief window to land (so we can open on a
+        // liked pattern); fall back to the default if it's slow/unavailable.
+        startT = window.setTimeout(() => {
+          fallbackFired = true;
+          maybeStart();
+        }, START_DELAY + 800);
+        maybeStart();
       })
       .catch(() => {
         /* engine failed to load — leave background empty */
