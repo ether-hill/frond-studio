@@ -53,8 +53,10 @@ export default function CtaCanvas() {
       }
       host.replaceChildren();
       // Lighter than the Algorithms-page default (fewer particles, 24fps) — it's
-      // a backdrop behind a scrim, not the hero of the page.
-      inst = render(host, "field-dynamics", seed, simSize(), 24, { color: 1, particles: 600 });
+      // a backdrop behind a scrim, not the hero of the page. The particle budget
+      // is kept modest so it doesn't chug against the capabilities node graph in
+      // the section above when both are on screen during a scroll.
+      inst = render(host, "field-dynamics", seed, simSize(), 24, { color: 1, particles: 420 });
       // reduced motion: let it trace the field briefly, then hold a still frame.
       if (reduce && inst?.noLoop) stillT = window.setTimeout(() => inst?.noLoop?.(), 1600);
       else applyVisibility(); // a freshly mounted instance must respect current visibility

@@ -122,7 +122,7 @@ export default async function Home() {
               }}
             >
               The interesting problems don&apos;t fit inside one discipline. We work across design, engineering, strategy and AI
-              as a single craft — so an idea moves from sketch to shipped without changing hands. Running through all of it is a{" "}
+              as a single craft. Running through all of it is a{" "}
               <span style={{ color: "var(--fg)" }}>biophilic</span> instinct: we borrow the patterns of living systems to make
               things that grow, adapt and last.
             </p>

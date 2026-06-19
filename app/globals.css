@@ -732,6 +732,8 @@ button {
 }
 .hero-btn:hover { border-color: rgba(255, 255, 255, 0.7); background: rgba(10, 9, 7, 0.7); }
 .hero-btn svg { width: 17px; height: 17px; display: block; }
+/* icon-only buttons are perfect circles; only the labelled Remix is a wide pill */
+.hero-btn:not(.hero-btn-wide) { width: 42px; min-width: 42px; padding: 0; }
 .hero-btn.hero-btn-wide { padding: 0 20px; gap: 9px; }
 .hero-btn .hero-ring { width: 16px; height: 16px; flex: 0 0 auto; }
 .hero-btn.on { background: #fff; color: #0b0a08; border-color: #fff; }
@@ -740,6 +742,7 @@ button {
 @media (max-width: 600px) {
   .hero-ctl { right: var(--gutter); }
   .hero-btn { height: 40px; min-width: 40px; padding: 0 12px; }
+  .hero-btn:not(.hero-btn-wide) { width: 40px; min-width: 40px; padding: 0; }
   .hero-btn.hero-btn-wide { padding: 0 16px; }
 }
 
@@ -829,7 +832,8 @@ button {
 .cta-vote:hover { color: var(--fg); border-color: var(--accent); }
 .cta-vote.voted { color: var(--bg-0); background: var(--accent); border-color: var(--accent); transform: scale(1.1); }
 @media (max-width: 600px) {
-  .cta-votes { right: calc(var(--content-edge) + 116px); gap: 6px; }
+  /* clear the full RANDOMISE pill (~120px wide) so the thumbs never overlap it */
+  .cta-votes { right: calc(var(--content-edge) + 142px); gap: 6px; }
   .cta-vote { width: 32px; height: 32px; }
 }
 

@@ -213,15 +213,25 @@ export default function CapabilitiesGraph() {
     canvas.addEventListener("pointerleave", onLeave);
     canvas.style.cursor = "grab";
 
-    // render loop, paused while off-screen or in a hidden tab
+    // render loop, paused while off-screen or in a hidden tab. Capped to ~30fps
+    // (this is a slow decorative orbit — re-rasterising the labels at 60fps is
+    // what made it chug alongside the CTA field below it). The orbit is advanced
+    // by elapsed time, so the speed is identical regardless of the frame rate;
+    // while dragging/hovering we draw every frame for full responsiveness.
     let raf = 0, looping = false, visible = !reduce, tabHidden = false;
-    const loop = () => {
+    const FRAME_MS = 1000 / 30;
+    let lastT = 0;
+    const loop = (t: number) => {
       if (!visible || tabHidden) { looping = false; return; }
-      if (!dragging && hover < 0) rotY += 0.0016; // gentle auto-orbit
-      draw();
       raf = requestAnimationFrame(loop);
+      const active = dragging || hover >= 0;
+      const dt = t - lastT;
+      if (!active && dt < FRAME_MS) return; // throttle the idle orbit
+      lastT = t;
+      if (!dragging && hover < 0) rotY += 0.096 * (Math.min(dt, 100) / 1000); // ~constant speed
+      draw();
     };
-    const startLoop = () => { if (!looping && visible && !tabHidden) { looping = true; raf = requestAnimationFrame(loop); } };
+    const startLoop = () => { if (!looping && visible && !tabHidden) { looping = true; lastT = 0; raf = requestAnimationFrame(loop); } };
 
     if (reduce) {
       draw(); // single still frame

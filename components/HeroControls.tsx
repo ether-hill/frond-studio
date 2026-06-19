@@ -133,6 +133,7 @@ export default function HeroControls() {
     if (soundOn) {
       try {
         biomeRef.current?.setMuted(true);
+        suspendRef.current?.(); // hard-stop the shared context — guaranteed silence, no lingering pulse
       } catch {
         /* noop */
       }

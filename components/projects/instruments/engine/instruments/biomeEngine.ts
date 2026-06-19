@@ -145,7 +145,10 @@ export class Biome {
 
   setMuted(m: boolean): void {
     this.muted = m;
-    if (this.started) this.masterGain.gain.setTargetAtTime(m ? 0 : this.master.volume * 0.4, this.ctx.currentTime, 0.1);
+    // Re-apply the whole master so BOTH the base gain and the breath-swell
+    // modulation drop to zero — muting only the base let the master breath LFO
+    // keep pushing the gain above zero, so "off" still pulsed audibly.
+    if (this.started) this.applyMaster();
   }
 
   private buildStrand(s: Strand): StrandNodes {
@@ -221,7 +224,8 @@ export class Biome {
     this.masterGain.gain.setTargetAtTime(this.muted ? 0 : m.volume * 0.4, t, 0.1);
     this.reverbWet.gain.setTargetAtTime(m.reverb, t, 0.1);
     this.masterBreathLfo.frequency.setTargetAtTime(clamp(m.breathRate, 0.01, 1), t, 0.1);
-    this.masterBreathGain.gain.setTargetAtTime(m.volume * 0.4 * m.breath * 0.6, t, 0.1);
+    // gate the breath swell on mute too, else it keeps the master above zero
+    this.masterBreathGain.gain.setTargetAtTime(this.muted ? 0 : m.volume * 0.4 * m.breath * 0.6, t, 0.1);
   }
 
   // ---- autonomous growth ---------------------------------------------------
@@ -334,40 +338,46 @@ export class Biome {
 // ---- curated presets -------------------------------------------------------
 
 export interface Preset { name: string; master: MasterState; strands: Partial<Strand>[]; }
+// Every preset is voiced as a major chord (root · major-third · fifth, plus an
+// octave/sixth shimmer) with a bright filter, a lively breath and modest reverb
+// — so each biome reads happy and uplifting rather than sombre or clinical.
 export const PRESETS: Preset[] = [
-  { name: "Deep Rest", master: { volume: 0.7, reverb: 0.55, breath: 0.5, breathRate: 0.05 }, strands: [
-    { type: "tone", hz: 174, level: 0.5, pan: -0.2, breath: 0.5, breathRate: 0.05, tone: 0.5 },
-    { type: "binaural", hz: 200, beat: 2.0, level: 0.5, breath: 0.3, breathRate: 0.06 },
-    { type: "noise", hz: 120, level: 0.3, tone: 0.35, breath: 0.6, breathRate: 0.04 },
-    { type: "drone", hz: 136.1, level: 0.35, pan: 0.3, breath: 0.4, breathRate: 0.05, tone: 0.5 },
+  { name: "Deep Rest", master: { volume: 0.7, reverb: 0.4, breath: 0.45, breathRate: 0.06 }, strands: [
+    { type: "tone", hz: 196, level: 0.42, pan: -0.2, breath: 0.4, breathRate: 0.06, tone: 0.62 },
+    { type: "tone", hz: 245, level: 0.34, pan: 0.3, breath: 0.4, breathRate: 0.07, tone: 0.72 },
+    { type: "tone", hz: 294, level: 0.3, pan: -0.3, breath: 0.4, breathRate: 0.06, tone: 0.74 },
+    { type: "binaural", hz: 392, beat: 6.0, level: 0.3, breath: 0.3, breathRate: 0.05 },
   ] },
-  { name: "Heart Field", master: { volume: 0.72, reverb: 0.5, breath: 0.45, breathRate: 0.07 }, strands: [
-    { type: "tone", hz: 528, level: 0.45, pan: -0.3, breath: 0.4, breathRate: 0.07, tone: 0.7 },
-    { type: "tone", hz: 639, level: 0.4, pan: 0.3, breath: 0.4, breathRate: 0.06, tone: 0.7 },
-    { type: "binaural", hz: 432, beat: 6.0, level: 0.45, breath: 0.3, breathRate: 0.05 },
-    { type: "drone", hz: 341.3, level: 0.3, breath: 0.5, breathRate: 0.04, tone: 0.6 },
+  { name: "Heart Field", master: { volume: 0.72, reverb: 0.38, breath: 0.42, breathRate: 0.08 }, strands: [
+    { type: "tone", hz: 264, level: 0.42, pan: -0.3, breath: 0.4, breathRate: 0.07, tone: 0.72 },
+    { type: "tone", hz: 330, level: 0.38, pan: 0.3, breath: 0.4, breathRate: 0.06, tone: 0.8 },
+    { type: "tone", hz: 396, level: 0.32, breath: 0.4, breathRate: 0.06, tone: 0.82 },
+    { type: "binaural", hz: 528, beat: 6.0, level: 0.34, breath: 0.3, breathRate: 0.05 },
   ] },
   { name: "Gamma Clarity", master: { volume: 0.7, reverb: 0.3, breath: 0.25, breathRate: 0.12 }, strands: [
-    { type: "isochronic", hz: 432, beat: 40, level: 0.42, pan: 0, breath: 0.15, breathRate: 0.1, tone: 0.8 },
-    { type: "tone", hz: 963, level: 0.28, pan: 0.4, breath: 0.3, breathRate: 0.09, tone: 0.9 },
-    { type: "drone", hz: 216, level: 0.3, pan: -0.3, breath: 0.3, breathRate: 0.08, tone: 0.7 },
+    { type: "tone", hz: 432, level: 0.36, pan: 0, breath: 0.25, breathRate: 0.1, tone: 0.85 },
+    { type: "tone", hz: 540, level: 0.3, pan: 0.4, breath: 0.3, breathRate: 0.09, tone: 0.92 },
+    { type: "tone", hz: 648, level: 0.28, pan: -0.3, breath: 0.3, breathRate: 0.08, tone: 0.95 },
+    { type: "isochronic", hz: 864, beat: 10, level: 0.26, pan: 0, breath: 0.2, breathRate: 0.1, tone: 0.95 },
   ] },
-  { name: "Earth Ground", master: { volume: 0.72, reverb: 0.45, breath: 0.5, breathRate: 0.04 }, strands: [
-    { type: "drone", hz: 136.1, level: 0.45, breath: 0.5, breathRate: 0.04, tone: 0.5 },
-    { type: "isochronic", hz: 110, beat: 7.83, level: 0.35, pan: 0.2, breath: 0.2, breathRate: 0.06, tone: 0.6 },
-    { type: "noise", hz: 100, level: 0.32, tone: 0.3, breath: 0.6, breathRate: 0.03 },
-    { type: "tone", hz: 194.18, level: 0.28, pan: -0.3, breath: 0.4, breathRate: 0.05, tone: 0.6 },
+  { name: "Earth Ground", master: { volume: 0.72, reverb: 0.36, breath: 0.45, breathRate: 0.06 }, strands: [
+    { type: "drone", hz: 174, level: 0.4, breath: 0.4, breathRate: 0.06, tone: 0.55 },
+    { type: "tone", hz: 217.5, level: 0.3, pan: 0.3, breath: 0.4, breathRate: 0.06, tone: 0.72 },
+    { type: "tone", hz: 261, level: 0.3, pan: -0.3, breath: 0.4, breathRate: 0.05, tone: 0.76 },
+    { type: "tone", hz: 348, level: 0.24, breath: 0.4, breathRate: 0.07, tone: 0.82 },
   ] },
-  { name: "Crown Opening", master: { volume: 0.68, reverb: 0.65, breath: 0.4, breathRate: 0.06 }, strands: [
-    { type: "tone", hz: 963, level: 0.36, pan: -0.4, breath: 0.4, breathRate: 0.06, tone: 0.95 },
-    { type: "tone", hz: 852, level: 0.34, pan: 0.4, breath: 0.4, breathRate: 0.05, tone: 0.9 },
-    { type: "tone", hz: 888, level: 0.26, breath: 0.5, breathRate: 0.07, tone: 1 },
-    { type: "binaural", hz: 528, beat: 10, level: 0.4, breath: 0.3, breathRate: 0.05 },
+  { name: "Crown Opening", master: { volume: 0.68, reverb: 0.5, breath: 0.4, breathRate: 0.07 }, strands: [
+    { type: "tone", hz: 396, level: 0.32, pan: -0.4, breath: 0.4, breathRate: 0.07, tone: 0.9 },
+    { type: "tone", hz: 495, level: 0.3, pan: 0.4, breath: 0.4, breathRate: 0.06, tone: 0.95 },
+    { type: "tone", hz: 594, level: 0.26, breath: 0.45, breathRate: 0.06, tone: 0.95 },
+    { type: "tone", hz: 660, level: 0.22, pan: 0.2, breath: 0.5, breathRate: 0.07, tone: 1 },
+    { type: "binaural", hz: 792, beat: 10, level: 0.28, breath: 0.3, breathRate: 0.05 },
   ] },
-  { name: "Schumann Drift", master: { volume: 0.72, reverb: 0.5, breath: 0.55, breathRate: 0.04 }, strands: [
-    { type: "drone", hz: 136.1, level: 0.4, pan: -0.2, breath: 0.5, breathRate: 0.04, tone: 0.5 },
-    { type: "binaural", hz: 256, beat: 7.83, level: 0.45, breath: 0.3, breathRate: 0.05 },
-    { type: "noise", hz: 120, level: 0.28, tone: 0.32, breath: 0.6, breathRate: 0.03 },
+  { name: "Schumann Drift", master: { volume: 0.72, reverb: 0.4, breath: 0.5, breathRate: 0.05 }, strands: [
+    { type: "drone", hz: 136.1, level: 0.38, pan: -0.2, breath: 0.45, breathRate: 0.05, tone: 0.55 },
+    { type: "tone", hz: 272.2, level: 0.3, pan: 0.2, breath: 0.4, breathRate: 0.06, tone: 0.72 },
+    { type: "tone", hz: 340.25, level: 0.28, pan: 0.3, breath: 0.4, breathRate: 0.06, tone: 0.78 },
+    { type: "binaural", hz: 408.3, beat: 7.83, level: 0.32, breath: 0.3, breathRate: 0.05 },
   ] },
 ];
 
@@ -377,25 +387,31 @@ export const PRESETS: Preset[] = [
  *  config (strands + master + palette) with no UI side-effects. Same ranges/logic
  *  as the original page randomise(). */
 export function randomConfig(): { strands: Partial<Strand>[]; master: Partial<MasterState>; palette: number[] } {
-  const roots = [136.1, 174, 256, 396, 432, 528];
+  // Bright, consonant roots only — the heavy sub-bass tones read sombre, so we
+  // skip them. Every voice is drawn from a major 6/9 chord, so a roll always
+  // lands happy and uplifting, never minor or muddy.
+  const roots = [196, 220, 261.6, 293.7, 329.6, 392, 432];
   const root = roots[Math.floor(Math.random() * roots.length)];
-  const ratios = [1, 1.5, 2, 4 / 3, 5 / 4, 0.5];
+  // major 6/9 voicing: root · maj2 · maj3 · fifth · maj6 · octave · maj9
+  const ratios = [1, 9 / 8, 5 / 4, 3 / 2, 5 / 3, 2, 9 / 4];
   const palette = ratios.map((r) => root * r);
   const n = 3 + Math.floor(Math.random() * 3);
-  const types: StrandType[] = ["tone", "drone", "binaural", "isochronic", "noise"];
+  // pitched, consonant voices only — clear tones with a little binaural shimmer
+  // and the odd soft pad. No noise or clinical pulses (they drag the mood down).
+  const types: StrandType[] = ["tone", "tone", "tone", "binaural", "drone"];
   const strands: Partial<Strand>[] = [];
   for (let i = 0; i < n; i++) {
     const type = types[Math.floor(Math.random() * types.length)];
     strands.push({
       type, hz: palette[Math.floor(Math.random() * palette.length)],
-      beat: BANDS[Math.floor(Math.random() * BANDS.length)].hz,
-      level: 0.3 + Math.random() * 0.4, pan: (Math.random() * 2 - 1) * 0.8,
-      breath: 0.2 + Math.random() * 0.6, breathRate: 0.03 + Math.random() * 0.16,
-      tone: type === "noise" ? 0.25 + Math.random() * 0.3 : 0.5 + Math.random() * 0.5,
+      beat: [6, 7.83, 10, 10][Math.floor(Math.random() * 4)], // gentle, lively beats
+      level: 0.28 + Math.random() * 0.32, pan: (Math.random() * 2 - 1) * 0.7,
+      breath: 0.25 + Math.random() * 0.5, breathRate: 0.06 + Math.random() * 0.12,
+      tone: 0.62 + Math.random() * 0.38, // brighter filter → uplifting timbre
     });
   }
   const master: Partial<MasterState> = {
-    volume: 0.7, reverb: 0.35 + Math.random() * 0.35, breath: 0.3 + Math.random() * 0.4, breathRate: 0.04 + Math.random() * 0.1,
+    volume: 0.7, reverb: 0.28 + Math.random() * 0.2, breath: 0.3 + Math.random() * 0.35, breathRate: 0.06 + Math.random() * 0.1,
   };
   return { strands, master, palette };
 }
