@@ -1,7 +1,7 @@
 import type { Metric } from "@/content/projects/_types";
 
 /** "By the numbers" — a row of stat columns: big value, caps label, one-line note. */
-export default function Metrics({ metrics, index = 4 }: { metrics: Metric[]; index?: number }) {
+export default function Metrics({ metrics, index }: { metrics: Metric[]; index?: number }) {
   return (
     <section data-rvs>
       <div
@@ -19,7 +19,7 @@ export default function Metrics({ metrics, index = 4 }: { metrics: Metric[]; ind
         }}
       >
         <span style={{ width: 40, height: 1, background: "var(--accent)" }} />
-        <span>&mdash; {String(index).padStart(2, "0")} &middot; By the numbers</span>
+        <span>&mdash; {index != null ? `${String(index).padStart(2, "0")} · ` : ""}By the numbers</span>
       </div>
 
       <div className="cs-metrics" style={{ display: "grid", gridTemplateColumns: `repeat(${metrics.length}, 1fr)`, gap: "clamp(28px,3vw,52px)" }}>

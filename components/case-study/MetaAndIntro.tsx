@@ -73,8 +73,14 @@ export default function MetaAndIntro({ project }: { project: Project }) {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "clamp(32px,4.5vh,52px)" }}>
-        <Block label="Challenge" body={project.challenge} />
-        <Block label="Approach" body={project.approach} />
+        {project.intro && project.intro.length
+          ? project.intro.map((b) => <Block key={b.label} label={b.label} body={b.body} />)
+          : (
+            <>
+              {project.challenge ? <Block label="Challenge" body={project.challenge} /> : null}
+              {project.approach ? <Block label="Approach" body={project.approach} /> : null}
+            </>
+          )}
       </div>
     </section>
   );

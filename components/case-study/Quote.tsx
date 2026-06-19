@@ -8,7 +8,8 @@ export default function Quote({ quote }: { quote: NonNullable<Project["quote"]> 
           &ldquo;{quote.body}&rdquo;
         </p>
         <footer style={{ marginTop: "clamp(20px,3vh,30px)", fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-faint)" }}>
-          {quote.author} &middot; {quote.role}
+          {quote.author}
+          {quote.role ? <> &middot; {quote.role}</> : null}
         </footer>
       </blockquote>
     </section>

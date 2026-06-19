@@ -1,5 +1,3 @@
-import type { Project } from "@/content/projects/_types";
-
 const TONES = {
   before: { tint: "rgba(196, 96, 74, 0.95)", dot: "rgba(196, 96, 74, 0.9)" },
   after: { tint: "rgba(108, 176, 150, 0.98)", dot: "rgba(108, 176, 150, 0.95)" },
@@ -33,11 +31,11 @@ function Column({ kind, points }: { kind: "before" | "after"; points: string[] }
   );
 }
 
-export default function BeforeAfter({ project }: { project: Project }) {
+export default function BeforeAfter({ before, after }: { before: string[]; after: string[] }) {
   return (
     <section data-rvs className="cs-before-after" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(32px,5vw,84px)" }}>
-      <Column kind="before" points={project.before.points} />
-      <Column kind="after" points={project.after.points} />
+      <Column kind="before" points={before} />
+      <Column kind="after" points={after} />
     </section>
   );
 }

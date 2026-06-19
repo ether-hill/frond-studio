@@ -8,6 +8,7 @@ import DeviceStrip from "./DeviceStrip";
 import IntegrationsStrip from "./IntegrationsStrip";
 import Metrics from "./Metrics";
 import Quote from "./Quote";
+import Credits from "./Credits";
 import MoreWork, { type MoreWorkItem } from "./MoreWork";
 
 /**
@@ -24,19 +25,22 @@ export default function CaseStudy({ project, moreWork = [] }: { project: Project
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)" }}>
           <Hero project={project} />
           <MetaAndIntro project={project} />
-          <Screengrab slot={project.homepageGrab} />
-          <BeforeAfter project={project} />
+          {project.homepageGrab ? <Screengrab slot={project.homepageGrab} /> : null}
+          {project.before && project.after ? <BeforeAfter before={project.before.points} after={project.after.points} /> : null}
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "clamp(56px,8vh,110px)" }}>
-            {project.features.map((f, i) => (
-              <FeatureRow key={f.title} feature={f} index={i} />
-            ))}
-          </div>
+          {project.features && project.features.length ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "clamp(56px,8vh,110px)" }}>
+              {project.features.map((f, i) => (
+                <FeatureRow key={f.title} feature={f} index={i} />
+              ))}
+            </div>
+          ) : null}
 
-          <DeviceStrip devices={project.devices} />
-          <IntegrationsStrip integrations={project.integrations} />
-          <Metrics metrics={project.metrics} />
+          {project.devices ? <DeviceStrip devices={project.devices} /> : null}
+          {project.integrations && project.integrations.length ? <IntegrationsStrip integrations={project.integrations} /> : null}
+          {project.metrics && project.metrics.length ? <Metrics metrics={project.metrics} index={project.metricsIndex} /> : null}
           {project.quote ? <Quote quote={project.quote} /> : null}
+          {project.credits || project.frondRole ? <Credits credits={project.credits} frondRole={project.frondRole} /> : null}
         </div>
       </div>
 

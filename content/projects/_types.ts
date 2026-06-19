@@ -38,21 +38,27 @@ export type Project = {
   services: string[];
   liveUrl?: string;
   heroVideo: MediaSlot;
-  homepageGrab: MediaSlot;
-  challenge: string;
-  approach: string;
-  /** Text-based bullet lists — a punchy fragment per line. */
-  before: { points: string[] };
-  after: { points: string[] };
+  homepageGrab?: MediaSlot;
+  /** Titled intro blocks (foreground the project). Falls back to challenge/approach. */
+  intro?: { label: string; body: string }[];
+  challenge?: string;
+  approach?: string;
+  /** Text-based bullet lists — a punchy fragment per line. Omit to skip the section. */
+  before?: { points: string[] };
+  after?: { points: string[] };
   /** 3-6 feature highlights, one clip each. */
-  features: Feature[];
-  devices: { mobile: MediaSlot; tablet: MediaSlot; desktop: MediaSlot };
+  features?: Feature[];
+  devices?: { mobile: MediaSlot; tablet: MediaSlot; desktop: MediaSlot };
   /** Rendered as logo + name chips (logos resolved by name in techLogos). */
-  integrations: string[];
+  integrations?: string[];
   /** "By the numbers" stats — 4-5 cards, each with an optional one-line note. */
-  metrics: Metric[];
-  quote?: { body: string; author: string; role: string };
+  metrics?: Metric[];
+  /** Optional ordinal shown before "By the numbers" (e.g. 4 -> "— 04 · …"). */
+  metricsIndex?: number;
+  quote?: { body: string; author: string; role?: string };
   credits?: string;
+  /** Short, factual line on Frond's role, shown in the credits block. */
+  frondRole?: string;
   prev?: { slug: string; title: string };
   next?: { slug: string; title: string };
 };

@@ -128,6 +128,7 @@ const project: Project = {
       note: "Extensive accessibility work — contrast, keyboard navigation, focus states, ARIA, and screen-reader considerations.",
     },
   ],
+  metricsIndex: 4,
 
   quote: {
     body: "[[ one or two lines from Chiara / EFM team ]]",

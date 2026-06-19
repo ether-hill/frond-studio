@@ -17,7 +17,7 @@ import { getContentProject, contentProjectSlugs, CONTENT_PROJECTS } from "@/cont
 async function moreWorkItems(): Promise<MoreWorkItem[]> {
   const sanity = await getProjects();
   return [
-    ...CONTENT_PROJECTS.map((p) => ({ slug: p.slug, title: p.title, label: p.category, image: p.homepageGrab.src || undefined })),
+    ...CONTENT_PROJECTS.map((p) => ({ slug: p.slug, title: p.title, label: p.category, image: p.homepageGrab?.src || undefined })),
     ...sanity.map((p) => ({ slug: p.slug, title: p.title, label: p.subtitle ?? undefined, image: p.thumbnailImage || `/posters/${p.slug}.jpg` })),
   ];
 }

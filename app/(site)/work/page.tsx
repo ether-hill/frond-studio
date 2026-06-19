@@ -24,7 +24,8 @@ const CONTENT_CARDS: ProjectCard[] = CONTENT_PROJECTS.map((p) => ({
   year: p.year,
   services: p.services,
   summary: p.oneLiner,
-  keyPoints: p.after.points,
+  // Prefer the "after" wins; otherwise lead with the feature titles.
+  keyPoints: p.after?.points ?? (p.features ?? []).slice(0, 4).map((f) => f.title),
   thumbnailVideo: p.heroVideo.src || null,
   thumbnailImage: null,
 }));
