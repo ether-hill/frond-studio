@@ -49,7 +49,7 @@ export default function HeroVote() {
     <div className="hero-votes" role="group" aria-label="Rate this pattern">
       <button
         type="button"
-        className={`hero-vote${flash === "up" ? " voted" : ""}`}
+        className={`ui-btn ui-btn-icon${flash === "up" ? " voted" : ""}`}
         onClick={() => vote("up")}
         aria-label="More patterns like this"
         title="Show more like this"
@@ -60,7 +60,7 @@ export default function HeroVote() {
       </button>
       <button
         type="button"
-        className={`hero-vote${flash === "down" ? " voted" : ""}`}
+        className={`ui-btn ui-btn-icon${flash === "down" ? " voted" : ""}`}
         onClick={() => vote("down")}
         aria-label="Fewer patterns like this"
         title="Show fewer like this"

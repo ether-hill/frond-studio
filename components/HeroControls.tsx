@@ -186,7 +186,7 @@ export default function HeroControls() {
     <div className="hero-ctl" ref={rootRef}>
       <span className="hero-ctl-cap">Slime mold algorithm visualisation</span>
       <div className="hero-ctl-row" role="group" aria-label="Visualisation controls">
-        <button type="button" className="hero-btn hero-btn-wide" onClick={onRemixClick} aria-label="Remix the visualisation">
+        <button type="button" className="ui-btn ui-btn-pill" onClick={onRemixClick} aria-label="Remix the visualisation">
           <svg className="hero-ring" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r={RING_R} stroke="currentColor" strokeWidth="2" opacity="0.28" />
             <circle
@@ -205,7 +205,7 @@ export default function HeroControls() {
         </button>
         <button
           type="button"
-          className={`hero-btn${soundOn ? " on" : ""}`}
+          className={`ui-btn ui-btn-icon${soundOn ? " on" : ""}`}
           onClick={toggleSound}
           aria-pressed={soundOn}
           aria-label={soundOn ? "Turn sound off" : "Turn sound on"}
@@ -223,13 +223,13 @@ export default function HeroControls() {
             )}
           </svg>
         </button>
-        <button type="button" className={`hero-btn${flash === "up" ? " voted" : ""}`} onClick={() => vote("up")} aria-label="More patterns like this" title="Show more like this">
+        <button type="button" className={`ui-btn ui-btn-icon${flash === "up" ? " voted" : ""}`} onClick={() => vote("up")} aria-label="More patterns like this" title="Show more like this">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
             <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <button type="button" className={`hero-btn${flash === "down" ? " voted" : ""}`} onClick={() => vote("down")} aria-label="Fewer patterns like this" title="Show fewer like this">
+        <button type="button" className={`ui-btn ui-btn-icon${flash === "down" ? " voted" : ""}`} onClick={() => vote("down")} aria-label="Fewer patterns like this" title="Show fewer like this">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <g transform="rotate(180 12 12)">
               <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />

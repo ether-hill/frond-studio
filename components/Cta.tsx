@@ -151,7 +151,7 @@ export default function Cta() {
       <div className="cta-votes" role="group" aria-label="Rate this statement">
         <button
           type="button"
-          className={`cta-vote${flash === "down" ? " voted" : ""}`}
+          className={`ui-btn ui-btn-icon${flash === "down" ? " voted" : ""}`}
           onClick={() => onVote("down")}
           aria-label="This statement isn't working"
           title="Show this one less"
@@ -165,7 +165,7 @@ export default function Cta() {
         </button>
         <button
           type="button"
-          className={`cta-vote${flash === "up" ? " voted" : ""}`}
+          className={`ui-btn ui-btn-icon${flash === "up" ? " voted" : ""}`}
           onClick={() => onVote("up")}
           aria-label="This statement is working"
           title="Show this one more"

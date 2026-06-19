@@ -36,9 +36,11 @@ const cardFields = `
   thumbnailImage
 `;
 
+// Timelapse Media lives in the personal Projects list (lib/projects.ts), not the
+// client Work section — exclude it here so it doesn't show in Recent Work / /work.
 export async function getProjects(): Promise<ProjectCard[]> {
   return client.fetch(
-    groq`*[_type == "project" && defined(slug.current)] | order(order asc, title asc){${cardFields}}`,
+    groq`*[_type == "project" && defined(slug.current) && !(slug.current match "timelapse*")] | order(order asc, title asc){${cardFields}}`,
     {},
     { next: { revalidate: 60 } }
   );

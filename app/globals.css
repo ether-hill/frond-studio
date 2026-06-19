@@ -332,6 +332,71 @@ button {
 }
 
 /* ── Capabilities 3D node cloud ───────────────────────────── */
+/* ── About / ethos rows ──────────────────────────────────────────
+   A large ghosted index + mono kicker on the left; the statement + body on the
+   right. Stacks to a single column on phones. */
+.about-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr);
+  gap: clamp(20px, 4vw, 76px);
+  align-items: start;
+  border-top: 1px solid var(--line);
+  padding-top: clamp(28px, 4vh, 52px);
+  margin-top: clamp(40px, 7vh, 96px);
+}
+.about-num {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(48px, 7vw, 104px);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: color-mix(in srgb, var(--fg) 13%, transparent);
+}
+.about-kicker {
+  margin-top: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.about-statement {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(26px, 3.1vw, 46px);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  max-width: 18ch;
+}
+.about-body {
+  margin-top: clamp(18px, 2.4vh, 26px);
+  max-width: 54ch;
+  font-size: clamp(15px, 1.15vw, 17px);
+  line-height: 1.62;
+  color: var(--fg-dim);
+}
+.about-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: clamp(30px, 4vh, 44px);
+}
+.about-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 16px;
+}
+@media (max-width: 760px) {
+  .about-row { grid-template-columns: 1fr; gap: 14px; }
+  .about-num { font-size: clamp(40px, 16vw, 64px); }
+}
+
 /* The cloud is a full-bleed layer that runs behind the copy and spills off the
    edges; a scrim keeps the left-hand text legible over it. */
 .cap-section {
@@ -709,46 +774,48 @@ button {
   display: flex;
   gap: 8px;
 }
-.hero-btn {
-  height: 42px;
-  min-width: 42px;
-  padding: 0 14px;
+/* ── Unified control buttons ─────────────────────────────────────────────────
+   ONE global style for the small controls used in the hero AND the CTA "letting
+   things flow" banner (both dark contexts). Themed entirely via tokens so they
+   are identical everywhere and never restyled per-component. `ui-btn-icon` is a
+   round icon button; `ui-btn-pill` is a labelled pill; `.on`/`.voted` are the
+   active states. */
+.ui-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  color: #fff;
-  background: rgba(10, 9, 7, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
   font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
+  color: var(--fg-dim);
+  background: color-mix(in srgb, var(--bg-0) 55%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 999px;
   cursor: pointer;
-  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
-.hero-btn:hover { border-color: rgba(255, 255, 255, 0.7); background: rgba(10, 9, 7, 0.7); }
-.hero-btn svg { width: 17px; height: 17px; display: block; }
-/* icon-only buttons are perfect circles; only the labelled Remix is a wide pill */
-.hero-btn:not(.hero-btn-wide) { width: 42px; min-width: 42px; padding: 0; }
-.hero-btn.hero-btn-wide { padding: 0 20px; gap: 9px; }
-.hero-btn .hero-ring { width: 16px; height: 16px; flex: 0 0 auto; }
-.hero-btn.on { background: #fff; color: #0b0a08; border-color: #fff; }
-.hero-btn.voted { background: #fff; color: #0b0a08; border-color: #fff; transform: scale(1.08); }
+.ui-btn:hover { color: var(--fg); border-color: var(--accent); }
+.ui-btn:disabled { opacity: 0.5; cursor: default; }
+.ui-btn-icon { width: 34px; height: 34px; padding: 0; border-radius: 50%; }
+.ui-btn-icon svg { width: 15px; height: 15px; display: block; }
+.ui-btn-pill { height: 34px; padding: 0 18px; gap: 9px; }
+.ui-btn-pill .hero-ring { width: 15px; height: 15px; flex: 0 0 auto; }
+.ui-btn.on,
+.ui-btn.voted { color: var(--bg-0); background: var(--accent); border-color: var(--accent); }
+.ui-btn.voted { transform: scale(1.08); }
 @media (prefers-reduced-motion: reduce) { .hero-ctl { animation: none; } }
 @media (max-width: 600px) {
   .hero-ctl { right: var(--gutter); }
-  .hero-btn { height: 40px; min-width: 40px; padding: 0 12px; }
-  .hero-btn:not(.hero-btn-wide) { width: 40px; min-width: 40px; padding: 0; }
-  .hero-btn.hero-btn-wide { padding: 0 16px; }
+  .ui-btn-icon { width: 32px; height: 32px; }
+  .ui-btn-pill { height: 32px; }
 }
 
-/* ── Hero pattern thumbs (subtle, just left of the RANDOMISE circle) ──────────
-   Teach which generative patterns/configs the randomiser should favour. Fixed
-   light values like the circle (the hero is always dark). */
+/* ── Hero pattern thumbs ──────────────────────────────────────────────────────
+   Container only — the buttons use the global .ui-btn system. */
 .hero-votes {
   position: absolute;
   z-index: 4;
@@ -759,29 +826,9 @@ button {
   gap: 8px;
   animation: randIn 0.6s ease 1.6s both;
 }
-.hero-vote {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 50%;
-  color: #fff;
-  background: rgba(10, 9, 7, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
-  cursor: pointer;
-  transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.2s ease, color 0.2s ease;
-}
-.hero-vote svg { width: 16px; height: 16px; }
-.hero-vote:hover { border-color: rgba(255, 255, 255, 0.7); background: rgba(10, 9, 7, 0.7); }
-.hero-vote.voted { background: #fff; color: #0b0a08; border-color: #fff; transform: scale(1.1); }
 @media (prefers-reduced-motion: reduce) { .hero-votes { animation: none; } }
 @media (max-width: 600px) {
   .hero-votes { right: calc(var(--content-edge) + 104px + 12px); gap: 6px; }
-  .hero-vote { width: 36px; height: 36px; }
 }
 
 /* ── CTA countdown ring (re-keyed each cycle to restart the 8s sweep) ─ */
@@ -803,7 +850,8 @@ button {
   .cta-timer-arc { animation: none; stroke-dashoffset: 0; }
 }
 
-/* ── CTA statement thumbs (sit just left of the RANDOMISE chip) ───────────── */
+/* ── CTA statement thumbs ─────────────────────────────────────────────────────
+   Container only — the buttons use the global .ui-btn system. */
 .cta-votes {
   position: absolute;
   z-index: 4;
@@ -812,29 +860,9 @@ button {
   display: flex;
   gap: 8px;
 }
-.cta-vote {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--bg-0) 55%, transparent);
-  color: var(--fg-dim);
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: color 0.2s, border-color 0.2s, background-color 0.2s, transform 0.2s;
-}
-.cta-vote svg { width: 15px; height: 15px; }
-.cta-vote:hover { color: var(--fg); border-color: var(--accent); }
-.cta-vote.voted { color: var(--bg-0); background: var(--accent); border-color: var(--accent); transform: scale(1.1); }
 @media (max-width: 600px) {
-  /* clear the full RANDOMISE pill (~120px wide) so the thumbs never overlap it */
+  /* clear the full RANDOMISE pill (~125px wide) so the thumbs never overlap it */
   .cta-votes { right: calc(var(--content-edge) + 142px); gap: 6px; }
-  .cta-vote { width: 32px; height: 32px; }
 }
 
 /* On phones the intro sits bottom-left and the RANDOMISE circle bottom-right;

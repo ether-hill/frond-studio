@@ -19,6 +19,39 @@ export type PersonalProject = {
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
   {
+    slug: "algorithms",
+    title: "Algorithms",
+    kicker: "GENERATIVE · LIVE IN BROWSER",
+    summary:
+      "Twelve generative systems — Physarum slime-mould networks, reaction–diffusion, boids, L-systems, Voronoi, DLA and more — each running live in the browser, building complex structure from a handful of simple rules.",
+    year: "2026",
+    tags: ["Generative", "p5.js", "WebGL"],
+    href: "/projects/algorithms",
+    image: "/cards/algorithms.jpg",
+  },
+  {
+    slug: "instruments",
+    title: "Instruments",
+    kicker: "WEB AUDIO · PLAYABLE IN-BROWSER",
+    summary:
+      "A small rack of instruments synthesised entirely in Web Audio — a Juno-106 polysynth, the RE-201 Space Echo tape delay, and a gesture Theremin. No plugins, no samples; play them in the page.",
+    year: "2026",
+    tags: ["Web Audio", "Synthesis", "TypeScript"],
+    href: "/projects/instruments",
+    image: "/cards/instruments.jpg",
+  },
+  {
+    slug: "sma-config",
+    title: "SMA Config",
+    kicker: "GENERATIVE · GPU · LIVE TOOL",
+    summary:
+      "An advanced real-time studio for the Jones (2010) agent-based Physarum slime-mould model — hundreds of thousands of agents on the GPU, with deep live control over sensing, deposition, diffusion and colour.",
+    year: "2026",
+    tags: ["WebGL2", "Slime mould", "Generative"],
+    href: "/projects/sma-config",
+    image: "/cards/sma-config.jpg",
+  },
+  {
     slug: "symcyto",
     title: "Symcyto",
     kicker: "BIO-ART · LIVING MEDIA",
@@ -31,7 +64,7 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
   },
   {
     slug: "timelapse-media-production",
-    title: "Timelapse Media Production",
+    title: "Timelapse Media",
     kicker: "FILM · TIMELAPSE · PRODUCTION",
     summary:
       "Process design, rigging, content creation and consulting for timelapse photography and film — focussed on the kingdoms of plants, fungi and slime mould, with deep experience in architecture, events and industrial work.",
@@ -61,38 +94,5 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     tags: ["Cymatics", "R&D", "Sound"],
     href: "/projects/cymatics-bubbles",
     image: "/cards/cymatics.jpg",
-  },
-  {
-    slug: "sma-config",
-    title: "SMA Config",
-    kicker: "GENERATIVE · GPU · LIVE TOOL",
-    summary:
-      "An advanced real-time studio for the Jones (2010) agent-based Physarum slime-mould model — hundreds of thousands of agents on the GPU, with deep live control over sensing, deposition, diffusion and colour.",
-    year: "2026",
-    tags: ["WebGL2", "Slime mould", "Generative"],
-    href: "/projects/sma-config",
-    image: "/cards/sma-config.jpg",
-  },
-  {
-    slug: "instruments",
-    title: "Instruments",
-    kicker: "WEB AUDIO · PLAYABLE IN-BROWSER",
-    summary:
-      "A small rack of instruments synthesised entirely in Web Audio — a Juno-106 polysynth, the RE-201 Space Echo tape delay, and a gesture Theremin. No plugins, no samples; play them in the page.",
-    year: "2026",
-    tags: ["Web Audio", "Synthesis", "TypeScript"],
-    href: "/projects/instruments",
-    image: "/cards/instruments.jpg",
-  },
-  {
-    slug: "algorithms",
-    title: "Algorithms",
-    kicker: "GENERATIVE · LIVE IN BROWSER",
-    summary:
-      "Twelve generative systems — Physarum slime-mould networks, reaction–diffusion, boids, L-systems, Voronoi, DLA and more — each running live in the browser, building complex structure from a handful of simple rules.",
-    year: "2026",
-    tags: ["Generative", "p5.js", "WebGL"],
-    href: "/projects/algorithms",
-    image: "/cards/algorithms.jpg",
   },
 ];
