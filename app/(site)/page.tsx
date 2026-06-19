@@ -60,10 +60,10 @@ export default async function Home() {
             className="hero-fade"
             style={{
               animationDelay: "0.26s",
-              maxWidth: 560,
+              maxWidth: 680,
               marginTop: "clamp(22px,3vh,38px)",
-              fontSize: "clamp(16px,1.35vw,19px)",
-              lineHeight: 1.55,
+              fontSize: "clamp(19px,1.7vw,27px)",
+              lineHeight: 1.4,
               color: "var(--fg)",
             }}
           >

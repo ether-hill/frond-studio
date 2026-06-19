@@ -16,7 +16,7 @@ import { CAP_NODES as NODES, CAP_LINKS as LINKS, GROUP_COLORS as COLORS, GROUP_C
 const FONT = '600 16px "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif';
 const rgba = (c: [number, number, number], a: number) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
-export default function CapabilitiesGraph() {
+export default function CapabilitiesGraph({ scale = 1 }: { scale?: number } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -119,7 +119,8 @@ export default function CapabilitiesGraph() {
       const narrow = W < 900;
       // ~40% bigger than before so it fills the section, runs behind the copy
       // and spills off the edges (desktop); contained + smaller on narrow.
-      const R = Math.min(W, H) * (narrow ? 0.5 : 0.64);
+      // `scale` lets a caller pump up the cluster (the About diagram runs at 1.5x).
+      const R = Math.min(W, H) * (narrow ? 0.5 : 0.64) * scale;
       // widen the cluster (it's ~spherical) to span / overflow a wide section
       const xStretch = narrow ? 1 : Math.min(1.7, Math.max(1, (W / H) * 0.8));
       // desktop: shifted right so it sits beside the left-hand copy. narrow:
@@ -285,7 +286,7 @@ export default function CapabilitiesGraph() {
       canvas.removeEventListener("pointerup", onUp);
       canvas.removeEventListener("pointerleave", onLeave);
     };
-  }, []);
+  }, [scale]);
 
   return (
     <canvas

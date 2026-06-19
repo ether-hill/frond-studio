@@ -85,7 +85,7 @@ export default function AboutPage() {
           </h1>
           <p
             className="hero-fade"
-            style={{ animationDelay: "0.2s", maxWidth: 560, marginTop: "clamp(22px,3vh,38px)", fontSize: "clamp(16px,1.35vw,19px)", lineHeight: 1.55, color: "var(--fg)" }}
+            style={{ animationDelay: "0.2s", maxWidth: 620, marginTop: "clamp(22px,3vh,38px)", fontSize: "clamp(19px,1.7vw,27px)", lineHeight: 1.4, color: "var(--fg)" }}
           >
             We’re a growing, transdisciplinary studio that works the way living systems do:
             across boundaries, in service of things that grow.
@@ -118,7 +118,7 @@ export default function AboutPage() {
           </div>
           <div className="about-split-vis" aria-hidden>
             <div className="about-split-vis-inner">
-              <CapabilitiesGraph />
+              <CapabilitiesGraph scale={1.5} />
             </div>
           </div>
         </div>
