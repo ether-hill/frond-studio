@@ -42,8 +42,9 @@ const ETHOS = [
 export default function AboutPage() {
   return (
     <RevealRoot>
-      {/* Header + manifesto — living mycelium grows behind it */}
-      <section data-theme="dark" style={{ position: "relative", overflow: "hidden", minHeight: "min(86vh, 900px)", background: "var(--bg-0)", color: "var(--fg)" }}>
+      {/* Header + manifesto — living mycelium grows behind it. Full-viewport like
+          the homepage hero, with the same scroll cue. */}
+      <section data-theme="dark" style={{ position: "relative", overflow: "hidden", minHeight: "100svh", background: "var(--bg-0)", color: "var(--fg)" }}>
         <div style={{ position: "absolute", inset: 0, zIndex: 0, opacity: 0.85 }}>
           <MyceliumBg />
         </div>
@@ -70,34 +71,49 @@ export default function AboutPage() {
             introSerif
           />
         </div>
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 30, zIndex: 2 }}>
+          <div style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter)" }}>
+            <span className="scroll-cue">
+              <span className="scroll-cue-label">Scroll</span>
+              <svg className="scroll-cue-arrow" width="20" height="26" viewBox="0 0 20 26" fill="none" aria-hidden="true">
+                <path d="M10 1v22M2 16l8 8 8-8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </div>
+        </div>
       </section>
 
-      {/* The four points flow organically down the page and dissolve into the
-          Focus-areas node structure — one continuous movement, no dividers. */}
+      {/* The four points flow down the page, centred text meandering. The first
+          sits centred on the page; the live node structure begins just beneath it
+          and the rest drift over it. One continuous movement, no dividers. */}
       <section id="services" className="about-flow" style={{ position: "relative", overflow: "hidden", background: "var(--bg-1)" }}>
-        <div className="about-flow-cloud">
-          <CapabilitiesGraph />
-        </div>
-        <div className="about-flow-scrim" aria-hidden />
+        {/* lead point — centred on the page, above the node structure */}
         <div className="page-gutter about-flow-inner">
-          {ETHOS.map((e, i) => (
-            <div key={e.kicker} className="ethos-point" data-par={["0.12", "-0.08", "0.1", "-0.1"][i]}>
-              <div data-rv>
-                <div className="about-kicker">{e.kicker}</div>
-                <h2 className="ethos-statement">{e.statement}</h2>
-                <p className="about-body">{e.body}</p>
-              </div>
+          <div className="ethos-point ethos-lead" data-par="0.08">
+            <div data-rv>
+              <div className="about-kicker">{ETHOS[0].kicker}</div>
+              <h2 className="ethos-statement">{ETHOS[0].statement}</h2>
+              <p className="about-body">{ETHOS[0].body}</p>
             </div>
-          ))}
+          </div>
+        </div>
 
-          <div className="about-focus" data-rv>
-            <h2 className="about-focus-title">Focus areas</h2>
-            <p className="about-focus-copy">
-              Where the thinking meets the making. The disciplines we move between
-              aren&apos;t separate services, they&apos;re{" "}
-              <span style={{ color: "var(--fg)" }}>one connected practice</span>, wired
-              the way a living system is.
-            </p>
+        {/* node structure starts here; the remaining points drift over it */}
+        <div className="about-nodes">
+          <div className="about-flow-cloud">
+            <CapabilitiesGraph />
+          </div>
+          <div className="about-flow-scrim" aria-hidden />
+          <div className="page-gutter about-flow-inner">
+            {ETHOS.slice(1).map((e, i) => (
+              <div key={e.kicker} className="ethos-point" data-par={["-0.08", "0.1", "-0.1"][i]}>
+                <div data-rv>
+                  <div className="about-kicker">{e.kicker}</div>
+                  <h2 className="ethos-statement">{e.statement}</h2>
+                  <p className="about-body">{e.body}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

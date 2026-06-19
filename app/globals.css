@@ -372,12 +372,31 @@ button {
 }
 
 /* ── Capabilities 3D node cloud ───────────────────────────── */
-/* ── About: ethos points flow down and dissolve into the node cloud ──────────
-   No numbers, no dividers. The four points meander down the page (offset left/
-   right) with scrub parallax, then the Focus-areas heading settles over the live
-   node structure, which the scrim reveals only toward the bottom. One movement. */
+/* ── About: ethos points flow down over the node structure ───────────────────
+   No numbers, no dividers. Every point is centre-aligned and wide. The first sits
+   centred on the page; the live node cloud begins just beneath it and the rest
+   drift left/right over it with scrub parallax. One continuous movement. */
 .about-flow { position: relative; }
-.about-flow-cloud { position: absolute; left: 0; right: 0; bottom: 0; height: 80%; z-index: 0; }
+.about-flow-inner {
+  position: relative;
+  z-index: 2;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(80px, 13vh, 184px) var(--gutter);
+}
+/* every point: centred text, generous width */
+.ethos-point {
+  text-align: center;
+  max-width: 60ch;
+  margin: 0 auto clamp(80px, 14vh, 200px);
+}
+.ethos-point:last-child { margin-bottom: 0; }
+/* the lead point is centred on the page and a touch wider */
+.ethos-lead { max-width: 64ch; margin-bottom: 0; }
+
+/* node structure + the drifting points */
+.about-nodes { position: relative; }
+.about-flow-cloud { position: absolute; inset: 0; z-index: 0; opacity: 0.6; }
 .about-flow-scrim {
   position: absolute;
   inset: 0;
@@ -386,23 +405,17 @@ button {
   background: linear-gradient(
     to bottom,
     var(--bg-1) 0%,
-    var(--bg-1) 18%,
-    color-mix(in srgb, var(--bg-1) 62%, transparent) 44%,
-    color-mix(in srgb, var(--bg-1) 22%, transparent) 70%,
-    transparent 88%
+    color-mix(in srgb, var(--bg-1) 35%, transparent) 11%,
+    transparent 30%,
+    transparent 74%,
+    var(--bg-1) 100%
   );
 }
-.about-flow-inner {
-  position: relative;
-  z-index: 2;
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: clamp(72px, 11vh, 150px) var(--gutter) 0;
-}
-.about-flow-inner > .ethos-point { max-width: 46ch; margin-bottom: clamp(72px, 13vh, 184px); }
-.about-flow-inner > .ethos-point:nth-child(2) { margin-left: clamp(0px, 30vw, 540px); max-width: 40ch; }
-.about-flow-inner > .ethos-point:nth-child(3) { margin-left: clamp(0px, 9vw, 160px); max-width: 44ch; }
-.about-flow-inner > .ethos-point:nth-child(4) { margin-left: clamp(0px, 42vw, 700px); max-width: 38ch; }
+/* points 2–4 drift to one side (organic), text stays centred */
+.about-nodes .about-flow-inner > .ethos-point:nth-child(1) { margin-left: auto; margin-right: clamp(0px, 17vw, 320px); }
+.about-nodes .about-flow-inner > .ethos-point:nth-child(2) { margin-left: clamp(0px, 17vw, 320px); margin-right: auto; }
+.about-nodes .about-flow-inner > .ethos-point:nth-child(3) { margin-left: auto; margin-right: clamp(0px, 6vw, 120px); }
+
 .about-kicker {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -420,41 +433,17 @@ button {
   letter-spacing: -0.022em;
 }
 .about-body {
-  margin-top: clamp(16px, 2.2vh, 24px);
-  max-width: 54ch;
+  margin: clamp(16px, 2.2vh, 24px) auto 0;
+  max-width: 56ch;
   font-size: clamp(15px, 1.15vw, 17px);
   line-height: 1.62;
-  color: var(--fg-dim);
-}
-.about-focus {
-  position: relative;
-  max-width: 42ch;
-  margin-left: clamp(0px, 14vw, 240px);
-  padding-bottom: clamp(170px, 32vh, 400px);
-}
-.about-focus-title {
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(42px, 6.2vw, 96px);
-  font-weight: 500;
-  line-height: 0.98;
-  letter-spacing: -0.025em;
-}
-.about-focus-copy {
-  margin-top: clamp(20px, 3vh, 32px);
-  max-width: 40ch;
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(19px, 1.7vw, 27px);
-  font-weight: 400;
-  line-height: 1.34;
-  letter-spacing: -0.01em;
   color: var(--fg-dim);
 }
 /* the mycelium buffer is square — cover the (wide) hero without stretching it */
 .myc-bg canvas { object-fit: cover; object-position: center; }
 @media (max-width: 860px) {
-  .about-flow-inner > .ethos-point { margin-left: 0 !important; max-width: 100%; margin-bottom: clamp(52px, 9vh, 100px); }
-  .about-flow-cloud { height: 68%; }
-  .about-focus { margin-left: 0; }
+  .ethos-point { max-width: 100%; margin-bottom: clamp(56px, 10vh, 110px); }
+  .about-nodes .about-flow-inner > .ethos-point { margin-left: auto !important; margin-right: auto !important; }
 }
 
 /* The cloud is a full-bleed layer that runs behind the copy and spills off the
