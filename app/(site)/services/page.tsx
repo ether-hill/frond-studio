@@ -61,7 +61,7 @@ export default function AboutPage() {
 
         <div className="about-values" data-stag>
           {VALUES.map((v) => (
-            <span key={v} className="about-tag">
+            <span key={v} className="tag">
               {v}
             </span>
           ))}

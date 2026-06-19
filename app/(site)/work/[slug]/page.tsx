@@ -123,10 +123,7 @@ export default async function ProjectCaseStudy({
                   "Services",
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {project.services.map((s) => (
-                      <span
-                        key={s}
-                        style={{ border: "1px solid var(--line)", borderRadius: 999, padding: "5px 12px", fontSize: 12, color: "var(--fg-dim)" }}
-                      >
+                      <span key={s} className="tag">
                         {s}
                       </span>
                     ))}

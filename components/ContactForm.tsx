@@ -109,14 +109,9 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={sending}
-        className="pill pill-solid"
+        className="pill pill-solid pill-lg"
         style={{
           alignSelf: "flex-start",
-          fontSize: 12,
-          fontWeight: 500,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          padding: "15px 30px",
           cursor: sending ? "default" : "pointer",
           opacity: sending ? 0.6 : 1,
           marginTop: 4,

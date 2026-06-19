@@ -265,15 +265,53 @@ button {
 .linku:hover {
   color: var(--fg);
 }
-
-/* ── Pills with hover swap ───────────────────────────── */
-.pill {
-  display: inline-block;
+/* Mono, uppercase call-to-action link — the "View case study →" / "Open →"
+   style used on cards and project pages. Pair with .linku for the underline. */
+.link-cta {
   font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* ── Tags / chips ─────────────────────────────────────
+   One global pill-tag for service lists, capability tags and value chips. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 14px;
+}
+
+/* ── Pills with hover swap ─────────────────────────────
+   Labelled action buttons. Base = the standard size; .pill-lg is the larger
+   form (form submits, the closing CTA). Padding/type live here, not inline. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 12px 22px;
   border-radius: 999px;
   white-space: nowrap;
+  cursor: pointer;
   transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
 }
+.pill-lg { padding: 15px 30px; font-size: 12px; letter-spacing: 0.1em; }
 .pill-solid {
   background: var(--fg);
   color: var(--bg-0);
@@ -381,16 +419,6 @@ button {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: clamp(30px, 4vh, 44px);
-}
-.about-tag {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--fg-dim);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 9px 16px;
 }
 @media (max-width: 760px) {
   .about-row { grid-template-columns: 1fr; gap: 14px; }

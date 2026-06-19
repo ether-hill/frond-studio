@@ -102,7 +102,10 @@ export default function Footer() {
           }}
         >
           <span>© <CurrentYear /> Frond Studio</span>
-          <div style={{ display: "flex", gap: 24 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
+            <Link className="linku" href="/design-system" style={{ color: "var(--fg-faint)" }}>
+              Design system
+            </Link>
             <a className="linku" href="#" style={{ color: "var(--fg-faint)" }}>
               Terms
             </a>

@@ -269,11 +269,7 @@ export default function Cta() {
             justifyContent: "center",
           }}
         >
-          <Link
-            href="/contact"
-            className="pill pill-solid"
-            style={{ fontSize: 13, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", padding: "16px 30px" }}
-          >
+          <Link href="/contact" className="pill pill-solid pill-lg">
             Let&apos;s collaborate
           </Link>
         </div>

@@ -201,7 +201,6 @@ export default function Nav() {
             onClick={() => setMenuOpen(false)}
             tabIndex={menuOpen ? 0 : -1}
             className="pill pill-ghost"
-            style={{ fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", padding: "12px 22px" }}
           >
             Start a project
           </Link>

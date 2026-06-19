@@ -89,17 +89,14 @@ export default function CaseStudyRow({
         {scope.length ? (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: "clamp(24px,3.5vh,34px)" }}>
             {scope.map((s) => (
-              <span
-                key={s}
-                style={{ border: "1px solid var(--line)", borderRadius: 999, padding: "5px 13px", fontSize: 11, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-dim)" }}
-              >
+              <span key={s} className="tag">
                 {s}
               </span>
             ))}
           </div>
         ) : null}
 
-        <Link className="linku" href={href} style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--accent)" }}>
+        <Link className="linku link-cta" href={href}>
           View case study &#8594;
         </Link>
       </div>

@@ -31,11 +31,7 @@ export default function SelectedProjects() {
           <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
             Recent Projects
           </h2>
-          <Link
-            href="/projects"
-            className="pill pill-ghost"
-            style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", padding: "12px 22px" }}
-          >
+          <Link href="/projects" className="pill pill-ghost">
             View all
           </Link>
         </div>
@@ -84,18 +80,7 @@ export default function SelectedProjects() {
                   {p.title}
                 </h3>
                 <p style={{ margin: "12px 0 0", fontSize: 14.5, lineHeight: 1.55, color: "var(--fg-dim)" }}>{p.summary}</p>
-                <span
-                  className="linku"
-                  style={{
-                    marginTop: 20,
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 11,
-                    fontWeight: 500,
-                    letterSpacing: "0.16em",
-                    textTransform: "uppercase",
-                    color: "var(--accent)",
-                  }}
-                >
+                <span className="linku link-cta" style={{ marginTop: 20 }}>
                   {p.external ? "Visit ↗" : "Open →"}
                 </span>
               </>
