@@ -1,0 +1,23 @@
+{
+  "name": "frond-algorithm-lab",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Frond Studio — Algorithm Lab (Wave 2). A standalone Vite prototype sandbox for exploring nature-inspired generative systems.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "check:portable": "node scripts/check-portable.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.161.0",
+    "tweakpane": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/three": "^0.161.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
+}
