@@ -80,15 +80,18 @@ export default function AboutPage() {
         >
           <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(36px,6.6vw,114px)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
             <span className="hero-clip">
-              <span className="hero-rise" style={{ animationDelay: "0.06s" }}>About</span>
+              <span className="hero-rise" style={{ animationDelay: "0.06s" }}>Studio as</span>
+            </span>
+            <span className="hero-clip">
+              <span className="hero-rise" style={{ animationDelay: "0.14s" }}>ecosystem.</span>
             </span>
           </h1>
           <p
             className="hero-fade"
-            style={{ animationDelay: "0.2s", maxWidth: 620, marginTop: "clamp(22px,3vh,38px)", fontSize: "clamp(19px,1.7vw,27px)", lineHeight: 1.4, color: "var(--fg)" }}
+            style={{ animationDelay: "0.26s", maxWidth: 620, marginTop: "clamp(22px,3vh,38px)", fontSize: "clamp(19px,1.7vw,27px)", lineHeight: 1.4, color: "var(--fg)" }}
           >
-            We’re a growing, transdisciplinary studio that works the way living systems do:
-            across boundaries, in service of things that grow.
+            We work the way nature does: across disciplines, through connection, in every
+            direction at once. Always seeking new methods, flavours and interpretations.
           </p>
         </div>
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 30, zIndex: 2 }}>
