@@ -6,9 +6,21 @@ import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import MediaPlaceholder from "@/components/MediaPlaceholder";
 import Cta from "@/components/Cta";
-import { getProject, getProjectSlugs, getAdjacentProjects } from "@/sanity/lib/queries";
+import { getProject, getProjects, getProjectSlugs, getAdjacentProjects } from "@/sanity/lib/queries";
 import CaseStudy from "@/components/case-study/CaseStudy";
-import { getContentProject, contentProjectSlugs } from "@/content/projects";
+import type { MoreWorkItem } from "@/components/case-study/MoreWork";
+import { getContentProject, contentProjectSlugs, CONTENT_PROJECTS } from "@/content/projects";
+
+// Unified cross-project list for the "See more work" slider — content-file
+// flagships first, then Sanity-backed work; the current project is filtered out
+// by the caller.
+async function moreWorkItems(): Promise<MoreWorkItem[]> {
+  const sanity = await getProjects();
+  return [
+    ...CONTENT_PROJECTS.map((p) => ({ slug: p.slug, title: p.title, label: p.category, image: p.homepageGrab.src || undefined })),
+    ...sanity.map((p) => ({ slug: p.slug, title: p.title, label: p.subtitle ?? undefined, image: p.thumbnailImage || `/posters/${p.slug}.jpg` })),
+  ];
+}
 
 export const revalidate = 60;
 
@@ -65,9 +77,10 @@ export default async function ProjectCaseStudy({
   // Rich, content-file case study (the reusable template) takes precedence.
   const content = getContentProject(slug);
   if (content) {
+    const moreWork = (await moreWorkItems()).filter((it) => it.slug !== slug);
     return (
       <RevealRoot>
-        <CaseStudy project={content} />
+        <CaseStudy project={content} moreWork={moreWork} />
         <Cta />
       </RevealRoot>
     );

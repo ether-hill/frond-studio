@@ -40,35 +40,21 @@ const project: Project = {
   approach:
     "Rebuilt as a modern web app with a content architecture suited to the museum's editorial rhythm: exhibitions, press, the Codex Hermeticus newsletter, partners and FAQs all editable in-house. Accessibility and Dutch/English parity were foundations, not add-ons. Commerce and the library catalogue were integrated directly so the site runs the institution rather than just describing it.",
 
+  // Inferred — flag for review before launch.
   before: {
-    image: {
-      type: "image",
-      src: "",
-      alt: "The previous Embassy of the Free Mind website.",
-      ratio: "4:5",
-      label: "Before — previous site",
-    },
-    // Inferred — flag for review before launch.
     points: [
-      "Dated design",
-      "Not accessible to all",
-      "Single language",
-      "Ticketing & library elsewhere",
+      "Dated design that under-served the collection",
+      "Not accessible to all visitors",
+      "Single language only",
+      "Ticketing and the library catalogue lived elsewhere",
     ],
   },
   after: {
-    image: {
-      type: "image",
-      src: "",
-      alt: "The rebuilt Embassy of the Free Mind website.",
-      ratio: "4:5",
-      label: "After — rebuilt site",
-    },
     points: [
-      "Editorial design",
-      "WCAG AA built in",
-      "Full NL / EN parity",
-      "Ticketing & library on-site",
+      "Editorial, content-rich design",
+      "WCAG AA built in from the foundations",
+      "Full Dutch / English parity",
+      "Ticketing, membership and the Source Library on-site",
     ],
   },
 
@@ -124,10 +110,23 @@ const project: Project = {
   ],
 
   metrics: [
-    { value: "[[ Lighthouse ]]", label: "Lighthouse performance" },
-    { value: "2", label: "Languages — NL / EN" },
-    { value: "AA", label: "WCAG 2.2 conformance" },
-    { value: "[[ items ]]", label: "Content items migrated" },
+    { value: "~50", label: "Pages built", note: "Each with custom layouts designed to suit the content." },
+    {
+      value: "20",
+      label: "CMS components",
+      note: "20 custom collections, and 10 custom templates, so the EFM team can publish new content independently.",
+    },
+    { value: "2", label: "Languages live", note: "EN and NL. The EFM team can edit translations directly via Weglot." },
+    {
+      value: "16",
+      label: "Video assets",
+      note: "Custom-edited background and editorial videos, optimised with lazy-load and play/pause handling for performance.",
+    },
+    {
+      value: "AA",
+      label: "WCAG 2.1, substantial measures",
+      note: "Extensive accessibility work — contrast, keyboard navigation, focus states, ARIA, and screen-reader considerations.",
+    },
   ],
 
   quote: {

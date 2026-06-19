@@ -8,15 +8,16 @@ import DeviceStrip from "./DeviceStrip";
 import IntegrationsStrip from "./IntegrationsStrip";
 import Metrics from "./Metrics";
 import Quote from "./Quote";
-import ProjectNav from "./ProjectNav";
+import MoreWork, { type MoreWorkItem } from "./MoreWork";
 
 /**
  * Composes the canonical case-study sections top-to-bottom. Section reveals are
  * driven by the site's shared [data-rv]/[data-rvs] hooks (RevealRoot) — one
  * orchestrated entrance per section as it scrolls in. New project = new content
- * file; no changes here.
+ * file; no changes here. `moreWork` is the cross-project list for the closing
+ * "See more work" slider (current project already excluded by the route).
  */
-export default function CaseStudy({ project }: { project: Project }) {
+export default function CaseStudy({ project, moreWork = [] }: { project: Project; moreWork?: MoreWorkItem[] }) {
   return (
     <>
       <div className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}>
@@ -39,7 +40,7 @@ export default function CaseStudy({ project }: { project: Project }) {
         </div>
       </div>
 
-      <ProjectNav prev={project.prev} next={project.next} />
+      <MoreWork items={moreWork} />
     </>
   );
 }

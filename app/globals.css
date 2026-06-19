@@ -625,6 +625,46 @@ button {
   .cs-metrics { grid-template-columns: 1fr; }
 }
 
+/* ── "See more work" slider (components/case-study/MoreWork) ──────────────────
+   3 cards per view on desktop; arrows step one card at a time via scrollBy. */
+.mw-track {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+.mw-track::-webkit-scrollbar { display: none; }
+.mw-card {
+  flex: 0 0 calc((100% - 48px) / 3); /* 3 across, 2 gaps of 24px */
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+}
+.mw-shot { margin-bottom: 0; }
+.mw-ph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 16px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+@media (max-width: 900px) {
+  .mw-card { flex-basis: calc((100% - 24px) / 2); } /* 2 across */
+}
+@media (max-width: 620px) {
+  .mw-card { flex-basis: 82%; } /* ~1 across, peek of the next */
+}
+
 /* ── Work index (list + cursor preview) ───────────── */
 .wi-row .wi-name {
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s ease;

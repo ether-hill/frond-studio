@@ -1,25 +1,18 @@
 import type { Project } from "@/content/projects/_types";
-import Media from "./Media";
 
 const TONES = {
-  before: { tint: "rgba(196, 96, 74, 0.9)", chip: "rgba(196, 96, 74, 0.14)", border: "rgba(196, 96, 74, 0.32)" },
-  after: { tint: "rgba(108, 176, 150, 0.95)", chip: "rgba(108, 176, 150, 0.14)", border: "rgba(108, 176, 150, 0.32)" },
+  before: { tint: "rgba(196, 96, 74, 0.95)", dot: "rgba(196, 96, 74, 0.9)" },
+  after: { tint: "rgba(108, 176, 150, 0.98)", dot: "rgba(108, 176, 150, 0.95)" },
 };
 
-function Column({
-  kind,
-  data,
-}: {
-  kind: "before" | "after";
-  data: { image: Project["before"]["image"]; points: string[] };
-}) {
+function Column({ kind, points }: { kind: "before" | "after"; points: string[] }) {
   const tone = TONES[kind];
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "clamp(20px,3vh,30px)" }}>
-      <div
+    <div style={{ display: "flex", flexDirection: "column", gap: "clamp(18px,2.6vh,26px)" }}>
+      <h3
         style={{
           fontFamily: "var(--font-mono)",
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 500,
           letterSpacing: "0.2em",
           textTransform: "uppercase",
@@ -27,27 +20,12 @@ function Column({
         }}
       >
         {kind === "before" ? "Before" : "After"}
-      </div>
-      <Media slot={data.image} />
-      <ul style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {data.points.map((p) => (
-          <li
-            key={p}
-            style={{
-              listStyle: "none",
-              fontFamily: "var(--font-mono)",
-              fontSize: 11,
-              fontWeight: 500,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              color: "var(--fg)",
-              background: tone.chip,
-              border: `1px solid ${tone.border}`,
-              borderRadius: 999,
-              padding: "7px 14px",
-            }}
-          >
-            {p}
+      </h3>
+      <ul style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {points.map((p) => (
+          <li key={p} style={{ display: "flex", alignItems: "flex-start", gap: 14, fontSize: "clamp(16px,1.4vw,20px)", lineHeight: 1.45, color: "var(--fg)", whiteSpace: "normal" }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: tone.dot, flexShrink: 0, marginTop: "0.55em" }} />
+            <span>{p}</span>
           </li>
         ))}
       </ul>
@@ -57,9 +35,9 @@ function Column({
 
 export default function BeforeAfter({ project }: { project: Project }) {
   return (
-    <section data-rvs className="cs-before-after" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(28px,4vw,64px)" }}>
-      <Column kind="before" data={project.before} />
-      <Column kind="after" data={project.after} />
+    <section data-rvs className="cs-before-after" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(32px,5vw,84px)" }}>
+      <Column kind="before" points={project.before.points} />
+      <Column kind="after" points={project.after.points} />
     </section>
   );
 }

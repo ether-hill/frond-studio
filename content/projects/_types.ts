@@ -25,7 +25,7 @@ export type Feature = {
 };
 
 /** value may be a clearly-marked placeholder like "[00]" or "[[ Lighthouse ]]". */
-export type Metric = { value: string; label: string };
+export type Metric = { value: string; label: string; note?: string };
 
 export type Project = {
   slug: string;
@@ -41,15 +41,16 @@ export type Project = {
   homepageGrab: MediaSlot;
   challenge: string;
   approach: string;
-  before: { image: MediaSlot; points: string[] };
-  after: { image: MediaSlot; points: string[] };
+  /** Text-based bullet lists — a punchy fragment per line. */
+  before: { points: string[] };
+  after: { points: string[] };
   /** 3-6 feature highlights, one clip each. */
   features: Feature[];
   devices: { mobile: MediaSlot; tablet: MediaSlot; desktop: MediaSlot };
-  /** Rendered as tags. */
+  /** Rendered as logo + name chips (logos resolved by name in techLogos). */
   integrations: string[];
-  /** Exactly 4 metric cards. */
-  metrics: [Metric, Metric, Metric, Metric];
+  /** "By the numbers" stats — 4-5 cards, each with an optional one-line note. */
+  metrics: Metric[];
   quote?: { body: string; author: string; role: string };
   credits?: string;
   prev?: { slug: string; title: string };
