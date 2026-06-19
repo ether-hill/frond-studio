@@ -372,36 +372,39 @@ button {
 }
 
 /* ── Capabilities 3D node cloud ───────────────────────────── */
-/* ── About: left-aligned text blocks scroll past a fixed node diagram ─────────
-   Two columns: the text column (left) scrolls naturally; the node diagram (right)
-   is sticky, staying in view while the blocks pass it. Each block animates in on
-   scroll via [data-rv]. Stacks on phones (text, then the diagram). */
-.about-split {
+/* ── About: full-bleed node cloud behind the copy ────────────────────────────
+   Same convention/size/layering as the homepage Focus-areas section: a full-bleed
+   CapabilitiesGraph (default size) with a left-edge scrim, copy layered over it.
+   The cloud is sticky so it holds (viewport-sized) while the copy scrolls. */
+.about-flow { position: relative; }
+.about-cloud { position: sticky; top: 0; height: 100svh; z-index: 0; }
+.about-cloud-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    var(--bg-1) 0%,
+    color-mix(in srgb, var(--bg-1) 72%, transparent) 30%,
+    transparent 58%
+  );
+}
+.about-flow-inner {
+  position: relative;
+  z-index: 2;
   max-width: var(--maxw);
-  margin: 0 auto;
-  padding: clamp(80px, 12vh, 170px) var(--gutter);
-  display: grid;
-  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
-  gap: clamp(32px, 5vw, 110px);
-  /* both columns stretch to the (tall) text column so the diagram can stay
-     sticky across the whole scroll. */
+  margin: -100svh auto 0;            /* pull the copy up over the sticky cloud */
+  padding: clamp(80px, 16vh, 220px) var(--gutter);
+  pointer-events: none;              /* let the exposed cloud stay draggable */
 }
-.about-split-text > .ethos-point {
+.about-flow-inner > .ethos-point {
   text-align: left;
-  max-width: 48ch;
-  /* big gaps so the column is tall enough for the diagram to stay pinned */
-  margin-bottom: clamp(140px, 30vh, 380px);
+  max-width: 42ch;
+  margin-bottom: clamp(150px, 34vh, 440px);
+  pointer-events: auto;
 }
-.about-split-text > .ethos-point:last-child { margin-bottom: clamp(32px, 6vh, 80px); }
-.about-split-vis { position: relative; }
-.about-split-vis-inner {
-  position: sticky;
-  top: clamp(84px, 11vh, 128px);
-  height: min(92vh, 980px);
-  /* bleed off the right viewport edge so the enlarged cluster has room to spill
-     rather than being cut at the column edge */
-  width: calc(100% + max(0px, (100vw - var(--maxw)) / 2) + var(--gutter));
-}
+.about-flow-inner > .ethos-point:last-child { margin-bottom: clamp(60px, 10vh, 150px); }
 
 .about-kicker {
   font-family: var(--font-mono);
@@ -429,12 +432,18 @@ button {
 /* square sim buffers — cover their (non-square) container instead of stretching */
 .myc-bg canvas,
 .cta-bg canvas { object-fit: cover; object-position: center; }
-@media (max-width: 860px) {
-  .about-split { grid-template-columns: 1fr; gap: clamp(40px, 8vh, 80px); }
-  .about-split-text > .ethos-point { max-width: 100%; margin-bottom: clamp(56px, 10vh, 110px); }
-  /* tall, full-bleed band so the (larger, centred) cluster reads fully on phones */
-  .about-split-vis { margin: 0 calc(var(--gutter) * -1); }
-  .about-split-vis-inner { position: static; height: min(90vh, 760px); }
+@media (max-width: 900px) {
+  /* text sits up top on narrow screens — wash the cloud from the top instead,
+     exactly like the homepage Focus-areas section */
+  .about-cloud-scrim {
+    background: linear-gradient(
+      to bottom,
+      var(--bg-1) 0%,
+      color-mix(in srgb, var(--bg-1) 58%, transparent) 36%,
+      transparent 72%
+    );
+  }
+  .about-flow-inner > .ethos-point { max-width: 100%; margin-bottom: clamp(80px, 18vh, 200px); }
 }
 
 /* The cloud is a full-bleed layer that runs behind the copy and spills off the

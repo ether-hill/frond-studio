@@ -106,24 +106,22 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Left-aligned text blocks scroll past the node diagram, which stays fixed
-          on the right. Each block animates in as it enters the viewport. */}
-      <section id="services" className="about-split-section" style={{ background: "var(--bg-1)" }}>
-        <div className="about-split">
-          <div className="about-split-text">
-            {ETHOS.map((e) => (
-              <div key={e.kicker} className="ethos-point" data-rv>
-                <div className="about-kicker">{e.kicker}</div>
-                <h2 className="ethos-statement">{e.statement}</h2>
-                <p className="about-body">{e.body}</p>
-              </div>
-            ))}
-          </div>
-          <div className="about-split-vis" aria-hidden>
-            <div className="about-split-vis-inner">
-              <CapabilitiesGraph fit scale={1.5} />
+      {/* Full-bleed node cloud behind the copy — same convention, size and layering
+          as the homepage Focus-areas section (cloud z0 · scrim z1 · copy z2). The
+          cloud is sticky so it holds, viewport-sized, while the copy scrolls over it. */}
+      <section id="services" className="about-flow" style={{ position: "relative", overflow: "hidden", background: "var(--bg-1)" }}>
+        <div className="about-cloud">
+          <CapabilitiesGraph />
+          <div className="about-cloud-scrim" aria-hidden />
+        </div>
+        <div className="page-gutter about-flow-inner">
+          {ETHOS.map((e) => (
+            <div key={e.kicker} className="ethos-point" data-rv>
+              <div className="about-kicker">{e.kicker}</div>
+              <h2 className="ethos-statement">{e.statement}</h2>
+              <p className="about-body">{e.body}</p>
             </div>
-          </div>
+          ))}
         </div>
       </section>
 
