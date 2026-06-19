@@ -49,8 +49,9 @@ export default function MyceliumBg() {
         /* noop */
       }
       host.replaceChildren();
-      // colour palettes (not mono); a calm 30fps — it's a backdrop, not the hero.
-      inst = render(host, "mycelium", seed, simSize(), 30, { color: 1 });
+      // colour "bloom" colony (the full-palette blooms, not the default grey
+      // "wild" preset); a calm 30fps — it's a backdrop, not the hero.
+      inst = render(host, "mycelium", seed, simSize(), 30, { color: 1, preset: "bloom" });
       if (reduce && inst?.noLoop) stillT = window.setTimeout(() => inst?.noLoop?.(), 2200);
       else applyVisibility();
     };
