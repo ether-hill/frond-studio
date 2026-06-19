@@ -115,9 +115,9 @@ export default function HeroPhysarum() {
 
     // ~55% of fresh draws go multi-species / multi-colour (rgb) for richer,
     // more complex scenes; the rest keep the preset's own palette + new movement.
-    const jitter = (p: P): P => {
+    const jitter = (p: P, vividChance = 0.55): P => {
       const base = { ...p, ...movementJitter() };
-      if (Math.random() < 0.55) {
+      if (Math.random() < vividChance) {
         const pal = pick(PALETTES);
         return {
           ...base,
@@ -149,10 +149,16 @@ export default function HeroPhysarum() {
       spawn: pickSpawn(), // re-roll spawn so even a banked ring becomes a (mostly) eventful network
     });
 
+    // Soften the vote weighting for the hero: sqrt-flatten so a heavily-liked
+    // look is still favoured but can't dominate the rotation. Without this, a
+    // single config hit the weight cap after ~6 upvotes and got pinned at #1,
+    // repeating endlessly. Baseline (no votes) stays 1.
+    const heroWeight = (id: string) => Math.sqrt(blurbWeight(sceneVotes[id]));
+
     // weighted preset pick — liked presets surface more, disliked fade (never to 0)
     const pickScene = () => {
       if (!sceneList.length) return null;
-      const ws = sceneList.map((s) => blurbWeight(sceneVotes[s.id]));
+      const ws = sceneList.map((s) => heroWeight(s.id));
       const total = ws.reduce((a, b) => a + b, 0);
       let r = Math.random() * total;
       for (let i = 0; i < sceneList.length; i++) {
@@ -165,7 +171,7 @@ export default function HeroPhysarum() {
     // pick a banked favourite, weighted by its preset's score — so a down-voted
     // look surfaces less here too, not just in fresh exploration.
     const pickLiked = (): Liked => {
-      const ws = liked.map((c) => blurbWeight(sceneVotes[c.id]));
+      const ws = liked.map((c) => heroWeight(c.id));
       const total = ws.reduce((a, b) => a + b, 0);
       if (total <= 0) return pick(liked);
       let r = Math.random() * total;
@@ -260,9 +266,10 @@ export default function HeroPhysarum() {
       io.observe(canvas);
     }
 
-    // First-paint coordination: open the hero on a (vote-weighted) liked pattern
-    // once the aggregate arrives — falling back to the studio default only when
-    // there are no likes yet, or the fetch is slow/unavailable.
+    // First-paint coordination: open the hero on a fresh, random, vivid
+    // variation once the engine is ready — never on a single banked favourite
+    // (that pinned the same look on almost every load). Falls back to the
+    // studio default only if no presets are available.
     let engineReady = false;
     let learningReady = false;
     let started = false;
@@ -273,14 +280,11 @@ export default function HeroPhysarum() {
       if (started || disposed || !engineReady || !heroDefault) return;
       started = true;
       window.clearTimeout(startT);
-      // Open on a liked pattern's look (freshly grown so it's eventful + varies
-      // each visit); otherwise the canonical studio default.
-      if (liked.length) {
-        const base = pickLiked();
-        current = { id: base.id, params: mutate(base.params) };
-      } else {
-        current = heroDefault;
-      }
+      // Always open on a fresh, heavily-jittered scene biased hard toward the
+      // vivid multi-colour transform — so each visit is an eventful, genuinely
+      // new variation rather than a near-clone of the top-voted config.
+      const s = pickScene() || heroDefault;
+      current = { id: s.id, params: jitter(s.params, 0.85) };
       build(current.params);
       canvas.style.opacity = "1"; // fade the sim in (CSS transition on the canvas)
       announce();
