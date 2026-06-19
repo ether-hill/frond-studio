@@ -6,9 +6,9 @@ import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import MediaPlaceholder from "@/components/MediaPlaceholder";
 import Cta from "@/components/Cta";
-import { getProject, getProjects, getProjectSlugs, getAdjacentProjects } from "@/sanity/lib/queries";
+import { getProject, getProjects, getProjectSlugs } from "@/sanity/lib/queries";
 import CaseStudy from "@/components/case-study/CaseStudy";
-import type { MoreWorkItem } from "@/components/case-study/MoreWork";
+import MoreWork, { type MoreWorkItem } from "@/components/case-study/MoreWork";
 import { getContentProject, contentProjectSlugs, CONTENT_PROJECTS } from "@/content/projects";
 
 // Unified cross-project list for the "See more work" slider — content-file
@@ -89,7 +89,7 @@ export default async function ProjectCaseStudy({
   const project = await getProject(slug);
   if (!project) notFound();
 
-  const { prev, next } = await getAdjacentProjects(slug);
+  const moreWork = (await moreWorkItems()).filter((it) => it.slug !== slug);
 
   return (
     <RevealRoot>
@@ -198,29 +198,7 @@ export default async function ProjectCaseStudy({
         </div>
       </article>
 
-      {/* Prev / Next */}
-      {(prev || next) && (
-        <nav style={{ borderTop: "1px solid var(--line)", background: "var(--bg-1)" }}>
-          <div className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "clamp(40px,6vh,72px) var(--gutter)", display: "flex", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
-            {prev ? (
-              <Link href={`/work/${prev.slug}`} className="linku" style={{ color: "var(--fg-dim)", display: "flex", flexDirection: "column", gap: 6 }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-faint)" }}>
-                  &#8592; Previous
-                </span>
-                <span style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(20px,2vw,30px)", color: "var(--fg)" }}>{prev.title}</span>
-              </Link>
-            ) : <span />}
-            {next ? (
-              <Link href={`/work/${next.slug}`} className="linku" style={{ color: "var(--fg-dim)", textAlign: "right", display: "flex", flexDirection: "column", gap: 6, marginLeft: "auto" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-faint)" }}>
-                  Next &#8594;
-                </span>
-                <span style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(20px,2vw,30px)", color: "var(--fg)" }}>{next.title}</span>
-              </Link>
-            ) : <span />}
-          </div>
-        </nav>
-      )}
+      <MoreWork items={moreWork} />
 
       <Cta />
     </RevealRoot>
