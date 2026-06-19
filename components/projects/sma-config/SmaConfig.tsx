@@ -55,18 +55,20 @@ const CSS = `
 .sma-root #guihost .lil-gui { --background-color: rgba(8,8,8,0.92); --widget-color: #1c1c1c; --title-background-color: #0c0c0c; max-height: calc(100svh - 150px); overflow-y: auto; }
 .sma-root #guihost .lil-gui.root { width: 100% !important; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 
-/* About panel — themed, in flow (no longer floating over the canvas) */
-.sma-root #insight { background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; color: var(--fg-dim); }
-.sma-root #paneltoggle { width: 100%; display: flex; justify-content: space-between; align-items: center; background: transparent; border: 0; color: var(--fg); cursor: pointer; font: 700 10px var(--font-mono); letter-spacing: 0.18em; padding: 0; }
+/* About the model — a wide, readable section below the studio (not crammed in
+   the sidebar). Lead paragraph spans, then two columns of detail. */
+.sma-root .sma-about { margin-top: clamp(40px, 5vw, 72px); border-top: 1px solid var(--line); padding-top: clamp(26px, 3vw, 40px); color: var(--fg-dim); }
+.sma-root #paneltoggle { width: 100%; max-width: var(--maxw); display: flex; justify-content: space-between; align-items: center; gap: 16px; background: transparent; border: 0; color: var(--fg); cursor: pointer; font: 500 12px var(--font-mono); letter-spacing: 0.18em; text-transform: uppercase; padding: 0; }
 .sma-root #paneltoggle .caret { color: var(--fg-dim); }
-.sma-root #panelbody { margin-top: 12px; }
+.sma-root #panelbody { margin-top: clamp(18px, 2.4vw, 30px); }
 .sma-root #panelbody.hidden { display: none; }
 .sma-root #blurb { display: none; }
-.sma-root #p3desc { color: var(--fg-dim); font-size: 12px; line-height: 1.6; }
-.sma-root #p3desc h4 { color: var(--fg); font: 700 9.5px var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; margin: 16px 0 7px; }
-.sma-root #p3desc p { margin: 0 0 9px; }
-.sma-root #p3desc ul { margin: 0 0 4px; padding-left: 16px; }
-.sma-root #p3desc li { margin: 0 0 7px; }
+.sma-root #p3desc { color: var(--fg-dim); font-size: clamp(13px, 1vw, 15px); line-height: 1.65; }
+.sma-root #p3desc .sma-about-lead { max-width: 72ch; font-size: clamp(15px, 1.25vw, 18px); line-height: 1.55; color: var(--fg); margin: 0 0 clamp(22px, 3vw, 36px); }
+.sma-root .sma-about-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 80px); max-width: 90ch; }
+.sma-root #p3desc h4 { color: var(--fg); font: 700 10px var(--font-mono); letter-spacing: 0.18em; text-transform: uppercase; margin: 0 0 13px; }
+.sma-root #p3desc ul { margin: 0; padding-left: 17px; }
+.sma-root #p3desc li { margin: 0 0 11px; }
 .sma-root #p3desc b { color: var(--fg); font-weight: 600; }
 .sma-root #p3desc i { color: var(--fg); font-style: italic; }
 
@@ -76,47 +78,56 @@ const CSS = `
   .sma-visual { height: min(72vh, 680px); }
   .sma-side { position: static; top: auto; }
   .sma-root #ctrltoggle { display: inline-flex; }
+  .sma-root .sma-about-cols { grid-template-columns: 1fr; gap: clamp(20px, 5vw, 32px); }
 }
 `;
 
 const SCAFFOLD = `
-<div class="sma-visual">
-  <canvas id="gl"></canvas>
-  <div id="presetbar">
-    <label id="algolabel">ALGORITHM</label>
-    <select id="algorithm" aria-label="Algorithm"></select>
-    <label id="presetlabel">PRESET</label>
-    <select id="version" aria-label="Preset"></select>
+<div class="sma-grid">
+  <div class="sma-visual">
+    <canvas id="gl"></canvas>
+    <div id="presetbar">
+      <label id="algolabel">ALGORITHM</label>
+      <select id="algorithm" aria-label="Algorithm"></select>
+      <label id="presetlabel">PRESET</label>
+      <select id="version" aria-label="Preset"></select>
+    </div>
+    <div id="topctl"><button id="p3-restart">RESTART</button><button id="p3-rand">RANDOMISE</button></div>
+    <div id="fps"></div>
+    <div id="fatal"></div>
   </div>
-  <div id="topctl"><button id="p3-restart">RESTART</button><button id="p3-rand">RANDOMISE</button></div>
-  <div id="fps"></div>
-  <div id="fatal"></div>
+  <aside class="sma-side">
+    <button id="ctrltoggle" class="toggle" aria-label="Toggle controls">⚙ Controls</button>
+    <div id="guihost"></div>
+  </aside>
 </div>
-<aside class="sma-side">
-  <button id="ctrltoggle" class="toggle" aria-label="Toggle controls">⚙ Controls</button>
-  <div id="guihost"></div>
-  <section id="insight" aria-label="About the Jones agent model">
-    <button id="paneltoggle"><span>ABOUT · THE JONES MODEL</span><span class="caret">▾</span></button>
-    <div id="panelbody">
-      <p id="blurb"></p>
-      <div id="p3desc">
-        <p>The <b>Jones Agent Model</b> (Jeff Jones, 2010) is a bio-inspired multi-agent algorithm that simulates the foraging and network-forming behaviour of the slime mould <i>Physarum polycephalum</i> through <b>stigmergy</b> — indirect coordination via the environment.</p>
-        <h4>How it works</h4>
-        <ul>
-          <li><b>Agent layer</b> — thousands of agents move through the grid, each sensing three points ahead (left, centre, right).</li>
-          <li><b>Trail map</b> — agents deposit a chemical trail and steer toward the highest concentration.</li>
-          <li><b>Diffuse &amp; decay</b> — the trail blurs and fades, so pathways adapt, merge or collapse.</li>
-        </ul>
-        <h4>Emergent properties</h4>
-        <ul>
-          <li><b>Network minimisation</b> — inefficient branches are pruned, leaving efficient transport networks.</li>
-          <li><b>Adaptation</b> — blocked paths reroute; decentralised resilience.</li>
-          <li><b>Pattern formation</b> — labyrinths, reticulated networks and fanning search fronts.</li>
-        </ul>
+<section id="insight" class="sma-about" aria-label="About the Jones agent model">
+  <button id="paneltoggle"><span>About · The Jones model</span><span class="caret">▾</span></button>
+  <div id="panelbody">
+    <p id="blurb"></p>
+    <div id="p3desc">
+      <p class="sma-about-lead">The <b>Jones Agent Model</b> (Jeff Jones, 2010) is a bio-inspired multi-agent algorithm that simulates the foraging and network-forming behaviour of the slime mould <i>Physarum polycephalum</i> through <b>stigmergy</b>: indirect coordination via the environment.</p>
+      <div class="sma-about-cols">
+        <div>
+          <h4>How it works</h4>
+          <ul>
+            <li><b>Agent layer</b> — thousands of agents move through the grid, each sensing three points ahead (left, centre, right).</li>
+            <li><b>Trail map</b> — agents deposit a chemical trail and steer toward the highest concentration.</li>
+            <li><b>Diffuse &amp; decay</b> — the trail blurs and fades, so pathways adapt, merge or collapse.</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Emergent properties</h4>
+          <ul>
+            <li><b>Network minimisation</b> — inefficient branches are pruned, leaving efficient transport networks.</li>
+            <li><b>Adaptation</b> — blocked paths reroute; decentralised resilience.</li>
+            <li><b>Pattern formation</b> — labyrinths, reticulated networks and fanning search fronts.</li>
+          </ul>
+        </div>
       </div>
     </div>
-  </section>
-</aside>
+  </div>
+</section>
 `;
 
 export default function SmaConfig() {
@@ -150,7 +161,7 @@ export default function SmaConfig() {
           </p>
         </header>
         <div className="sma-wrap">
-          <div ref={ref} id="root" className="sma-grid" />
+          <div ref={ref} id="root" />
         </div>
       </div>
     </>
