@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Live "Algorithms" toolbox — twelve generative systems, each running in the
+ * Live "Algorithms" toolbox — a growing collection of generative systems, each running in the
  * browser (p5.js sketches + a WebGL2 GPU Physarum engine). Ported from
  * generatives.vercel.app and reskinned to Frond's tokens. The heavy engine
  * modules are imported lazily (client-only) so p5/WebGL never touch SSR.
@@ -58,8 +58,8 @@ export default function AlgorithmsApp() {
             </h1>
           </div>
           <p style={{ margin: 0, maxWidth: "46ch", fontSize: "clamp(14px,1.7vw,16px)", lineHeight: 1.6, color: "var(--fg2)" }}>
-            Thirteen systems, each running live. Every one builds complex structure from a handful of simple rules — no
-            blueprint, just local interactions. Pick one to watch it run.
+            A growing collection of generative systems, each running live. Every one builds complex structure from a
+            handful of simple rules: no blueprint, just local interactions. Pick one to watch it run.
           </p>
         </div>
       </section>

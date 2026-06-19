@@ -5,7 +5,7 @@ import InstrumentMount from "@/components/projects/instruments/InstrumentMount";
 export const metadata: Metadata = {
   title: "Instruments — Frond Studio",
   description:
-    "A small rack of instruments synthesised entirely in Web Audio — Juno-106, Space Echo and a Theremin, playable in the browser.",
+    "A growing rack of instruments synthesised entirely in Web Audio: Juno-106, Space Echo, a Theremin and more, playable in the browser.",
 };
 
 export default function InstrumentsHubPage() {

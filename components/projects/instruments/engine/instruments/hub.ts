@@ -63,8 +63,8 @@ hero.style.cssText = "padding:clamp(100px,13vw,156px) 0 clamp(36px,5vw,60px);bor
 hero.innerHTML =
   `<div style="max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)">` +
     `<div style="font-family:${MONO};font-size:11px;letter-spacing:0.28em;color:var(--fg4);margin-bottom:18px">INSTRUMENTS · PLAYABLE IN-BROWSER</div>` +
-    `<h1 style="margin:0;font-weight:700;font-size:clamp(40px,8vw,108px);line-height:0.92;letter-spacing:-0.035em;max-width:14ch">A small rack, built from code.</h1>` +
-    `<p style="margin:24px 0 0;max-width:62ch;font-size:clamp(15px,2vw,20px);line-height:1.6;color:var(--fg2)">Four instruments synthesised entirely in Web Audio — no plugins, no downloads, no samples. Classic circuits, a gesture controller and a living soundscape, rebuilt as code and played in the page. Sound starts on a click; bring headphones.</p>` +
+    `<h1 style="margin:0;font-weight:700;font-size:clamp(40px,8vw,108px);line-height:0.92;letter-spacing:-0.035em;max-width:14ch">A growing rack, built from code.</h1>` +
+    `<p style="margin:24px 0 0;max-width:62ch;font-size:clamp(15px,2vw,20px);line-height:1.6;color:var(--fg2)">Instruments synthesised entirely in Web Audio: no plugins, no downloads, no samples. Classic circuits, a gesture controller and a living soundscape, rebuilt as code and played in the page. Sound starts on a click; bring headphones.</p>` +
   `</div>`;
 root.appendChild(hero);
 

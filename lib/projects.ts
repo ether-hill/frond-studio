@@ -23,7 +23,7 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     title: "Algorithms",
     kicker: "GENERATIVE · LIVE IN BROWSER",
     summary:
-      "Twelve generative systems — Physarum slime-mould networks, reaction–diffusion, boids, L-systems, Voronoi, DLA and more — each running live in the browser, building complex structure from a handful of simple rules.",
+      "A growing collection of generative systems: Physarum slime-mould networks, reaction–diffusion, boids, L-systems, Voronoi, DLA and more, each running live in the browser, building complex structure from a handful of simple rules.",
     year: "2026",
     tags: ["Generative", "p5.js", "WebGL"],
     href: "/projects/algorithms",
@@ -34,7 +34,7 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     title: "Instruments",
     kicker: "WEB AUDIO · PLAYABLE IN-BROWSER",
     summary:
-      "A small rack of instruments synthesised entirely in Web Audio — a Juno-106 polysynth, the RE-201 Space Echo tape delay, and a gesture Theremin. No plugins, no samples; play them in the page.",
+      "A growing rack of instruments synthesised entirely in Web Audio: a Juno-106 polysynth, the RE-201 Space Echo tape delay, a gesture Theremin and more. No plugins, no samples; play them in the page.",
     year: "2026",
     tags: ["Web Audio", "Synthesis", "TypeScript"],
     href: "/projects/instruments",
