@@ -3,9 +3,9 @@ import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
 
 export const metadata: Metadata = {
-  title: "Design System — Frond Studio",
+  title: "Design System · Frond Studio",
   description:
-    "The Frond Studio design system — tokens, typography, components and the guidelines (tone of voice, design ethos) that keep everything consistent.",
+    "The Frond Studio design system: tokens, typography, components and the guidelines (tone of voice, design ethos) that keep everything consistent.",
 };
 
 /* ── reference data ─────────────────────────────────────────────────────── */
@@ -38,26 +38,26 @@ const TOKENS = [
 ];
 
 const ETHOS = [
-  ["Transdisciplinary", "Design, engineering, strategy and AI as one craft — held whole, never passed down a line."],
+  ["Transdisciplinary", "Design, engineering, strategy and AI as one craft, held whole, never passed down a line."],
   ["Biophilic", "We borrow the grammar of living systems: growth, networks, rhythm, adaptation. Things that grow and last."],
-  ["Ethical & positive AI", "AI to amplify human craft — with consent and transparency, never to deceive or extract."],
-  ["Nourishing, not extractive", "We choose work that gives more than it takes — for people, teams and the planet."],
+  ["Ethical & positive AI", "AI to amplify human craft, with consent and transparency, never to deceive or extract."],
+  ["Nourishing, not extractive", "We choose work that gives more than it takes, for people, teams and the planet."],
   ["Restraint", "Quiet surfaces, few colours, generous space. Let the work breathe and the content lead."],
-  ["Motion with intent", "Reveal on entry, gentle living backgrounds — never decorative jitter, always honouring reduced-motion."],
+  ["Motion with intent", "Reveal on entry, gentle living backgrounds. Never decorative jitter, always honouring reduced-motion."],
 ];
 
 const VOICE_DO = [
-  "Plain-spoken and warm — write like a thoughtful person, not a brand.",
+  "Plain-spoken and warm. Write like a thoughtful person, not a brand.",
   "Precise over clever. Short sentences, concrete nouns.",
   "Confident, not loud. No hype, no exclamation marks.",
   "Curious and generous about the work and the people.",
-  "British-leaning spelling — colour, visualise, organise.",
+  "British-leaning spelling: colour, visualise, organise.",
 ];
 const VOICE_DONT = [
+  "Em dashes of any kind. They’re a dead giveaway for AI; reach for commas, colons or full stops.",
   "“We leverage cutting-edge synergies to disrupt the industry.”",
   "Buzzwords: revolutionary, world-class, seamless, unlock, supercharge.",
-  "Shouting — ALL CAPS sentences, !!!, growth-hack urgency.",
-  "Vague claims with no substance behind them.",
+  "Shouting: ALL CAPS sentences, !!!, growth-hack urgency.",
 ];
 
 /* ── small presentational helpers (server component, no client JS) ──────── */
@@ -85,12 +85,12 @@ export default function DesignSystemPage() {
         <PageHeader
           eyebrow="Reference · Living style guide"
           title="Design System"
-          intro="One source of truth for how the studio looks, moves and sounds. Everything on the site is wired to these tokens and classes — change them here, change them everywhere."
+          intro="One source of truth for how the studio looks, moves and sounds. Everything on the site is wired to these tokens and classes. Change them here, change them everywhere."
           introSerif
         />
 
         {/* Design ethos */}
-        <Section id="ethos" n="01" title="Design ethos" intro="The principles underneath every decision. They guide what we make and how it behaves — not just how it looks.">
+        <Section id="ethos" n="01" title="Design ethos" intro="The principles underneath every decision. They guide what we make and how it behaves, not just how it looks.">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "clamp(18px,2vw,28px)" }}>
             {ETHOS.map(([t, d]) => (
               <div key={t} style={cardStyle}>
@@ -102,7 +102,7 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* Tone of voice */}
-        <Section id="voice" n="02" title="Tone of voice" intro="How we write — in headlines, body copy, micro-labels and email. Warm, precise, unhurried.">
+        <Section id="voice" n="02" title="Tone of voice" intro="How we write, across headlines, body copy, micro-labels and email. Warm, precise, unhurried.">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: "clamp(18px,2vw,28px)" }}>
             <div style={cardStyle}>
               <div style={{ ...monoLabel, color: "var(--accent)", marginBottom: 16 }}>Do</div>
@@ -124,7 +124,7 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* Colour */}
-        <Section id="colour" n="03" title="Colour" intro="A warm, low-chroma palette in two themes. Every value is a token that flips between light and dark — never hardcode a colour, reach for the token. Swatches below show the current theme.">
+        <Section id="colour" n="03" title="Colour" intro="A warm, low-chroma palette in two themes. Every value is a token that flips between light and dark, so never hardcode a colour, reach for the token. Swatches below show the current theme.">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))", gap: 14 }}>
             {COLORS.map((c) => (
               <div key={c.name} style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
@@ -162,7 +162,7 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* Buttons & controls */}
-        <Section id="controls" n="05" title="Buttons & controls" intro="One global .ui-btn system powers the hero and the closing banner alike — round .ui-btn-icon buttons and labelled .ui-btn-pill buttons, themed entirely via tokens. They live on dark / immersive surfaces, shown here on a dark panel.">
+        <Section id="controls" n="05" title="Buttons & controls" intro="One global .ui-btn system powers the hero and the closing banner alike: round .ui-btn-icon buttons and labelled .ui-btn-pill buttons, themed entirely via tokens. They live on dark, immersive surfaces, shown here on a dark panel.">
           <div data-theme="dark" style={{ background: "#0b0a08", border: "1px solid rgba(241,237,229,0.13)", borderRadius: 12, padding: "clamp(24px,3vw,40px)", display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center" }}>
             <button type="button" className="ui-btn ui-btn-pill">Randomise ↻</button>
             <button type="button" className="ui-btn ui-btn-icon" aria-label="Sound">
