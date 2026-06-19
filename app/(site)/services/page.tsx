@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import RevealRoot from "@/components/RevealRoot";
-import PageHeader from "@/components/PageHeader";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
 import MyceliumBg from "@/components/MyceliumBg";
 import AboutMyceliumControls from "@/components/AboutMyceliumControls";
@@ -61,15 +60,36 @@ export default function AboutPage() {
               "linear-gradient(105deg, var(--bg-0) 0%, color-mix(in srgb, var(--bg-0) 72%, transparent) 42%, color-mix(in srgb, var(--bg-0) 30%, transparent) 70%, transparent 100%)",
           }}
         />
+        {/* Same size + position as the homepage hero: bottom-left, compositor-driven
+            rise/fade so the WebGL sim can't stall it. */}
         <div
-          className="page-gutter"
-          style={{ position: "relative", zIndex: 2, maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) clamp(64px,12vh,128px)" }}
+          className="hero-inner"
+          style={{
+            position: "relative",
+            zIndex: 2,
+            maxWidth: "var(--maxw)",
+            margin: "0 auto",
+            minHeight: "100svh",
+            padding: "120px var(--gutter) clamp(116px,16vh,168px)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-end",
+            alignItems: "flex-start",
+            textShadow: "0 2px 44px rgba(0,0,0,0.62)",
+          }}
         >
-          <PageHeader
-            title="About"
-            intro="We’re a growing, transdisciplinary studio that works the way living systems do: across boundaries, in service of things that grow."
-            introSerif
-          />
+          <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(36px,6.6vw,114px)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
+            <span className="hero-clip">
+              <span className="hero-rise" style={{ animationDelay: "0.06s" }}>About</span>
+            </span>
+          </h1>
+          <p
+            className="hero-fade"
+            style={{ animationDelay: "0.2s", maxWidth: 560, marginTop: "clamp(22px,3vh,38px)", fontSize: "clamp(16px,1.35vw,19px)", lineHeight: 1.55, color: "var(--fg)" }}
+          >
+            We’re a growing, transdisciplinary studio that works the way living systems do:
+            across boundaries, in service of things that grow.
+          </p>
         </div>
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 30, zIndex: 2 }}>
           <div style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter)" }}>
@@ -83,37 +103,23 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* The four points flow down the page, centred text meandering. The first
-          sits centred on the page; the live node structure begins just beneath it
-          and the rest drift over it. One continuous movement, no dividers. */}
-      <section id="services" className="about-flow" style={{ position: "relative", overflow: "hidden", background: "var(--bg-1)" }}>
-        {/* lead point — centred on the page, above the node structure */}
-        <div className="page-gutter about-flow-inner">
-          <div className="ethos-point ethos-lead" data-par="0.08">
-            <div data-rv>
-              <div className="about-kicker">{ETHOS[0].kicker}</div>
-              <h2 className="ethos-statement">{ETHOS[0].statement}</h2>
-              <p className="about-body">{ETHOS[0].body}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* node structure starts here; the remaining points drift over it */}
-        <div className="about-nodes">
-          <div className="about-flow-cloud">
-            <CapabilitiesGraph />
-          </div>
-          <div className="about-flow-scrim" aria-hidden />
-          <div className="page-gutter about-flow-inner">
-            {ETHOS.slice(1).map((e, i) => (
-              <div key={e.kicker} className="ethos-point" data-par={["-0.08", "0.1", "-0.1"][i]}>
-                <div data-rv>
-                  <div className="about-kicker">{e.kicker}</div>
-                  <h2 className="ethos-statement">{e.statement}</h2>
-                  <p className="about-body">{e.body}</p>
-                </div>
+      {/* Left-aligned text blocks scroll past the node diagram, which stays fixed
+          on the right. Each block animates in as it enters the viewport. */}
+      <section id="services" className="about-split-section" style={{ background: "var(--bg-1)" }}>
+        <div className="about-split">
+          <div className="about-split-text">
+            {ETHOS.map((e) => (
+              <div key={e.kicker} className="ethos-point" data-rv>
+                <div className="about-kicker">{e.kicker}</div>
+                <h2 className="ethos-statement">{e.statement}</h2>
+                <p className="about-body">{e.body}</p>
               </div>
             ))}
+          </div>
+          <div className="about-split-vis" aria-hidden>
+            <div className="about-split-vis-inner">
+              <CapabilitiesGraph />
+            </div>
           </div>
         </div>
       </section>

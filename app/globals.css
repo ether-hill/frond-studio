@@ -372,49 +372,33 @@ button {
 }
 
 /* ── Capabilities 3D node cloud ───────────────────────────── */
-/* ── About: ethos points flow down over the node structure ───────────────────
-   No numbers, no dividers. Every point is centre-aligned and wide. The first sits
-   centred on the page; the live node cloud begins just beneath it and the rest
-   drift left/right over it with scrub parallax. One continuous movement. */
-.about-flow { position: relative; }
-.about-flow-inner {
-  position: relative;
-  z-index: 2;
+/* ── About: left-aligned text blocks scroll past a fixed node diagram ─────────
+   Two columns: the text column (left) scrolls naturally; the node diagram (right)
+   is sticky, staying in view while the blocks pass it. Each block animates in on
+   scroll via [data-rv]. Stacks on phones (text, then the diagram). */
+.about-split {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: clamp(80px, 13vh, 184px) var(--gutter);
+  padding: clamp(80px, 12vh, 170px) var(--gutter);
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(32px, 5vw, 110px);
+  /* both columns stretch to the (tall) text column so the diagram can stay
+     sticky across the whole scroll. */
 }
-/* every point: centred text, generous width */
-.ethos-point {
-  text-align: center;
-  max-width: 60ch;
-  margin: 0 auto clamp(80px, 14vh, 200px);
+.about-split-text > .ethos-point {
+  text-align: left;
+  max-width: 48ch;
+  /* big gaps so the column is tall enough for the diagram to stay pinned */
+  margin-bottom: clamp(140px, 30vh, 380px);
 }
-.ethos-point:last-child { margin-bottom: 0; }
-/* the lead point is centred on the page and a touch wider */
-.ethos-lead { max-width: 64ch; margin-bottom: 0; }
-
-/* node structure + the drifting points */
-.about-nodes { position: relative; }
-.about-flow-cloud { position: absolute; inset: 0; z-index: 0; opacity: 0.6; }
-.about-flow-scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    var(--bg-1) 0%,
-    color-mix(in srgb, var(--bg-1) 35%, transparent) 11%,
-    transparent 30%,
-    transparent 74%,
-    var(--bg-1) 100%
-  );
+.about-split-text > .ethos-point:last-child { margin-bottom: clamp(32px, 6vh, 80px); }
+.about-split-vis { position: relative; }
+.about-split-vis-inner {
+  position: sticky;
+  top: clamp(84px, 11vh, 128px);
+  height: min(76vh, 760px);
 }
-/* points 2–4 drift to one side (organic), text stays centred */
-.about-nodes .about-flow-inner > .ethos-point:nth-child(1) { margin-left: auto; margin-right: clamp(0px, 17vw, 320px); }
-.about-nodes .about-flow-inner > .ethos-point:nth-child(2) { margin-left: clamp(0px, 17vw, 320px); margin-right: auto; }
-.about-nodes .about-flow-inner > .ethos-point:nth-child(3) { margin-left: auto; margin-right: clamp(0px, 6vw, 120px); }
 
 .about-kicker {
   font-family: var(--font-mono);
@@ -427,14 +411,14 @@ button {
 }
 .ethos-statement {
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(28px, 3.7vw, 56px);
+  font-size: clamp(28px, 3.4vw, 52px);
   font-weight: 500;
-  line-height: 1.05;
+  line-height: 1.06;
   letter-spacing: -0.022em;
 }
 .about-body {
-  margin: clamp(16px, 2.2vh, 24px) auto 0;
-  max-width: 56ch;
+  margin-top: clamp(16px, 2.2vh, 24px);
+  max-width: 50ch;
   font-size: clamp(15px, 1.15vw, 17px);
   line-height: 1.62;
   color: var(--fg-dim);
@@ -442,8 +426,9 @@ button {
 /* the mycelium buffer is square — cover the (wide) hero without stretching it */
 .myc-bg canvas { object-fit: cover; object-position: center; }
 @media (max-width: 860px) {
-  .ethos-point { max-width: 100%; margin-bottom: clamp(56px, 10vh, 110px); }
-  .about-nodes .about-flow-inner > .ethos-point { margin-left: auto !important; margin-right: auto !important; }
+  .about-split { grid-template-columns: 1fr; gap: clamp(40px, 8vh, 80px); }
+  .about-split-text > .ethos-point { max-width: 100%; margin-bottom: clamp(56px, 10vh, 110px); }
+  .about-split-vis-inner { position: static; height: clamp(360px, 60vh, 560px); }
 }
 
 /* The cloud is a full-bleed layer that runs behind the copy and spills off the
