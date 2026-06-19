@@ -145,7 +145,7 @@ export default function SmaConfig() {
           <h1 className="sma-title">SMA Config</h1>
           <p className="sma-intro">
             An advanced real-time GPU studio for the Jones (2010) agent-based Physarum
-            slime-mould model. Sculpt sensing, deposition, diffusion and colour live —
+            slime-mould model. Sculpt sensing, deposition, diffusion and colour live.
             RANDOMISE rolls a fresh configuration, RESTART reseeds the field.
           </p>
         </header>
