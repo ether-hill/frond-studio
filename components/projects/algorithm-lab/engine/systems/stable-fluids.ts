@@ -76,6 +76,7 @@ interface State {
   pointers: PointerState[];
 
   acc: number; // time accumulator for fixed sub-steps
+  tick: number; // monotonic frame counter driving the auto-chaos
 }
 
 interface PointerState {
@@ -121,7 +122,7 @@ const schema: ParamSchema = {
     min: 0.9,
     max: 1.0,
     step: 0.001,
-    default: 0.985,
+    default: 0.997, // slower fade → colour builds up into a rich churn
     hot: true,
     label: "dye dissipation",
   },
@@ -147,7 +148,7 @@ const schema: ParamSchema = {
     min: 0,
     max: 50,
     step: 0.5,
-    default: 18,
+    default: 40, // cranked high → lots of curl & swirl by default
     hot: true,
     label: "vorticity",
   },
@@ -156,7 +157,7 @@ const schema: ParamSchema = {
     min: 1000,
     max: 12000,
     step: 100,
-    default: 6000,
+    default: 9000, // more energetic motion
     hot: true,
     label: "force strength",
   },
@@ -165,9 +166,18 @@ const schema: ParamSchema = {
     min: 0.05,
     max: 1.0,
     step: 0.01,
-    default: 0.35,
+    default: 0.6, // brighter, livelier ink
     hot: true,
     label: "dye strength",
+  },
+  chaos: {
+    type: "number",
+    min: 0,
+    max: 1,
+    step: 0.01,
+    default: 0.85, // scales auto-splat rate/strength + the param wander
+    hot: true,
+    label: "chaos",
   },
   palette: {
     type: "select",
@@ -486,6 +496,7 @@ function init(surface: RenderSurface, params: Params, rng: RNG): State {
     curlFBO: null as unknown as FBO,
     pointers: [],
     acc: 0,
+    tick: 0,
   };
 
   if (!ext) {
@@ -685,6 +696,50 @@ function attachPointerListeners(state: State): void {
   canvas.addEventListener("pointerleave", release);
 }
 
+// ── a vivid RGB triple from an explicit hue [0,1) (HSV with S=V=1) ────────────
+function dyeColorFromHue(h: number, amp: number): [number, number, number] {
+  const hh = ((h % 1) + 1) % 1;
+  const i = Math.floor(hh * 6);
+  const f = hh * 6 - i;
+  const q = 1 - f;
+  let r = 0,
+    g = 0,
+    b = 0;
+  switch (i % 6) {
+    case 0:
+      r = 1;
+      g = f;
+      b = 0;
+      break;
+    case 1:
+      r = q;
+      g = 1;
+      b = 0;
+      break;
+    case 2:
+      r = 0;
+      g = 1;
+      b = f;
+      break;
+    case 3:
+      r = 0;
+      g = q;
+      b = 1;
+      break;
+    case 4:
+      r = f;
+      g = 0;
+      b = 1;
+      break;
+    default:
+      r = 1;
+      g = 0;
+      b = q;
+      break;
+  }
+  return [r * amp, g * amp, b * amp];
+}
+
 // ── deterministic dye colour from rng (HSV-ish in linear-ish RGB) ─────────────
 function randomDyeColor(rng: RNG): [number, number, number] {
   // pick a hue, convert to a vivid RGB triple; values are dye amounts (>1 ok).
@@ -780,8 +835,16 @@ function splat(
   const p = state.progs.splat;
   const [tx, ty] = texel(state);
   const aspect = state.simW / state.simH;
-  const dyeStrength = asNum(state.params.dyeStrength, 0.35);
-  const forceStrength = asNum(state.params.forceStrength, 6000);
+  // auto-chaos drive: continuously wander force & dye strength over time
+  // (sin(tick)+rng) scaled by chaos so the agitation pulses and never settles.
+  const chaos = clamp(asNum(state.params.chaos, 0.85), 0, 1);
+  const t = state.tick;
+  const dyeWander =
+    1 + chaos * (0.4 * Math.sin(t * 0.04 + 1.3) + 0.35 * (state.rng.next() - 0.5) * 2);
+  const forceWander =
+    1 + chaos * (0.5 * Math.sin(t * 0.025) + 0.5 * (state.rng.next() - 0.5) * 2);
+  const dyeStrength = Math.max(0, asNum(state.params.dyeStrength, 0.6) * dyeWander);
+  const forceStrength = Math.max(0, asNum(state.params.forceStrength, 9000) * forceWander);
 
   gl.useProgram(p.program);
   gl.uniform2f(p.uniforms.uTexel, tx, ty);
@@ -825,6 +888,45 @@ function applyPointerInput(state: State): void {
   }
 }
 
+// ── auto-injection: keep the fluid perpetually agitated & swirling ────────────
+// Every frame we fire several dye+force splats at rng-chosen positions with
+// rng-chosen directions and a tick-rotated rainbow hue. Count and strength scale
+// with the `chaos` param so the field is never calm.
+function applyAutoInjection(state: State): void {
+  const rng = state.rng;
+  const chaos = clamp(asNum(state.params.chaos, 0.85), 0, 1);
+  if (chaos <= 0) return;
+
+  const t = state.tick;
+  // base hue marches forward each frame → a shifting rainbow of injected ink.
+  const baseHue = (t * 0.013) % 1;
+
+  // 1..~6 splats per frame, biased by chaos.
+  const count = 1 + Math.floor(chaos * 5 + rng.next() * (1 + chaos * 2));
+
+  for (let i = 0; i < count; i++) {
+    // rng-chosen position, kept off the very edges.
+    const x = rng.range(0.08, 0.92);
+    const y = rng.range(0.08, 0.92);
+
+    // rng-chosen direction, magnitude wandered by sin(tick)+rng and chaos.
+    const ang = rng.range(0, Math.PI * 2);
+    const speed =
+      (0.0006 + 0.0026 * chaos) *
+      (0.5 + 0.5 * Math.abs(Math.sin(t * 0.05 + i * 1.7))) *
+      (0.4 + rng.next() * 1.4);
+    const dx = Math.cos(ang) * speed;
+    const dy = Math.sin(ang) * speed;
+
+    // tick-rotated hue, fanned out per-splat with a little rng jitter.
+    const hue = baseHue + i / Math.max(1, count) + rng.next() * 0.12;
+    const amp = (0.18 + rng.next() * 0.16) * (0.4 + chaos);
+    const color = dyeColorFromHue(hue, amp);
+
+    splat(state, x, y, dx, dy, color, false);
+  }
+}
+
 // ── step (fixed sub-dt accumulation) ──────────────────────────────────────────
 function step(state: State, dt: number): State {
   if (!state.ok) return state;
@@ -860,6 +962,11 @@ function simulate(state: State, dt: number): void {
   const { progs } = state;
   const [tx, ty] = texel(state);
 
+  // advance the internal frame clock that drives all the auto-chaos.
+  state.tick += 1;
+
+  // auto-injection first so the new ink/force participates in this step.
+  applyAutoInjection(state);
   applyPointerInput(state);
 
   // ── 1. curl ──
@@ -868,8 +975,14 @@ function simulate(state: State, dt: number): void {
   bindTex(gl, progs.curl.uniforms.uVelocity, 0, state.velocity.read.tex);
   blit(state, state.curlFBO);
 
-  // ── 2. vorticity confinement ──
-  const vort = asNum(state.params.vorticity, 18);
+  // ── 2. vorticity confinement (wandered over time for restless curl) ──
+  const chaos = clamp(asNum(state.params.chaos, 0.85), 0, 1);
+  const t = state.tick;
+  const vortBase = asNum(state.params.vorticity, 40);
+  // continuous wander: sin(tick) + rng, scaled by chaos. Kept positive & high.
+  const vortWander =
+    1 + chaos * (0.55 * Math.sin(t * 0.03) + 0.45 * (state.rng.next() - 0.5) * 2);
+  const vort = clamp(vortBase * vortWander, 0, 80);
   gl.useProgram(progs.vorticity.program);
   gl.uniform2f(progs.vorticity.uniforms.uTexel, tx, ty);
   gl.uniform1f(progs.vorticity.uniforms.uCurlStrength, vort);

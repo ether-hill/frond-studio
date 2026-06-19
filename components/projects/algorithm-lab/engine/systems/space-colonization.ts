@@ -1,14 +1,19 @@
-// Space Colonization (Runions / Lane / Prusinkiewicz venation).
+// Space Colonization (Runions / Lane / Prusinkiewicz venation) — CIRCUS MODE.
 //
 // Attractor points are scattered inside a domain mask. Each growth step:
 //   1. every attractor finds the nearest growth node within `influenceRadius`;
 //   2. every node influenced by ≥1 attractor grows one new node `stepLength`
 //      toward the average (normalised) direction of its influencing attractors;
 //   3. an attractor is removed once any node sits within `killRadius` of it.
-// Growth stops when no attractors remain or `maxNodes` is reached.
 //
-// Thickness tapers by subtree size or Strahler/branch order so the network looks
-// botanical. Colour is driven by depth-from-root through the chosen palette.
+// Unlike a one-shot drawing, this build NEVER settles: when a colony exhausts
+// its attractors (or hits the node cap) it auto-reseeds at a fresh rng spot, we
+// run several overlapping colonies, sprinkle new attractors near the live tips
+// every step, fling new colonies at random, and continuously wander the growth
+// parameters + colour with slow sin() of an internal tick scaled by `chaos`.
+//
+// Thickness tapers by subtree size or Strahler/branch order. Colour is driven by
+// depth-from-root through the chosen palette, plus an animated, churning offset.
 
 import type {
   Canvas2DSurface,
@@ -30,7 +35,7 @@ import { SpatialHash } from "../core/spatial-hash";
 interface Node {
   x: number;
   y: number;
-  parent: number; // index of parent node, or -1 for a root
+  parent: number; // index of parent node within its colony, or -1 for a root
   depth: number; // graph distance from the root (in node hops)
   // accumulators for thickness, filled after growth:
   subtree: number; // number of descendant nodes (incl. self)
@@ -50,28 +55,40 @@ interface HashNode {
   i: number;
 }
 
-export interface State {
-  params: Params;
-  rng: RNG;
+// One independent growing network. Several run at once and turn over.
+interface Colony {
   nodes: Node[];
   attractors: Attractor[];
   hash: SpatialHash<HashNode>;
   hashItems: HashNode[]; // reused scratch, rebuilt each step
-  influenceRadius: number; // resolved (normalised) values cached at init
+  maxDepth: number; // running max depth, for colour normalisation
+  maxSubtree: number; // running max subtree size, for thickness normalisation
+  hueShift: number; // per-colony colour rotation so they read distinctly
+  paletteIndex: number; // which palette this colony currently rides
+  finished: boolean; // reached cap / attractors gone → will be reseeded
+}
+
+export interface State {
+  params: Params;
+  rng: RNG;
+  colonies: Colony[];
+  tick: number; // internal frame counter — drives all the wander
+  // live (wandered) values, recomputed each step from base params + chaos:
+  influenceRadius: number;
   killRadius: number;
   stepLength: number;
   maxNodes: number;
-  maxDepth: number; // running max depth, for colour normalisation
-  maxSubtree: number; // running max subtree size, for thickness normalisation
-  done: boolean;
+  // cached domain helpers
+  inside: (x: number, y: number) => boolean;
+  done: boolean; // never true in circus mode, kept for contract symmetry
 }
 
 // ── Schema ──────────────────────────────────────────────────────────────────────
-// Structural params (counts / radii / domain) omit `hot` so a change resets the
-// sim. Render-only params (palette, strokeScale) are `hot` so they read live.
+// `chaos` scales every wander / jitter amplitude. Render-only params stay `hot`.
 
 const schema: ParamSchema = {
   palette: { type: "select", options: PALETTE_IDS, default: "fern", hot: true, label: "Palette" },
+  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 0.85, hot: true, label: "Chaos" },
   attractorCount: { type: "int", min: 200, max: 6000, default: 2200, label: "Attractors" },
   distribution: {
     type: "select",
@@ -94,6 +111,9 @@ const schema: ParamSchema = {
   strokeScale: { type: "number", min: 0.2, max: 4, step: 0.05, default: 1.2, hot: true, label: "Stroke scale" },
 };
 
+// How many overlapping colonies churn at once.
+const COLONY_COUNT = 3;
+
 // ── Domain masks ─────────────────────────────────────────────────────────────────
 // All masks are evaluated in normalised [0,1]² space. Return true if (x,y) is
 // inside the domain.
@@ -105,15 +125,11 @@ function insideCircle(x: number, y: number): boolean {
 }
 
 // Teardrop / leaf outline. Centred horizontally; tip at the top, base at bottom.
-// We use a superquadric-ish width profile that pinches toward both ends.
 function insideLeaf(x: number, y: number): boolean {
-  // t ∈ [0,1] from base (bottom, y≈0.92) up to tip (top, y≈0.06)
   const yTop = 0.06;
   const yBot = 0.92;
   if (y < yTop || y > yBot) return false;
   const t = (yBot - y) / (yBot - yTop); // 0 at base, 1 at tip
-  // width profile: rounded near base, sharp at tip. sin gives a fat belly,
-  // raised to a power to sharpen the tip.
   const halfWidth = 0.34 * Math.pow(Math.sin(t * Math.PI), 0.65) * (1 - 0.25 * t);
   const dx = Math.abs(x - 0.5);
   return dx <= halfWidth;
@@ -121,13 +137,11 @@ function insideLeaf(x: number, y: number): boolean {
 
 // Upper dome (a tree canopy). Root sits at the bottom-centre, mass up top.
 function insideCanopy(x: number, y: number): boolean {
-  // dome centred near top, plus a thin trunk corridor down to the base.
   const cx = 0.5;
   const cy = 0.36;
   const dx = (x - cx) / 0.44;
   const dy = (y - cy) / 0.34;
   if (dx * dx + dy * dy <= 1 && y <= 0.62) return true;
-  // trunk corridor
   if (y > 0.62 && Math.abs(x - cx) <= 0.06) return true;
   return false;
 }
@@ -169,9 +183,8 @@ function scatterAttractors(
     let x: number;
     let y: number;
     if (distribution === "ring") {
-      // sample on an annulus around centre, then accept if inside the mask.
       const a = rng.next() * TAU;
-      const r = 0.46 * Math.sqrt(0.35 + 0.65 * rng.next()); // bias to outer ring
+      const r = 0.46 * Math.sqrt(0.35 + 0.65 * rng.next());
       x = 0.5 + Math.cos(a) * r;
       y = 0.5 + Math.sin(a) * r;
     } else if (distribution === "clustered") {
@@ -188,6 +201,22 @@ function scatterAttractors(
   return out;
 }
 
+// Pick a random root somewhere inside the mask (used for reseeding & flinging).
+function randomRoot(rng: RNG, inside: (x: number, y: number) => boolean): Node {
+  let x = 0.5;
+  let y = 0.5;
+  for (let tries = 0; tries < 200; tries++) {
+    const cx = rng.next();
+    const cy = rng.next();
+    if (inside(cx, cy)) {
+      x = cx;
+      y = cy;
+      break;
+    }
+  }
+  return { x, y, parent: -1, depth: 0, subtree: 1, order: 1 };
+}
+
 // Seed root nodes near the base of the domain.
 function makeRoots(shape: string, rootCount: number, rng: RNG): Node[] {
   const roots: Node[] = [];
@@ -201,9 +230,8 @@ function makeRoots(shape: string, rootCount: number, rng: RNG): Node[] {
       y = 0.9;
     } else if (shape === "leaf") {
       x = 0.5 + jitter + rng.range(-0.01, 0.01);
-      y = 0.9; // base of the leaf (petiole)
+      y = 0.9;
     } else {
-      // circle: start from centre
       x = 0.5 + jitter + rng.range(-0.01, 0.01);
       y = 0.5 + rng.range(-0.01, 0.01);
     }
@@ -212,69 +240,194 @@ function makeRoots(shape: string, rootCount: number, rng: RNG): Node[] {
   return roots;
 }
 
+// Build a fresh colony with its own attractor field + roots.
+function makeColony(
+  state: State,
+  opts?: { flung?: boolean },
+): Colony {
+  const { rng, params, inside } = state;
+  const shape = String(params.domainShape);
+  const distribution = String(params.distribution);
+  const attractorCount = Math.round(Number(params.attractorCount));
+
+  const attractors = scatterAttractors(rng, attractorCount, distribution, inside);
+
+  // A "flung" colony starts from a random in-domain point instead of the base,
+  // which keeps the composition unpredictable.
+  const nodes = opts?.flung
+    ? [randomRoot(rng, inside)]
+    : makeRoots(shape, Number(params.rootCount), rng);
+
+  return {
+    nodes,
+    attractors,
+    hash: new SpatialHash<HashNode>(Math.max(0.01, state.influenceRadius)),
+    hashItems: [],
+    maxDepth: 0,
+    maxSubtree: 1,
+    hueShift: rng.next(), // 0..1 colour rotation, unique per colony
+    paletteIndex: rng.int(0, PALETTE_IDS.length - 1),
+    finished: false,
+  };
+}
+
 // ── Lifecycle ──────────────────────────────────────────────────────────────────────
 
 function init(surface: RenderSurface, params: Params, rng: RNG): State {
   void surface; // geometry is normalised; surface size only matters at render time
 
   const shape = String(params.domainShape);
-  const distribution = String(params.distribution);
   const inside = maskFor(shape);
-
-  const attractorCount = Math.round(Number(params.attractorCount));
-  const attractors = scatterAttractors(rng, attractorCount, distribution, inside);
-  const nodes = makeRoots(shape, Number(params.rootCount), rng);
 
   const influenceRadius = Number(params.influenceRadius);
   let killRadius = Number(params.killRadius);
-  const stepLength = Number(params.stepLength);
-  // keep killRadius below influence so growth can actually reach attractors.
   killRadius = Math.min(killRadius, influenceRadius * 0.9);
+  const stepLength = Number(params.stepLength);
   const maxNodes = Math.round(Number(params.maxNodes));
 
-  // hash cell sized to the influence radius for ~O(1) nearest-node queries.
-  const hash = new SpatialHash<HashNode>(Math.max(0.01, influenceRadius));
-
-  return {
+  const state: State = {
     params,
     rng,
-    nodes,
-    attractors,
-    hash,
-    hashItems: [],
+    colonies: [],
+    tick: 0,
     influenceRadius,
     killRadius,
     stepLength,
     maxNodes,
-    maxDepth: 0,
-    maxSubtree: 1,
+    inside,
     done: false,
   };
-}
 
-function step(state: State, dt: number): State {
-  if (state.done) return state;
-  void dt;
-
-  // Grow several rounds per frame so the animation reaches a finished network in
-  // a reasonable number of frames, but cap work per frame to stay live.
-  const roundsPerFrame = 4;
-  for (let round = 0; round < roundsPerFrame; round++) {
-    if (state.done) break;
-    growOnce(state);
+  for (let i = 0; i < COLONY_COUNT; i++) {
+    state.colonies.push(makeColony(state, { flung: i > 0 }));
   }
-
-  // recompute thickness accumulators for the current network (used by render).
-  computeThickness(state);
   return state;
 }
 
-// One Space-Colonization growth round.
-function growOnce(state: State): void {
-  const { nodes, attractors, hash, influenceRadius, killRadius, stepLength } = state;
+// Re-derive live growth params from base params, wandered by slow sin(tick) plus
+// rng jitter, all scaled by `chaos`. This is what keeps the thing breathing.
+function driveChaos(state: State): void {
+  const p = state.params;
+  const chaos = clamp(Number(p.chaos), 0, 1);
+  const t = state.tick;
+
+  const baseInfluence = Number(p.influenceRadius);
+  const baseKill = Number(p.killRadius);
+  const baseStep = Number(p.stepLength);
+  const baseMax = Math.round(Number(p.maxNodes));
+
+  // slow, out-of-phase oscillators so params never line up the same way twice.
+  const wob = (period: number, phase: number) => Math.sin(t / period + phase);
+  const jit = () => (state.rng.next() - 0.5) * 2;
+
+  const inflAmp = baseInfluence * 0.6 * chaos;
+  const killAmp = baseKill * 0.6 * chaos;
+  const stepAmp = baseStep * 0.8 * chaos;
+
+  state.influenceRadius = clamp(
+    baseInfluence + inflAmp * (0.7 * wob(140, 0) + 0.3 * jit()),
+    0.04,
+    0.45,
+  );
+  state.stepLength = clamp(
+    baseStep + stepAmp * (0.7 * wob(90, 1.7) + 0.3 * jit()),
+    0.004,
+    0.04,
+  );
+  // keep kill comfortably below influence so growth keeps reaching attractors.
+  const killWander = baseKill + killAmp * (0.7 * wob(110, 3.1) + 0.3 * jit());
+  state.killRadius = clamp(Math.min(killWander, state.influenceRadius * 0.85), 0.004, 0.08);
+
+  // breathe the node cap so colonies turn over at varying sizes.
+  const capAmp = baseMax * 0.35 * chaos;
+  state.maxNodes = Math.round(clamp(baseMax + capAmp * wob(200, 0.5), 500, 9000));
+}
+
+function step(state: State, dt: number): State {
+  void dt;
+  state.tick++;
+
+  driveChaos(state);
+
+  const chaos = clamp(Number(state.params.chaos), 0, 1);
+
+  // Grow several batches per frame across every colony so the canvas fills fast
+  // and turns over. More chaos → more work per frame → more frenetic motion.
+  const roundsPerFrame = 5 + Math.round(5 * chaos); // 5..10
+  for (let round = 0; round < roundsPerFrame; round++) {
+    for (let c = 0; c < state.colonies.length; c++) {
+      growOnce(state, state.colonies[c]);
+    }
+  }
+
+  // Continuous injection: sprinkle attractors near live tips, and occasionally
+  // fling a whole new colony to keep things unpredictable.
+  for (let c = 0; c < state.colonies.length; c++) {
+    injectNearTips(state, state.colonies[c]);
+  }
+
+  // Reseed any finished colony into a brand-new one so growth is perpetual.
+  for (let c = 0; c < state.colonies.length; c++) {
+    if (state.colonies[c].finished) {
+      state.colonies[c] = makeColony(state, { flung: state.rng.next() < 0.6 });
+    }
+  }
+
+  // Occasionally fling: replace a random colony with a fresh flung one even if it
+  // hasn't finished, so the composition keeps reshuffling. Rate scales with chaos.
+  if (state.rng.next() < 0.02 + 0.06 * chaos) {
+    const victim = state.rng.int(0, state.colonies.length - 1);
+    state.colonies[victim] = makeColony(state, { flung: true });
+  }
+
+  // recompute thickness accumulators for every colony (used by render).
+  for (let c = 0; c < state.colonies.length; c++) {
+    computeThickness(state.colonies[c]);
+  }
+  return state;
+}
+
+// Sprinkle new attractors just beyond the growing tips so branches keep finding
+// fresh space to invade. Tips = recently added nodes (high indices).
+function injectNearTips(state: State, colony: Colony): void {
+  const { rng, inside } = state;
+  const chaos = clamp(Number(state.params.chaos), 0, 1);
+  const nodes = colony.nodes;
+  if (nodes.length === 0) return;
+  if (colony.attractors.length > 12000) return; // safety cap on attractor count
+
+  const spawnCount = 4 + Math.round(20 * chaos); // 4..24 per colony per frame
+  const spread = state.influenceRadius * (0.8 + 0.6 * chaos);
+
+  for (let i = 0; i < spawnCount; i++) {
+    // bias toward the newest tips (end of the array).
+    const idx = Math.min(
+      nodes.length - 1,
+      Math.floor(nodes.length * (1 - rng.next() * rng.next())),
+    );
+    const tip = nodes[idx];
+    const ang = rng.next() * TAU;
+    const rad = spread * Math.sqrt(rng.next());
+    const x = tip.x + Math.cos(ang) * rad;
+    const y = tip.y + Math.sin(ang) * rad;
+    if (x < 0 || x > 1 || y < 0 || y > 1) continue;
+    if (!inside(x, y)) continue;
+    colony.attractors.push({ x, y, alive: true });
+  }
+}
+
+// One Space-Colonization growth round for a single colony. Sets colony.finished
+// when it can no longer grow; the caller reseeds finished colonies.
+function growOnce(state: State, colony: Colony): void {
+  const { nodes, attractors, hash } = colony;
+  const { influenceRadius, killRadius, stepLength } = state;
 
   if (nodes.length >= state.maxNodes) {
-    state.done = true;
+    colony.finished = true;
+    return;
+  }
+  if (nodes.length === 0) {
+    colony.finished = true;
     return;
   }
 
@@ -282,12 +435,12 @@ function growOnce(state: State): void {
   let liveCount = 0;
   for (let i = 0; i < attractors.length; i++) if (attractors[i].alive) liveCount++;
   if (liveCount === 0) {
-    state.done = true;
+    colony.finished = true;
     return;
   }
 
   // rebuild the spatial hash from the current nodes.
-  const items = state.hashItems;
+  const items = colony.hashItems;
   items.length = 0;
   for (let i = 0; i < nodes.length; i++) {
     const n = nodes[i];
@@ -296,7 +449,6 @@ function growOnce(state: State): void {
   hash.rebuild(items);
 
   // For each node, accumulate the summed direction of influencing attractors.
-  // dirSum[i] = {x,y}; influenced[i] = count.
   const dirX = new Float64Array(nodes.length);
   const dirY = new Float64Array(nodes.length);
   const infl = new Int32Array(nodes.length);
@@ -307,7 +459,6 @@ function growOnce(state: State): void {
     const at = attractors[a];
     if (!at.alive) continue;
 
-    // find the nearest node within influenceRadius via the hash.
     let bestI = -1;
     let bestD2 = infl2;
     hash.query(at.x, at.y, influenceRadius, (it) => {
@@ -334,7 +485,10 @@ function growOnce(state: State): void {
     }
   }
 
-  // Grow a new node from every influenced node, toward the averaged direction.
+  // Directional jitter so growth wiggles instead of marching straight.
+  const chaos = clamp(Number(state.params.chaos), 0, 1);
+  const wiggle = 0.5 * chaos;
+
   let grew = false;
   const startLen = nodes.length;
   for (let i = 0; i < startLen; i++) {
@@ -342,9 +496,22 @@ function growOnce(state: State): void {
     let vx = dirX[i];
     let vy = dirY[i];
     const l = Math.hypot(vx, vy);
-    if (l < 1e-6) continue; // opposing attractors cancelled out
+    if (l < 1e-6) continue;
     vx /= l;
     vy /= l;
+
+    // rotate the growth direction by a small chaotic angle.
+    if (wiggle > 0) {
+      const ang =
+        (Math.sin(state.tick * 0.13 + i * 0.7) * 0.5 + (state.rng.next() - 0.5)) *
+        wiggle;
+      const ca = Math.cos(ang);
+      const sa = Math.sin(ang);
+      const rx = vx * ca - vy * sa;
+      const ry = vx * sa + vy * ca;
+      vx = rx;
+      vy = ry;
+    }
 
     const parent = nodes[i];
     const nxx = parent.x + vx * stepLength;
@@ -359,14 +526,13 @@ function growOnce(state: State): void {
       order: 1,
     };
     nodes.push(child);
-    if (child.depth > state.maxDepth) state.maxDepth = child.depth;
+    if (child.depth > colony.maxDepth) colony.maxDepth = child.depth;
     grew = true;
 
     if (nodes.length >= state.maxNodes) break;
   }
 
   // Kill attractors that any node has reached.
-  // Rebuild hash with the new nodes for an accurate kill test.
   items.length = 0;
   for (let i = 0; i < nodes.length; i++) {
     const n = nodes[i];
@@ -389,37 +555,36 @@ function growOnce(state: State): void {
   }
 
   if (!grew) {
-    // No node could grow toward any live attractor (e.g. all out of range).
-    state.done = true;
+    // No node could grow toward any live attractor this round. The continuous
+    // injection usually revives it next frame, but if it's truly stuck mark it
+    // finished so the caller reseeds a fresh colony — never a static frame.
+    colony.finished = true;
   }
 }
 
-// Compute subtree sizes and Strahler order in one bottom-up pass.
-// Nodes are appended in creation order, so a child always has a higher index
-// than its parent — iterate in reverse to accumulate up the tree.
-function computeThickness(state: State): void {
-  const nodes = state.nodes;
+// Compute subtree sizes and Strahler order in one bottom-up pass for a colony.
+function computeThickness(colony: Colony): void {
+  const nodes = colony.nodes;
   const n = nodes.length;
+  if (n === 0) {
+    colony.maxSubtree = 1;
+    return;
+  }
 
-  // reset
   for (let i = 0; i < n; i++) {
     nodes[i].subtree = 1;
     nodes[i].order = 1;
   }
 
-  // children lists, to compute Strahler order correctly.
   const childCount = new Int32Array(n);
-  const childMaxOrder = new Int32Array(n); // highest child order seen
-  const childMaxOrderCount = new Int32Array(n); // how many children share that order
+  const childMaxOrder = new Int32Array(n);
+  const childMaxOrderCount = new Int32Array(n);
 
-  // First pass (reverse): accumulate subtree sizes.
   for (let i = n - 1; i >= 1; i--) {
     const p = nodes[i].parent;
     if (p >= 0) nodes[p].subtree += nodes[i].subtree;
   }
 
-  // Second pass (reverse): Strahler order.
-  // order(leaf)=1. A node's order = max child order, +1 if the top order is shared.
   for (let i = n - 1; i >= 1; i--) {
     const o = nodes[i].order;
     const p = nodes[i].parent;
@@ -431,23 +596,20 @@ function computeThickness(state: State): void {
     } else if (o === childMaxOrder[p]) {
       childMaxOrderCount[p]++;
     }
-    // when we have finished contributing to p (we process children after p? no —
-    // children have higher index, so by the time we reach p all its children are
-    // already processed). Set p's order now using accumulated child stats.
     if (childCount[p] > 0) {
       nodes[p].order =
         childMaxOrderCount[p] >= 2 ? childMaxOrder[p] + 1 : childMaxOrder[p];
     }
   }
 
-  // track maxima for normalisation.
   let maxSub = 1;
   for (let i = 0; i < n; i++) if (nodes[i].subtree > maxSub) maxSub = nodes[i].subtree;
-  state.maxSubtree = maxSub;
+  colony.maxSubtree = maxSub;
 }
 
-function isDone(state: State): boolean {
-  return state.done;
+// Circus mode never settles.
+function isDone(): boolean {
+  return false;
 }
 
 // ── Render ──────────────────────────────────────────────────────────────────────
@@ -458,8 +620,6 @@ function render(state: State, surface: RenderSurface): void {
   const W = s.width;
   const H = s.height;
 
-  // scale normalised [0,1]² geometry to the surface. Use a square unit so the
-  // network keeps proportion, centred in the canvas.
   const unit = Math.min(W, H);
   const offX = (W - unit) * 0.5;
   const offY = (H - unit) * 0.5;
@@ -468,80 +628,93 @@ function render(state: State, surface: RenderSurface): void {
 
   ctx.clearRect(0, 0, W, H);
 
-  const nodes = state.nodes;
-  if (nodes.length < 2) return;
-
-  const palette = getPalette(String(state.params.palette));
+  const basePaletteId = String(state.params.palette);
   const strokeScale = Number(state.params.strokeScale);
   const thicknessModel = String(state.params.thicknessModel);
+  const chaos = clamp(Number(state.params.chaos), 0, 1);
+  const t = state.tick;
 
-  const maxDepth = Math.max(1, state.maxDepth);
-  const maxSubtree = Math.max(1, state.maxSubtree);
+  // Global colour churn: a time-varying offset added to the depth value before
+  // fieldToColor, plus a slow drift through PALETTE_IDS, so hue shifts vividly.
+  const globalChurn = 0.5 + 0.5 * Math.sin(t / 60); // 0..1
+  const paletteDrift = Math.floor(t / 90); // step through palettes over time
 
-  // baseline stroke in px, relative to surface size so it scales with re-render.
   const baseW = unit * 0.0016;
-
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // Draw each child→parent segment. Thicker branches (large subtree / high order)
-  // are drawn after thin twigs so trunks sit on top.
-  // Sort indices by thickness ascending for nicer overlap (cheap for ≤9000).
-  const order = new Array<number>(nodes.length);
-  for (let i = 0; i < nodes.length; i++) order[i] = i;
+  for (let c = 0; c < state.colonies.length; c++) {
+    const colony = state.colonies[c];
+    const nodes = colony.nodes;
+    if (nodes.length < 2) continue;
 
-  const thicknessOf = (i: number): number => {
-    const nd = nodes[i];
-    if (thicknessModel === "order") {
-      // order grows ~log of subtree; map to width.
-      return Math.pow(nd.order, 1.35);
+    // Each colony rides its own palette (drifting over time) when chaos is high,
+    // otherwise everyone shares the user's chosen palette.
+    let paletteId = basePaletteId;
+    if (chaos > 0.05) {
+      const pi = (colony.paletteIndex + paletteDrift) % PALETTE_IDS.length;
+      paletteId = PALETTE_IDS[pi];
     }
-    // subtree model: width ∝ sqrt(subtree) (Murray-ish taper).
-    return Math.sqrt(nd.subtree / maxSubtree);
-  };
+    const palette = getPalette(paletteId);
 
-  order.sort((a, b) => thicknessOf(a) - thicknessOf(b));
+    const maxDepth = Math.max(1, colony.maxDepth);
+    const maxSubtree = Math.max(1, colony.maxSubtree);
 
-  // precompute a normaliser for the 'order' model.
-  let maxThick = 1e-6;
-  for (let i = 0; i < nodes.length; i++) {
-    const t = thicknessOf(i);
-    if (t > maxThick) maxThick = t;
-  }
+    const order = new Array<number>(nodes.length);
+    for (let i = 0; i < nodes.length; i++) order[i] = i;
 
-  for (let k = 0; k < order.length; k++) {
-    const i = order[k];
-    const nd = nodes[i];
-    if (nd.parent < 0) continue;
-    const pa = nodes[nd.parent];
+    const thicknessOf = (i: number): number => {
+      const nd = nodes[i];
+      if (thicknessModel === "order") return Math.pow(nd.order, 1.35);
+      return Math.sqrt(nd.subtree / maxSubtree);
+    };
 
-    const depth01 = clamp(nd.depth / maxDepth, 0, 1);
-    ctx.strokeStyle = fieldToColor(depth01, palette);
+    order.sort((a, b) => thicknessOf(a) - thicknessOf(b));
 
-    const tNorm = thicknessOf(i) / maxThick; // 0..1
-    const w = baseW * strokeScale * (0.4 + 4.2 * tNorm);
-    ctx.lineWidth = Math.max(0.4, w);
+    let maxThick = 1e-6;
+    for (let i = 0; i < nodes.length; i++) {
+      const tk = thicknessOf(i);
+      if (tk > maxThick) maxThick = tk;
+    }
 
-    ctx.beginPath();
-    ctx.moveTo(X(pa.x), Y(pa.y));
-    ctx.lineTo(X(nd.x), Y(nd.y));
-    ctx.stroke();
-  }
+    // per-colony hue offset + global churn, wrapped into 0..1 for the palette.
+    const colourOffset = (colony.hueShift + globalChurn * chaos) % 1;
 
-  // small dots at the roots to anchor the composition.
-  for (let i = 0; i < nodes.length; i++) {
-    if (nodes[i].parent >= 0) continue;
-    ctx.fillStyle = fieldToColor(0, palette);
-    ctx.beginPath();
-    ctx.arc(X(nodes[i].x), Y(nodes[i].y), Math.max(1, baseW * strokeScale * 2.4), 0, TAU);
-    ctx.fill();
+    for (let k = 0; k < order.length; k++) {
+      const i = order[k];
+      const nd = nodes[i];
+      if (nd.parent < 0) continue;
+      const pa = nodes[nd.parent];
+
+      let depth01 = nd.depth / maxDepth + colourOffset;
+      depth01 = depth01 - Math.floor(depth01); // wrap into [0,1)
+      ctx.strokeStyle = fieldToColor(depth01, palette);
+
+      const tNorm = thicknessOf(i) / maxThick;
+      const w = baseW * strokeScale * (0.4 + 4.2 * tNorm);
+      ctx.lineWidth = Math.max(0.4, w);
+
+      ctx.beginPath();
+      ctx.moveTo(X(pa.x), Y(pa.y));
+      ctx.lineTo(X(nd.x), Y(nd.y));
+      ctx.stroke();
+    }
+
+    // dots at the roots to anchor each colony.
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].parent >= 0) continue;
+      ctx.fillStyle = fieldToColor((colourOffset) % 1, palette);
+      ctx.beginPath();
+      ctx.arc(X(nodes[i].x), Y(nodes[i].y), Math.max(1, baseW * strokeScale * 2.4), 0, TAU);
+      ctx.fill();
+    }
   }
 }
 
 export const spaceColonization: GenerativeSystem<State> = {
   id: "space-colonization",
   title: "Space Colonization",
-  blurb: "Vascular venation — leaf veins, canopies, roots.",
+  blurb: "Vascular venation — leaf veins, canopies, roots. Now a churning, never-still circus.",
   tier: "canvas2d",
   schema,
   init,

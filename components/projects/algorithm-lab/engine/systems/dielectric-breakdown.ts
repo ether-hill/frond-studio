@@ -11,6 +11,13 @@
 //   • η tunes branchiness: η→0 ≈ compact Eden; η≈1 forked lightning;
 //     η large ≈ sparse, near-straight creep (the dominant tip wins).
 //
+// CIRCUS MODE: this build never stops. Bolts strike perpetually — when a
+// discharge finishes (hits max cells, bridges the gap, or runs out of room) it is
+// AUTO-RESEEDED from a fresh rng-chosen seed, and several discharges run at once.
+// η and the growth rate wander over time (sin(tick)+rng·chaos) so the morphology
+// keeps shifting between forked and creeping. Older charge fades and flickers, and
+// the colour field sweeps — a constant, colourful, crackling light show.
+//
 // APPROXIMATION NOTE: a true DBM re-solves Laplace to convergence every step.
 // We instead run a fixed, small number of relaxation sweeps per step (warm-
 // started from the previous frame's φ, which is already close). This is a known,
@@ -39,11 +46,15 @@ interface State {
   phi: Float32Array; // potential field φ ∈ [0,1], length gw*gh
   occ: Uint8Array; // occupancy: 1 = cluster cell (conductor, φ=0)
   fixed: Uint8Array; // 1 = boundary cell held at φ=1 (Dirichlet)
-  age: Int32Array; // growth-time per cell; -1 = never grown
+  age: Int32Array; // growth-time (in ticks) per cell; -1 = never grown
   cluster: number[]; // flat indices of cluster cells, in growth order
 
-  step: number;
-  done: boolean;
+  bolts: number; // count of active simultaneous discharges
+  boltDone: boolean[]; // per-bolt "finished, awaiting reseed" flags (parallel-ish)
+
+  tick: number; // internal frame counter — drives all the chaos wandering
+  step: number; // growth-time counter (advances ~1 per tick)
+  done: boolean; // ALWAYS false in circus mode; kept for the contract
 }
 
 // ── Schema ───────────────────────────────────────────────────────────────────
@@ -54,8 +65,16 @@ const schema: ParamSchema = {
     max: 6,
     step: 0.1,
     default: 1.0,
-    hot: true, // affects FUTURE growth only (not retroactive) — safe without reset
+    hot: true, // base η — wandered each frame by `chaos`
     label: "η (branchiness)",
+  },
+  chaos: {
+    type: "number",
+    min: 0,
+    max: 1,
+    default: 0.85,
+    hot: true, // scales η/growth wander, reseed rate, and flicker depth
+    label: "Chaos",
   },
   gridRes: {
     type: "int",
@@ -79,22 +98,22 @@ const schema: ParamSchema = {
   growthPerStep: {
     type: "int",
     min: 1,
-    max: 20,
-    default: 4,
+    max: 60,
+    default: 14, // FASTER — bolts shoot quickly (wandered by chaos)
     label: "Growth / step",
   },
   solverSweeps: {
     type: "int",
     min: 4,
     max: 40,
-    default: 16, // capped Laplace budget per step (warm-started)
+    default: 12, // capped Laplace budget per step (warm-started)
     label: "Solver sweeps",
   },
   maxCells: {
     type: "int",
     min: 200,
     max: 60000,
-    default: 9000,
+    default: 5200, // per-discharge budget before it fades & reseeds
     label: "Max cells",
   },
   palette: {
@@ -127,6 +146,60 @@ function addCluster(s: State, idx: number, atStep: number): void {
   s.cluster.push(idx);
 }
 
+/** Re-paint the φ=1 Dirichlet boundary for the current mode (used on (re)seed). */
+function paintBoundary(s: State, boundary: string): void {
+  const { phi, fixed, occ, gw, gh } = s;
+  const idx = (x: number, y: number) => y * gw + x;
+  if (boundary === "point-plane" || boundary === "point-point") {
+    for (let x = 0; x < gw; x++) {
+      const i = idx(x, gh - 1);
+      if (occ[i]) continue;
+      fixed[i] = 1;
+      phi[i] = 1;
+    }
+  } else {
+    const cx = (gw - 1) / 2;
+    const cy = (gh - 1) / 2;
+    const r = Math.min(gw, gh) * 0.47;
+    for (let y = 0; y < gh; y++) {
+      for (let x = 0; x < gw; x++) {
+        const i = idx(x, y);
+        if (occ[i]) continue;
+        if (Math.hypot(x - cx, y - cy) >= r) {
+          fixed[i] = 1;
+          phi[i] = 1;
+        }
+      }
+    }
+  }
+}
+
+/** Drop a fresh discharge seed at an rng-chosen launch point for this boundary. */
+function seedBolt(s: State, boundary: string): void {
+  const { gw, gh, occ, fixed } = s;
+  const idx = (x: number, y: number) => y * gw + x;
+  const tryAt = (x: number, y: number): boolean => {
+    x = clamp(x | 0, 1, gw - 2);
+    y = clamp(y | 0, 1, gh - 2);
+    const i = idx(x, y);
+    if (occ[i] || fixed[i]) return false;
+    addCluster(s, i, s.step);
+    return true;
+  };
+
+  for (let attempt = 0; attempt < 24; attempt++) {
+    if (boundary === "ring") {
+      // launch near the centre, jittered, so radial bolts fan out differently
+      const jx = s.rng.range(-0.12, 0.12) * gw;
+      const jy = s.rng.range(-0.12, 0.12) * gh;
+      if (tryAt(gw / 2 + jx, gh / 2 + jy)) return;
+    } else {
+      // point-plane / point-point: a tip somewhere along the top, growing down
+      if (tryAt(s.rng.range(0.08, 0.92) * gw, s.rng.range(1, 3))) return;
+    }
+  }
+}
+
 // ── init ─────────────────────────────────────────────────────────────────────
 function init(_surface: RenderSurface, params: Params, rng: RNG): State {
   const gridRes = clamp(asInt(params.gridRes, 200), 8, 512);
@@ -145,41 +218,6 @@ function init(_surface: RenderSurface, params: Params, rng: RNG): State {
   // faster; boundary/seed pinned below.
   phi.fill(1);
 
-  const idx = (x: number, y: number) => y * gw + x;
-
-  // ── Dirichlet boundary (φ = 1) per mode ──────────────────────────────────
-  if (boundary === "point-plane") {
-    // Outer plane: the bottom edge held at φ=1. Seed sits near the top.
-    for (let x = 0; x < gw; x++) {
-      fixed[idx(x, gh - 1)] = 1;
-      phi[idx(x, gh - 1)] = 1;
-    }
-  } else if (boundary === "point-point") {
-    // Two opposing electrodes: bottom edge at φ=1, seed near the top.
-    for (let x = 0; x < gw; x++) {
-      fixed[idx(x, gh - 1)] = 1;
-      phi[idx(x, gh - 1)] = 1;
-    }
-  } else {
-    // ring: a circular outer boundary at φ=1, seed at the centre.
-    const cx = (gw - 1) / 2;
-    const cy = (gh - 1) / 2;
-    const r = Math.min(gw, gh) * 0.47;
-    for (let y = 0; y < gh; y++) {
-      for (let x = 0; x < gw; x++) {
-        const dx = x - cx;
-        const dy = y - cy;
-        const d = Math.hypot(dx, dy);
-        // Pin everything at/outside the ring radius to φ=1 (acts as the outer
-        // electrode); the interior is solved.
-        if (d >= r) {
-          fixed[idx(x, y)] = 1;
-          phi[idx(x, y)] = 1;
-        }
-      }
-    }
-  }
-
   const state: State = {
     params,
     rng,
@@ -190,20 +228,19 @@ function init(_surface: RenderSurface, params: Params, rng: RNG): State {
     fixed,
     age,
     cluster: [],
+    bolts: 0,
+    boltDone: [],
+    tick: 0,
     step: 0,
     done: false,
   };
 
-  // ── Seed the cluster (φ = 0) ─────────────────────────────────────────────
-  if (boundary === "ring") {
-    addCluster(state, idx((gw / 2) | 0, (gh / 2) | 0), 0);
-  } else if (boundary === "point-point") {
-    // Seed a tip near the top, growing down toward the φ=1 plane.
-    addCluster(state, idx((gw / 2) | 0, 1), 0);
-  } else {
-    // point-plane: single seed near the top-centre.
-    addCluster(state, idx((gw / 2) | 0, 1), 0);
-  }
+  paintBoundary(state, boundary);
+
+  // ── Seed the opening salvo of simultaneous discharges. ───────────────────
+  const initial = boundary === "ring" ? 3 : 3;
+  for (let b = 0; b < initial; b++) seedBolt(state, boundary);
+  state.bolts = initial;
 
   return state;
 }
@@ -234,13 +271,30 @@ function relax(s: State, sweeps: number): void {
 
 // ── One growth step ──────────────────────────────────────────────────────────
 function step(s: State, _dt: number): State {
-  if (s.done) return s;
-
   const p = s.params;
-  const eta = asNum(p.eta, 1.0);
-  const sweeps = clamp(asInt(p.solverSweeps, 16), 1, 200);
-  const growthPerStep = clamp(asInt(p.growthPerStep, 4), 1, 100);
-  const maxCells = clamp(asInt(p.maxCells, 9000), 1, 1_000_000);
+  const boundary = asStr(p.boundary, "point-plane");
+  const chaos = clamp(asNum(p.chaos, 0.85), 0, 1);
+
+  // ── AUTO-CHAOS DRIVE ──────────────────────────────────────────────────────
+  // Wander η and the growth rate over time so branchiness keeps shifting
+  // between forked (low η) and creeping (high η). sin gives a slow breathing
+  // cycle; rng adds per-frame jitter; both scaled by `chaos`.
+  const tick = s.tick;
+  const baseEta = asNum(p.eta, 1.0);
+  const etaWander =
+    Math.sin(tick * 0.013) * 2.0 + (s.rng.next() - 0.5) * 1.6;
+  const eta = clamp(baseEta + etaWander * chaos, 0.4, 6);
+
+  const baseGrowth = clamp(asInt(p.growthPerStep, 14), 1, 100);
+  const growthWander = 1 + 0.6 * Math.sin(tick * 0.021) + (s.rng.next() - 0.5) * 0.7;
+  const growthPerStep = clamp(
+    Math.round(baseGrowth * (1 + (growthWander - 1) * chaos)),
+    1,
+    120,
+  );
+
+  const sweeps = clamp(asInt(p.solverSweeps, 12), 1, 200);
+  const maxCells = clamp(asInt(p.maxCells, 5200), 1, 1_000_000);
   const use8 = asStr(p.neighborhood, "8") === "8";
 
   const { phi, occ, fixed, gw, gh } = s;
@@ -256,10 +310,20 @@ function step(s: State, _dt: number): State {
         [1, 0], [-1, 0], [0, 1], [0, -1],
       ];
 
+  // How many discharges to keep alive at once (more chaos ⇒ more bolts).
+  const targetBolts = 2 + Math.round(chaos * 4);
+
+  let bridged = false;
+
   for (let g = 0; g < growthPerStep; g++) {
-    if (s.cluster.length >= maxCells) {
-      s.done = true;
-      break;
+    // ── PERPETUAL: never stop. When a bolt has consumed its budget we trim
+    //    the oldest charge (so old bolts fade out of the grid) and immediately
+    //    reseed a fresh discharge from a new launch point.
+    if (s.cluster.length >= maxCells || bridged) {
+      recycleOldest(s, Math.max(growthPerStep * 2, 24));
+      seedBolt(s, boundary);
+      bridged = false;
+      continue;
     }
 
     // Relax the field (warm-started) before evaluating candidates.
@@ -296,9 +360,11 @@ function step(s: State, _dt: number): State {
     }
 
     if (candIdx.length === 0) {
-      // No reachable candidates (e.g. cluster bridged the gap) — finished.
-      s.done = true;
-      break;
+      // No reachable candidates — this discharge is spent. Reseed instead of
+      // stopping, so the show never dies.
+      recycleOldest(s, Math.max(growthPerStep * 2, 24));
+      seedBolt(s, boundary);
+      continue;
     }
 
     // ── Pick one candidate weighted by (φ)^η. If all weights are ~0 (field
@@ -317,23 +383,55 @@ function step(s: State, _dt: number): State {
       chosen = s.rng.pick(candIdx);
     }
 
-    addCluster(s, chosen, s.step + 1);
+    addCluster(s, chosen, s.step);
 
-    // point-point: stop once a tip reaches the opposing plane (breakdown
-    // bridged the gap).
+    // point-plane / point-point: a tip reached the opposing plane (breakdown
+    // bridged the gap). Flag it so the next loop reseeds a fresh strike.
     const chy = (chosen / gw) | 0;
-    if (
-      (asStr(p.boundary, "point-plane") === "point-point" ||
-        asStr(p.boundary, "point-plane") === "point-plane") &&
-      chy >= gh - 2
-    ) {
-      s.done = true;
-      break;
+    if (boundary !== "ring" && chy >= gh - 2) {
+      bridged = true;
     }
   }
 
+  // Keep the desired number of simultaneous discharges burning. Occasionally —
+  // gated by chaos — fire an extra spontaneous bolt for that crackling churn.
+  if (s.rng.next() < 0.04 + chaos * 0.18) {
+    seedBolt(s, boundary);
+  }
+  // Trim drift in total population so the grid never saturates solid.
+  if (s.cluster.length > maxCells * 1.15) {
+    recycleOldest(s, s.cluster.length - maxCells);
+  }
+  s.bolts = targetBolts;
+
+  s.tick++;
   s.step++;
+  s.done = false; // NEVER STOP
   return s;
+}
+
+// ── Fade / recycle the oldest charge ─────────────────────────────────────────
+// Remove the `count` oldest cluster cells from the grid (freeing them back to
+// dielectric) so old bolts dim out and new ones flash in. Seeds aside, this is
+// what makes the field read as alive rather than a static accreted cluster.
+function recycleOldest(s: State, count: number): void {
+  const { occ, fixed, phi, age, cluster, gw } = s;
+  const n = Math.min(count, Math.max(0, cluster.length - 1));
+  for (let k = 0; k < n; k++) {
+    const idx = cluster.shift();
+    if (idx === undefined) break;
+    occ[idx] = 0;
+    age[idx] = -1;
+    // Hand the freed cell back to the solver with a warm guess so the field
+    // re-fills smoothly. If it sits on the outer plane, restore it as φ=1.
+    const y = (idx / gw) | 0;
+    if (y >= s.gh - 1) {
+      fixed[idx] = 1;
+      phi[idx] = 1;
+    } else {
+      phi[idx] = 0.5;
+    }
+  }
 }
 
 // ── render ───────────────────────────────────────────────────────────────────
@@ -342,8 +440,26 @@ function render(state: State, surface: RenderSurface): void {
   const s = surface as Canvas2DSurface;
   const { ctx, width, height } = s;
 
-  const palette = getPalette(asStr(state.params.palette, "fluoro"));
+  // ── COLOUR CHURN: cycle through palettes over time and add a sweeping offset
+  //    to the age field, so the charge colour drifts continuously.
+  const chaos = clamp(asNum(state.params.chaos, 0.85), 0, 1);
+  const baseId = asStr(state.params.palette, "fluoro");
+  const baseIdx = PALETTE_IDS.indexOf(baseId);
+  const cyc = (Math.floor(state.tick / 240) + (baseIdx < 0 ? 0 : baseIdx)) %
+    PALETTE_IDS.length;
+  const palette = getPalette(PALETTE_IDS[cyc]);
   const glow = asBool(state.params.glow, true);
+
+  // A time-varying offset added to the normalised age → the colour ramp sweeps.
+  const colourSweep = (state.tick * 0.004) % 1;
+
+  // ── FLICKER / PULSE: a fast, jittered brightness pulse so it reads electric.
+  const flickerDepth = 0.15 + chaos * 0.45;
+  const pulse =
+    1 -
+    flickerDepth *
+      (0.5 + 0.5 * Math.sin(state.tick * 0.9)) *
+      (0.7 + 0.3 * state.rng.next());
 
   // Dark backdrop so the charge propagation reads as luminous filaments.
   ctx.fillStyle = "#06070a";
@@ -356,10 +472,11 @@ function render(state: State, surface: RenderSurface): void {
   const dw = cellW + 0.75;
   const dh = cellH + 0.75;
 
-  // Normalise age (growth-time) over the whole cluster for the colour ramp.
-  // age=0 (seed) → palette start; latest growth → palette end. This makes the
-  // charge-propagation front read as a moving colour wave.
-  const maxAge = Math.max(1, state.step);
+  // FADE: charge fades with age. Map each cell's age onto a recent window so the
+  // newest charge blazes at full alpha while the trailing tail dims out. The
+  // window is shorter when chaos is high → snappier, flashier strikes.
+  const now = state.step;
+  const fadeWindow = Math.max(40, Math.round((1.4 - chaos) * 520));
 
   // ── Optional glow pass: large, low-alpha additive dots under the cells.
   if (glow) {
@@ -368,42 +485,53 @@ function render(state: State, surface: RenderSurface): void {
     const gr = Math.max(cellW, cellH) * 1.9;
     for (let k = 0; k < cluster.length; k++) {
       const idx = cluster[k];
+      const a = age[idx];
+      if (a < 0) continue;
+      const fresh = clamp(1 - (now - a) / fadeWindow, 0, 1);
+      if (fresh <= 0.01) continue;
       const x = idx % gw;
       const y = (idx / gw) | 0;
-      const a = age[idx] < 0 ? 0 : age[idx];
-      const t = a / maxAge;
+      // Leading tips (freshest) sweep toward the bright end of the ramp.
+      const t = ((fresh * 0.6 + 0.4) + colourSweep) % 1;
       ctx.fillStyle = fieldToColor(t, palette);
-      ctx.globalAlpha = 0.06;
+      ctx.globalAlpha = 0.06 * fresh * fresh * pulse;
       ctx.beginPath();
-      ctx.arc((x + 0.5) * cellW, (y + 0.5) * cellH, gr, 0, Math.PI * 2);
+      ctx.arc((x + 0.5) * cellW, (y + 0.5) * cellH, gr * (0.5 + fresh), 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
   }
 
-  // ── Solid pass: the cluster cells coloured by age.
-  ctx.globalAlpha = 1;
+  // ── Solid pass: the cluster cells coloured by faded age.
+  ctx.globalCompositeOperation = "source-over";
   for (let k = 0; k < cluster.length; k++) {
     const idx = cluster[k];
+    const a = age[idx];
+    if (a < 0) continue;
+    const fresh = clamp(1 - (now - a) / fadeWindow, 0, 1);
+    if (fresh <= 0.01) continue;
     const x = idx % gw;
     const y = (idx / gw) | 0;
-    const a = age[idx] < 0 ? 0 : age[idx];
-    const t = a / maxAge;
+    // Older charge slides toward the cool end; the leading front blazes bright.
+    const t = ((1 - fresh) * 0.85 + colourSweep) % 1;
+    ctx.globalAlpha = (0.35 + 0.65 * fresh) * pulse;
     ctx.fillStyle = fieldToColor(t, palette);
     ctx.fillRect(x * cellW, y * cellH, dw, dh);
   }
+  ctx.globalAlpha = 1;
 }
 
 // ── isDone ───────────────────────────────────────────────────────────────────
-function isDone(state: State): boolean {
-  return state.done;
+// CIRCUS MODE: the lightning never stops. Always false.
+function isDone(_state: State): boolean {
+  return false;
 }
 
 // ── System export ────────────────────────────────────────────────────────────
 export const dielectricBreakdown: GenerativeSystem<State> = {
   id: "dielectric-breakdown",
   title: "Dielectric Breakdown",
-  blurb: "Field-driven ramification — lightning, fulgurite, root creep.",
+  blurb: "Perpetual crackling lightning — chaotic, colourful field-driven discharges.",
   tier: "canvas2d",
   schema,
   init,

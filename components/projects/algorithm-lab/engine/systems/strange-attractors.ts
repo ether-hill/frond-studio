@@ -52,6 +52,9 @@ const schema: ParamSchema = {
   gamma: { type: "number", min: 0.2, max: 4, step: 0.01, default: 1.4, hot: true, label: "Gamma" },
   palette: { type: "select", options: PALETTE_IDS, default: "fluoro", hot: true, label: "Palette" },
   blendBg: { type: "color", default: "#06060a", hot: true, label: "Background" },
+  // The circus dial. Scales coefficient-drift speed/amplitude, density decay and
+  // colour-cycle. 0 ≈ near-static plate, 1 = wild constant morphing chaos.
+  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 0.85, hot: true, label: "Chaos" },
 };
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -65,6 +68,20 @@ interface State {
   y: number;
   iterationsDone: number;
   done: boolean;
+  // ── morphing state ──────────────────────────────────────────────────────────
+  tick: number; // internal frame counter driving all the time-varying motion
+  // Live drifting coefficients. Seeded from the base a/b/c/d params, then they
+  // wander every frame so the attractor shape continuously breathes and morphs.
+  ca: number;
+  cb: number;
+  cc: number;
+  cd: number;
+  // Per-coefficient sine phases — keeps each axis on its own breathing rhythm.
+  pa: number;
+  pb: number;
+  pc: number;
+  pd: number;
+  cycle: number; // colour-cycle accumulator (hue/palette sweep phase)
 }
 
 // ── Map families ─────────────────────────────────────────────────────────────
@@ -85,6 +102,17 @@ const getMap = (family: string): MapFn => MAPS[family] ?? MAPS.dejong;
 
 // World-space half-extent the map is assumed to live in. Hopalong sprawls wider.
 const worldExtent = (family: string): number => (family === "hopalong" ? 10 : 2.2);
+
+// A fresh, non-degenerate coefficient set. We bias away from tiny |coeff| values
+// (which collapse the map to a dot/line) so every jump lands on a real form.
+function freshCoeffs(rng: RNG): [number, number, number, number] {
+  const pick = () => {
+    const v = rng.range(-2.6, 2.6);
+    // Push small magnitudes outward so we never settle into a degenerate map.
+    return Math.abs(v) < 0.6 ? v + (v >= 0 ? 0.6 : -0.6) : v;
+  };
+  return [pick(), pick(), pick(), pick()];
+}
 
 // ── Number helpers ───────────────────────────────────────────────────────────
 const num = (p: Params, k: string, fallback: number): number => {
@@ -157,8 +185,12 @@ function toneMap(
   gamma: number,
   paletteId: string,
   bgHex: string,
+  cycle = 0, // colour-cycle phase: time-varying hue offset folded into the tone
 ): ImageData {
   const palette = getPalette(paletteId);
+  // A wrapping offset added to the tone value before fieldToRgb so hues sweep
+  // through the filaments over time. fract() of the phase keeps it in [0,1).
+  const hueOffset = cycle - Math.floor(cycle);
   const img = new ImageData(w, h);
   const data = img.data;
 
@@ -215,7 +247,12 @@ function toneMap(
     t = clamp(t, 0, 1);
     t = Math.pow(t, invGamma);
 
-    const [fr, fg, fb] = fieldToRgb(t, palette);
+    // Sweep palette colour through the filaments: shift the lookup position by a
+    // time-varying, density-modulated offset and wrap. The alpha below still
+    // uses the un-shifted tone so faint hits stay smoky regardless of hue.
+    let tc = t + hueOffset;
+    tc -= Math.floor(tc);
+    const [fr, fg, fb] = fieldToRgb(tc, palette);
     // Composite the filament over the background, weighted by tone t so faint
     // hits melt smoothly into the bg (smoky edges, no harsh point pixels).
     const a = clamp(t, 0, 1);
@@ -262,6 +299,12 @@ export const strangeAttractors: GenerativeSystem<State> = {
       y = 0.0001;
     }
 
+    // Seed the live drifting coefficients from the base params.
+    const ca = num(params, "a", 1.4);
+    const cb = num(params, "b", -2.3);
+    const cc = num(params, "c", 2.4);
+    const cd = num(params, "d", -2.1);
+
     return {
       params,
       rng,
@@ -272,44 +315,114 @@ export const strangeAttractors: GenerativeSystem<State> = {
       y,
       iterationsDone: 0,
       done: false,
+      tick: 0,
+      ca,
+      cb,
+      cc,
+      cd,
+      // Random starting phases so the four coefficient rhythms aren't in lockstep.
+      pa: rng.range(0, Math.PI * 2),
+      pb: rng.range(0, Math.PI * 2),
+      pc: rng.range(0, Math.PI * 2),
+      pd: rng.range(0, Math.PI * 2),
+      cycle: rng.range(0, 1),
     };
   },
 
   step(state: State, _dt: number): State {
-    if (state.done) return state;
     const p = state.params;
     const family = str(p, "mapFamily", "dejong");
-    const a = num(p, "a", 1.4);
-    const b = num(p, "b", -2.3);
-    const c = num(p, "c", 2.4);
-    const d = num(p, "d", -2.1);
+    const baseA = num(p, "a", 1.4);
+    const baseB = num(p, "b", -2.3);
+    const baseC = num(p, "c", 2.4);
+    const baseD = num(p, "d", -2.1);
     const perFrame = Math.max(1, Math.floor(num(p, "iterationsPerFrame", 200_000)));
-    const total = Math.max(1, Math.floor(num(p, "totalIterations", 12_000_000)));
+    const chaos = clamp(num(p, "chaos", 0.85), 0, 1);
 
-    const remaining = total - state.iterationsDone;
-    const count = Math.min(perFrame, remaining);
-    if (count <= 0) {
-      state.done = true;
-      return state;
+    state.tick++;
+    const t = state.tick;
+
+    // ── 1. Occasional JUMP to a fresh non-degenerate form ─────────────────────
+    // Probability scales with chaos. A jump snaps the coefficients somewhere new
+    // and reseeds the iterate so the new attractor builds cleanly.
+    const jumpChance = 0.002 + chaos * 0.012;
+    if (state.rng.next() < jumpChance) {
+      const [na, nb, nc, nd] = freshCoeffs(state.rng);
+      state.ca = na;
+      state.cb = nb;
+      state.cc = nc;
+      state.cd = nd;
+      state.x = 0.0001;
+      state.y = 0.0001;
+    } else {
+      // ── 2. Continuous DRIFT — sin(tick·freq) breathing + rng wander, all
+      // gently pulled back toward the base a/b/c/d so it morphs but never
+      // runs away forever. Speed and amplitude both scale with chaos.
+      const freq = 0.006 + chaos * 0.05; // breathing rate
+      const amp = 0.25 + chaos * 1.4; // sine swing magnitude
+      const wander = chaos * 0.06; // per-frame random walk
+      const pull = 0.01; // weak restoring force toward the base coeffs
+
+      const drift = (cur: number, base: number, phase: number, k: number) => {
+        const target = base + Math.sin(t * freq + phase) * amp * (0.7 + 0.3 * Math.sin(t * 0.013 + k));
+        let v = cur + (target - cur) * (0.02 + chaos * 0.06); // ease toward target
+        v += state.rng.range(-wander, wander); // chaotic jitter
+        v += (base - v) * pull; // mild restoring pull
+        return v;
+      };
+
+      state.ca = drift(state.ca, baseA, state.pa, 0);
+      state.cb = drift(state.cb, baseB, state.pb, 1.7);
+      state.cc = drift(state.cc, baseC, state.pc, 3.1);
+      state.cd = drift(state.cd, baseD, state.pd, 4.9);
     }
 
+    // Guard against NaN/escape in the coefficients themselves.
+    if (
+      !Number.isFinite(state.ca) ||
+      !Number.isFinite(state.cb) ||
+      !Number.isFinite(state.cc) ||
+      !Number.isFinite(state.cd)
+    ) {
+      const [na, nb, nc, nd] = freshCoeffs(state.rng);
+      state.ca = na;
+      state.cb = nb;
+      state.cc = nc;
+      state.cd = nd;
+      state.x = 0.0001;
+      state.y = 0.0001;
+    }
+
+    // ── 3. LIVING DENSITY — decay the buffer a touch each frame so old filaments
+    // fade and the smoke flows as the shape morphs, instead of freezing solid.
+    // More chaos ⇒ faster decay (shorter trails, more motion).
+    const decay = 0.985 - chaos * 0.065; // ~0.985 down to ~0.92
+    const density = state.density;
+    for (let i = 0; i < density.length; i++) density[i] *= decay;
+
+    // Reseed the iterate if it has blown up before we accumulate.
+    if (!Number.isFinite(state.x) || !Number.isFinite(state.y)) {
+      state.x = 0.0001;
+      state.y = 0.0001;
+    }
+
+    // ── 4. Accumulate a fresh batch of hits with the current drifting coeffs.
     const [nx, ny] = accumulate(
-      state.density,
+      density,
       state.w,
       state.h,
       family,
       state.x,
       state.y,
-      a,
-      b,
-      c,
-      d,
-      count,
+      state.ca,
+      state.cb,
+      state.cc,
+      state.cd,
+      perFrame,
     );
     state.x = nx;
     state.y = ny;
-    state.iterationsDone += count;
-    if (state.iterationsDone >= total) state.done = true;
+    state.iterationsDone += perFrame;
 
     return state;
   },
@@ -319,18 +432,41 @@ export const strangeAttractors: GenerativeSystem<State> = {
     const p = state.params;
     const exposure = num(p, "exposure", 6);
     const gamma = clamp(num(p, "gamma", 1.4), 0.05, 8);
-    const paletteId = str(p, "palette", "fluoro");
+    const chaos = clamp(num(p, "chaos", 0.85), 0, 1);
+
+    // ── 5. COLOUR CHURN ───────────────────────────────────────────────────────
+    // Advance a colour-cycle phase each frame (speed scales with chaos) and feed
+    // it as a hue offset that sweeps palette colour through the filaments. We
+    // also cycle the palette itself slowly so the whole scheme keeps evolving.
+    state.cycle += 0.004 + chaos * 0.02;
+
+    let paletteId = str(p, "palette", "fluoro");
+    if (chaos > 0) {
+      // Slowly rotate through the available palettes for sustained vivid variety.
+      const idx = Math.floor(state.cycle * (0.25 + chaos)) % PALETTE_IDS.length;
+      paletteId = PALETTE_IDS[(idx + PALETTE_IDS.length) % PALETTE_IDS.length] ?? paletteId;
+    }
     const bgHex = str(p, "blendBg", "#06060a");
 
-    const img = toneMap(state.density, state.w, state.h, exposure, gamma, paletteId, bgHex);
+    const img = toneMap(
+      state.density,
+      state.w,
+      state.h,
+      exposure,
+      gamma,
+      paletteId,
+      bgHex,
+      state.cycle,
+    );
 
     // Draw 1:1 in device pixels — neutralise the dpr transform the harness set.
     s.ctx.setTransform(1, 0, 0, 1, 0, 0);
     s.ctx.putImageData(img, 0, 0);
   },
 
-  isDone(state: State): boolean {
-    return state.done;
+  // A visual circus: never stop. The attractor morphs forever.
+  isDone(): boolean {
+    return false;
   },
 
   exportHiRes(

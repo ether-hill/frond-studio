@@ -23,7 +23,7 @@ import type {
   RenderSurface,
   RNG,
 } from "../core/types";
-import { fieldToColor, getPalette, PALETTE_IDS } from "../core/color";
+import { fieldToColor, getPalette, PALETTE_IDS, type Palette, type Stop } from "../core/color";
 import { clamp, TAU, type Vec2 } from "../core/math";
 import { SpatialHash } from "../core/spatial-hash";
 
@@ -42,6 +42,7 @@ interface Hotspot {
   x: number;
   y: number;
   r: number;
+  age: number; // tick at which it was (re)placed — lets hotspots drift + retire
 }
 
 export interface State {
@@ -55,7 +56,14 @@ export interface State {
   /** faded historical snapshots for depth (oldest first) */
   history: { nodes: Vec2[]; closed: boolean }[];
   framesSinceSnapshot: number;
-  done: boolean;
+
+  // ── circus drive (auto-chaos) ───────────────────────────────────────────────
+  tick: number; // ever-advancing internal frame clock — drives all wander/sweep
+  paletteIndex: number; // which palette we are churning toward (cycles over time)
+  paletteBlend: number; // 0..1 cross-fade progress between adjacent palettes
+  framesSincePrune: number; // when capped, how long since we last pruned a chunk
+  framesSinceJolt: number; // throttles the random impulse injections
+  framesSinceSpawn: number; // throttles spawning of extra loops
 }
 
 // ── Schema: single source of truth for the control panel + presets ───────────
@@ -72,6 +80,10 @@ const schema: ParamSchema = {
   nodeCap: { type: "int", min: 200, max: 6000, default: 3200, label: "Node cap" },
   growthBias: { type: "select", options: ["uniform", "hotspots"], default: "uniform", label: "Growth bias" },
   closed: { type: "bool", default: true, label: "Closed loop" },
+
+  // Global energy knob. Scales jitter, repulsion swing, split-threshold wander,
+  // hotspot migration speed, jolt frequency and colour churn. The circus dial.
+  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 0.85, hot: true, label: "Chaos" },
 };
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -88,45 +100,50 @@ const bool = (p: Params, k: string, d: boolean) => {
   return typeof v === "boolean" ? v : d;
 };
 
+// Cross-fade two palettes into a new one. We resample both to a common number of
+// control stops along their 0..1 position, then lerp each stop (shortest-arc
+// hue) so the whole ramp morphs smoothly — used for live colour churn.
+function blendPalettes(a: Palette, b: Palette, t: number): Palette {
+  if (t <= 0) return a;
+  if (t >= 1) return b;
+  const m = Math.max(a.stops.length, b.stops.length);
+  const stops: Stop[] = [];
+  for (let i = 0; i < m; i++) {
+    const u = m === 1 ? 0 : i / (m - 1);
+    const sa = sampleStop(a, u);
+    const sb = sampleStop(b, u);
+    let dh = sb.h - sa.h;
+    if (dh > 180) dh -= 360;
+    if (dh < -180) dh += 360;
+    stops.push({
+      L: sa.L + (sb.L - sa.L) * t,
+      C: sa.C + (sb.C - sa.C) * t,
+      h: ((sa.h + dh * t) % 360 + 360) % 360,
+    });
+  }
+  return { id: `${a.id}~${b.id}`, label: "churn", stops };
+}
+
+// Sample a palette's control points at normalised position u∈[0,1].
+function sampleStop(pal: Palette, u: number): Stop {
+  const s = pal.stops;
+  if (s.length === 1) return s[0];
+  const x = clamp(u, 0, 1) * (s.length - 1);
+  const i = Math.min(s.length - 2, Math.floor(x));
+  const f = x - i;
+  const a = s[i];
+  const b = s[i + 1];
+  let dh = b.h - a.h;
+  if (dh > 180) dh -= 360;
+  if (dh < -180) dh += 360;
+  return { L: a.L + (b.L - a.L) * f, C: a.C + (b.C - a.C) * f, h: ((a.h + dh * f) % 360 + 360) % 360 };
+}
+
 // ── init ──────────────────────────────────────────────────────────────────────
 function init(_surface: RenderSurface, params: Params, rng: RNG): State {
   const closed = bool(params, "closed", true);
   const nodeCap = Math.round(num(params, "nodeCap", 3200));
   const split = num(params, "splitThreshold", 0.022);
-
-  const nodes: Node[] = [];
-
-  if (closed) {
-    // Start from a small circle so the very first step already has tension.
-    const count = 44;
-    // radius a touch under half the split threshold × count / TAU so edges sit
-    // comfortably below the split length — buckling, not exploding, from frame 1.
-    const radius = Math.max(0.05, (split * count) / TAU * 0.45);
-    const wobble = rng.range(0, TAU);
-    for (let i = 0; i < count; i++) {
-      const a = (i / count) * TAU;
-      // a faint radial wobble seeds asymmetry deterministically from the rng.
-      const rr = radius * (1 + 0.04 * Math.sin(a * 3 + wobble) + rng.range(-0.01, 0.01));
-      nodes.push({
-        x: Math.cos(a) * rr,
-        y: Math.sin(a) * rr,
-        px: 0,
-        py: 0,
-        age: 0,
-        hot: 0,
-      });
-    }
-  } else {
-    // Open chain: a short, slightly bowed horizontal line through the centre.
-    const count = 40;
-    const half = (split * count) / 2 * 0.4;
-    for (let i = 0; i < count; i++) {
-      const t = i / (count - 1);
-      const x = (t - 0.5) * 2 * half;
-      const y = Math.sin(t * Math.PI) * 0.01 + rng.range(-0.002, 0.002);
-      nodes.push({ x, y, px: 0, py: 0, age: 0, hot: 0 });
-    }
-  }
 
   // Hotspots: a few regions that bias node insertion when growthBias === hotspots.
   const hotspots: Hotspot[] = [];
@@ -134,10 +151,10 @@ function init(_surface: RenderSurface, params: Params, rng: RNG): State {
   for (let i = 0; i < hsCount; i++) {
     const a = rng.range(0, TAU);
     const rad = rng.range(0.05, 0.32);
-    hotspots.push({ x: Math.cos(a) * rad, y: Math.sin(a) * rad, r: rng.range(0.08, 0.2) });
+    hotspots.push({ x: Math.cos(a) * rad, y: Math.sin(a) * rad, r: rng.range(0.08, 0.2), age: 0 });
   }
-  // Tag the initial nodes with their hotspot weight.
-  for (const n of nodes) n.hot = hotspotWeight(n.x, n.y, hotspots);
+
+  const nodes = seedLoop(closed, split, rng, 0, 0, 1, 0, hotspots);
 
   return {
     params,
@@ -149,8 +166,58 @@ function init(_surface: RenderSurface, params: Params, rng: RNG): State {
     step: 0,
     history: [],
     framesSinceSnapshot: 0,
-    done: false,
+    tick: 0,
+    paletteIndex: 0,
+    paletteBlend: 0,
+    framesSincePrune: 0,
+    framesSinceJolt: 0,
+    framesSinceSpawn: 0,
   };
+}
+
+// Build a fresh small loop / chain at (ox,oy) with a given scale and phase. Used
+// both for the initial seed and to spawn extra loops / re-seed after a reset so
+// the system perpetually re-buckles from new starting geometry.
+function seedLoop(
+  closed: boolean,
+  split: number,
+  rng: RNG,
+  ox: number,
+  oy: number,
+  scale: number,
+  bornStep: number,
+  hotspots: Hotspot[],
+): Node[] {
+  const nodes: Node[] = [];
+  if (closed) {
+    // Start from a small circle so the very first step already has tension.
+    const count = 44;
+    // radius a touch under half the split threshold × count / TAU so edges sit
+    // comfortably below the split length — buckling, not exploding, from frame 1.
+    const radius = Math.max(0.05, (split * count) / TAU * 0.45) * scale;
+    const wobble = rng.range(0, TAU);
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * TAU;
+      // a faint radial wobble seeds asymmetry deterministically from the rng.
+      const rr = radius * (1 + 0.05 * Math.sin(a * 3 + wobble) + rng.range(-0.015, 0.015));
+      nodes.push({ x: ox + Math.cos(a) * rr, y: oy + Math.sin(a) * rr, px: 0, py: 0, age: bornStep, hot: 0 });
+    }
+  } else {
+    // Open chain: a short, slightly bowed horizontal line through the centre.
+    const count = 40;
+    const half = ((split * count) / 2) * 0.4 * scale;
+    const ang = rng.range(0, TAU);
+    const ca = Math.cos(ang);
+    const sa = Math.sin(ang);
+    for (let i = 0; i < count; i++) {
+      const t = i / (count - 1);
+      const lx = (t - 0.5) * 2 * half;
+      const ly = Math.sin(t * Math.PI) * 0.01 * scale + rng.range(-0.003, 0.003);
+      nodes.push({ x: ox + lx * ca - ly * sa, y: oy + lx * sa + ly * ca, px: 0, py: 0, age: bornStep, hot: 0 });
+    }
+  }
+  for (const n of nodes) n.hot = hotspotWeight(n.x, n.y, hotspots);
+  return nodes;
 }
 
 function hotspotWeight(x: number, y: number, hotspots: Hotspot[]): number {
@@ -169,34 +236,136 @@ function hotspotWeight(x: number, y: number, hotspots: Hotspot[]): number {
 
 // ── step ──────────────────────────────────────────────────────────────────────
 function step(state: State, _dt: number): State {
-  if (state.done) return state;
-
-  const p = state.params;
   const nodes = state.nodes;
-  const n = nodes.length;
-  if (n < 2) {
-    state.done = true;
-    return state;
+  if (nodes.length < 2) {
+    // Never die — re-seed a fresh tiny loop and keep the circus going.
+    reseed(state);
   }
 
-  const repulsionRadius = clamp(num(p, "repulsionRadius", 0.018), 0.001, 0.2);
-  const repulsionStrength = num(p, "repulsionStrength", 0.42);
-  const springStrength = num(p, "springStrength", 0.3);
-  const splitThreshold = clamp(num(p, "splitThreshold", 0.022), 0.004, 0.2);
-  const jitter = Math.max(0, num(p, "jitter", 0.0008));
-  const bias = str(p, "growthBias", "uniform");
+  const p = state.params;
   const closed = state.closed;
+  // The energy dial. Everything below is scaled by it.
+  const chaos = clamp(num(p, "chaos", 0.85), 0, 1);
 
-  // Rest length: a hair under the split threshold so springs and splits agree.
+  // Advance the internal clock. Faster than `step` so motion writhes even once
+  // the geometry would otherwise relax. Chaos speeds the whole carousel up.
+  state.tick += 0.6 + 1.4 * chaos;
+  const T = state.tick;
+
+  // ── (auto-chaos drive) continuously wander the governing parameters ──
+  // Slow, out-of-phase sines so the system breathes between buckling regimes;
+  // a per-frame rng nudge keeps it from being perfectly periodic.
+  const baseJit = Math.max(0, num(p, "jitter", 0.0008));
+  const baseRep = num(p, "repulsionStrength", 0.42);
+  const baseSplit = clamp(num(p, "splitThreshold", 0.022), 0.004, 0.2);
+  const springStrength = num(p, "springStrength", 0.3);
+  const repulsionRadius = clamp(num(p, "repulsionRadius", 0.018), 0.001, 0.2);
+  const bias = str(p, "growthBias", "uniform");
+
+  // Jitter: a strong, ever-shifting Brownian budget. Floor it well above the raw
+  // param so it always writhes; swing it wildly with chaos.
+  const jitter = (baseJit + 0.0016 * chaos) * (1 + 0.9 * chaos * (0.5 + 0.5 * Math.sin(T * 0.07 + 0.0)))
+    * (0.85 + 0.3 * state.rng.next());
+  // Repulsion strength pulses so folds alternately crowd and splay.
+  const repulsionStrength = clamp(baseRep * (1 + 0.6 * chaos * Math.sin(T * 0.045 + 1.7)), 0, 1.6);
+  // Split threshold wanders so growth alternately races and stalls → re-buckles.
+  const splitThreshold = clamp(
+    baseSplit * (1 + 0.45 * chaos * Math.sin(T * 0.033 + 3.1)),
+    0.004,
+    0.2,
+  );
+
+  // ── migrate the growth-bias hotspots so buckling roams the canvas ──
+  driftHotspots(state, T, chaos);
+
+  // Run several relaxation sub-steps per frame so it moves energetically. More
+  // chaos → more sub-steps → faster, livelier writhing.
+  const subSteps = 2 + Math.round(2 * chaos);
+  for (let s = 0; s < subSteps; s++) {
+    relax(state, repulsionRadius, repulsionStrength, springStrength, splitThreshold, jitter, bias, closed);
+  }
+
+  // ── (3) injection: sudden jolts to random node spans ──
+  state.framesSinceJolt++;
+  const joltGap = Math.max(8, Math.round(70 - 60 * chaos));
+  if (state.nodes.length >= 4 && state.framesSinceJolt >= joltGap && state.rng.next() < 0.4 + 0.5 * chaos) {
+    injectJolt(state, repulsionRadius, chaos);
+    state.framesSinceJolt = 0;
+  }
+
+  // ── (4) node insertion where an edge exceeds the split threshold ──
+  if (state.nodes.length < state.nodeCap) {
+    insertSplits(state, splitThreshold, bias);
+  } else {
+    // CAP HIT — never freeze. Prune a chunk of the strand and keep growing so it
+    // perpetually buckles and re-buckles; occasionally reset to a fresh loop.
+    state.framesSincePrune++;
+    if (state.framesSincePrune >= 3) {
+      state.framesSincePrune = 0;
+      if (state.rng.next() < 0.08) {
+        reseed(state);
+      } else {
+        pruneChunk(state, chaos);
+      }
+    }
+  }
+
+  // ── injection: occasionally spawn an extra loop to keep things lively ──
+  state.framesSinceSpawn++;
+  const spawnGap = Math.max(40, Math.round(220 - 150 * chaos));
+  if (
+    state.nodes.length < state.nodeCap * 0.92 &&
+    state.framesSinceSpawn >= spawnGap &&
+    state.rng.next() < 0.3 + 0.5 * chaos
+  ) {
+    spawnLoop(state, splitThreshold);
+    state.framesSinceSpawn = 0;
+  }
+
+  // ── (colour churn) advance palette cross-fade over time ──
+  state.paletteBlend += (0.0009 + 0.004 * chaos);
+  if (state.paletteBlend >= 1) {
+    state.paletteBlend -= 1;
+    state.paletteIndex = (state.paletteIndex + 1) % PALETTE_IDS.length;
+  }
+
+  state.step++;
+
+  // periodic historical snapshot for depth layers (keep a small ring)
+  state.framesSinceSnapshot++;
+  if (state.framesSinceSnapshot >= 18) {
+    state.framesSinceSnapshot = 0;
+    state.history.push({
+      nodes: state.nodes.map((nd) => ({ x: nd.x, y: nd.y })),
+      closed,
+    });
+    if (state.history.length > 2) state.history.shift();
+  }
+
+  return state;
+}
+
+// One relaxation pass: repulsion + springs + jitter, displacement applied.
+function relax(
+  state: State,
+  repulsionRadius: number,
+  repulsionStrength: number,
+  springStrength: number,
+  splitThreshold: number,
+  jitter: number,
+  bias: string,
+  closed: boolean,
+): void {
+  const nodes = state.nodes;
+  const n = nodes.length;
+  if (n < 2) return;
+
   const restLen = splitThreshold * 0.62;
-  // Minimum spacing the repulsion defends — keeps the curve from self-touching.
   const minSpacing = Math.max(restLen * 0.85, repulsionRadius * 0.45);
 
-  // 1. Spatial hash for neighbour repulsion (rebuilt every step).
   const hash = new SpatialHash<Node>(repulsionRadius);
   hash.rebuild(nodes);
 
-  // Reset per-step displacement accumulators.
   for (let i = 0; i < n; i++) {
     nodes[i].px = 0;
     nodes[i].py = 0;
@@ -216,12 +385,11 @@ function step(state: State, _dt: number): State {
         const d2 = dx * dx + dy * dy;
         if (d2 > r2 || d2 <= 1e-12) return;
         const d = Math.sqrt(d2);
-        // soft falloff to the repulsion radius, clamped to defend minSpacing.
         const target = Math.max(minSpacing, d);
         const push = ((repulsionRadius - d) / repulsionRadius) * repulsionStrength;
         const inv = 1 / d;
-        a.px += (dx * inv) * push * target;
-        a.py += (dy * inv) * push * target;
+        a.px += dx * inv * push * target;
+        a.py += dy * inv * push * target;
       });
     }
 
@@ -229,9 +397,7 @@ function step(state: State, _dt: number): State {
     if (springStrength > 0) {
       const prevI = i === 0 ? (closed ? n - 1 : -1) : i - 1;
       const nextI = i === n - 1 ? (closed ? 0 : -1) : i + 1;
-
       if (prevI >= 0 && nextI >= 0) {
-        // interior node: pull toward midpoint of its two neighbours (smoothing)
         const pv = nodes[prevI];
         const nx = nodes[nextI];
         const mx = (pv.x + nx.x) * 0.5;
@@ -239,7 +405,6 @@ function step(state: State, _dt: number): State {
         a.px += (mx - a.x) * springStrength * 0.5;
         a.py += (my - a.y) * springStrength * 0.5;
       }
-      // additionally, enforce rest length on each incident edge
       if (prevI >= 0) springToward(a, nodes[prevI], restLen, springStrength * 0.5);
       if (nextI >= 0) springToward(a, nodes[nextI], restLen, springStrength * 0.5);
     }
@@ -260,35 +425,105 @@ function step(state: State, _dt: number): State {
     let dy = a.py;
     const m2 = dx * dx + dy * dy;
     if (m2 > maxMove * maxMove) {
-      const s = maxMove / Math.sqrt(m2);
-      dx *= s;
-      dy *= s;
+      const sc = maxMove / Math.sqrt(m2);
+      dx *= sc;
+      dy *= sc;
     }
     a.x += dx;
     a.y += dy;
   }
+}
 
-  // ── (4) node insertion where an edge exceeds the split threshold ──
-  if (nodes.length < state.nodeCap) {
-    insertSplits(state, splitThreshold, bias);
+// Wander the hotspot centres so the growth-bias regions roam the canvas — the
+// buckling migrates instead of staying pinned. Occasionally retire/replace one.
+function driftHotspots(state: State, T: number, chaos: number): void {
+  const hs = state.hotspots;
+  for (let i = 0; i < hs.length; i++) {
+    const h = hs[i];
+    const ph = i * 1.7;
+    const sp = 0.004 + 0.012 * chaos;
+    h.x += Math.cos(T * 0.02 + ph) * sp + state.rng.range(-1, 1) * 0.0015 * chaos;
+    h.y += Math.sin(T * 0.017 + ph * 1.3) * sp + state.rng.range(-1, 1) * 0.0015 * chaos;
+    // keep them within a sane window so growth stays on-screen.
+    const d = Math.hypot(h.x, h.y);
+    if (d > 0.42) {
+      h.x *= 0.42 / d;
+      h.y *= 0.42 / d;
+    }
+    // pulse the radius gently so hot regions breathe.
+    h.r = clamp(h.r + Math.sin(T * 0.03 + ph) * 0.0008, 0.06, 0.26);
   }
-
-  state.step++;
-
-  // periodic historical snapshot for depth layers (keep a small ring)
-  state.framesSinceSnapshot++;
-  if (state.framesSinceSnapshot >= 26 && nodes.length < state.nodeCap) {
-    state.framesSinceSnapshot = 0;
-    state.history.push({
-      nodes: nodes.map((nd) => ({ x: nd.x, y: nd.y })),
-      closed,
-    });
-    if (state.history.length > 2) state.history.shift();
+  // occasionally relocate one hotspot entirely for a fresh focus of buckling.
+  if (hs.length > 0 && state.rng.next() < 0.01 * (0.3 + chaos)) {
+    const h = hs[state.rng.int(0, hs.length - 1)];
+    const a = state.rng.range(0, TAU);
+    const rad = state.rng.range(0.05, 0.34);
+    h.x = Math.cos(a) * rad;
+    h.y = Math.sin(a) * rad;
+    h.r = state.rng.range(0.08, 0.2);
+    h.age = T;
   }
+}
 
-  if (nodes.length >= state.nodeCap) state.done = true;
+// Sudden impulse to a random contiguous span of nodes — a jolt that ripples out.
+function injectJolt(state: State, repulsionRadius: number, chaos: number): void {
+  const nodes = state.nodes;
+  const n = nodes.length;
+  const span = state.rng.int(3, Math.max(4, Math.round(n * 0.12)));
+  const start = state.rng.int(0, n - 1);
+  const ang = state.rng.range(0, TAU);
+  const mag = repulsionRadius * (1.5 + 4 * chaos) * (0.6 + 0.8 * state.rng.next());
+  const dx = Math.cos(ang) * mag;
+  const dy = Math.sin(ang) * mag;
+  for (let k = 0; k < span; k++) {
+    const idx = state.closed ? (start + k) % n : Math.min(n - 1, start + k);
+    // tapered so the jolt is strongest at the centre of the span (a bump).
+    const t = k / (span - 1 || 1);
+    const env = Math.sin(t * Math.PI);
+    nodes[idx].x += dx * env;
+    nodes[idx].y += dy * env;
+  }
+}
 
-  return state;
+// Cut a contiguous chunk out of the strand so it can re-grow and re-buckle.
+function pruneChunk(state: State, chaos: number): void {
+  const nodes = state.nodes;
+  const n = nodes.length;
+  // remove between ~12% and ~30% of the nodes, scaled up with chaos.
+  const frac = 0.12 + 0.18 * chaos;
+  const remove = clamp(Math.round(n * frac), 1, n - 40);
+  if (remove <= 0) return;
+  const start = state.rng.int(0, n - 1);
+  if (start + remove <= n) {
+    nodes.splice(start, remove);
+  } else {
+    // wrap: trim the tail then the head (closed loops stay continuous).
+    const tail = n - start;
+    nodes.splice(start, tail);
+    nodes.splice(0, remove - tail);
+  }
+}
+
+// Reset to a fresh small loop at a new rng spot — perpetual re-buckling.
+function reseed(state: State): void {
+  const split = clamp(num(state.params, "splitThreshold", 0.022), 0.004, 0.2);
+  const ox = state.rng.range(-0.22, 0.22);
+  const oy = state.rng.range(-0.22, 0.22);
+  const scale = state.rng.range(0.7, 1.4);
+  state.nodes = seedLoop(state.closed, split, state.rng, ox, oy, scale, state.step, state.hotspots);
+  state.history = [];
+}
+
+// Spawn an extra small loop spliced onto the strand so new buckling fronts open.
+function spawnLoop(state: State, splitThreshold: number): void {
+  const ox = state.rng.range(-0.26, 0.26);
+  const oy = state.rng.range(-0.26, 0.26);
+  const scale = state.rng.range(0.4, 0.9);
+  const extra = seedLoop(state.closed, splitThreshold, state.rng, ox, oy, scale, state.step, state.hotspots);
+  // splice the new loop in at a random point so it joins the existing strand.
+  const at = state.rng.int(0, state.nodes.length);
+  state.nodes.splice(at, 0, ...extra);
+  if (state.nodes.length > state.nodeCap) state.nodes.length = state.nodeCap;
 }
 
 function springToward(a: Node, b: Node, rest: number, k: number): void {
@@ -392,7 +627,21 @@ function render(state: State, surface: RenderSurface): void {
   const cy = h * 0.5;
 
   const p = state.params;
-  const palette = getPalette(str(p, "palette", "coral"));
+  const chaos = clamp(num(p, "chaos", 0.85), 0, 1);
+
+  // ── (colour churn) cross-fade between two cycling palettes over time ──
+  // We blend the user palette with the next system palette so the whole field
+  // drifts through hue families; chaos deepens how far it strays.
+  const userPal = getPalette(str(p, "palette", "coral"));
+  const churn = 0.35 + 0.55 * chaos;
+  const palA = blendPalettes(userPal, getPalette(PALETTE_IDS[state.paletteIndex]), churn);
+  const palB = blendPalettes(userPal, getPalette(PALETTE_IDS[(state.paletteIndex + 1) % PALETTE_IDS.length]), churn);
+  const palette = blendPalettes(palA, palB, state.paletteBlend);
+
+  // a slow time-varying offset added to every colour field lookup — the whole
+  // strand pulses through the ramp.
+  const colourOffset = 0.18 * Math.sin(state.tick * 0.05) * (0.5 + chaos);
+
   const strokeScale = num(p, "strokeScale", 1);
 
   // background — dark base tinted toward the low end of the palette.
@@ -444,8 +693,10 @@ function render(state: State, surface: RenderSurface): void {
       const curv = turnAngle(nodes[prevI], a, b);
 
       const ageT = clamp(a.age / maxAge, 0, 1); // 0 old … 1 just born
-      // colour field blends growth age with curvature so folds catch light.
-      const field = clamp(0.25 + 0.55 * ageT + 0.35 * (curv / Math.PI), 0, 1);
+      // colour field blends growth age + curvature with a travelling hue sweep
+      // along the strand and the global time offset → vivid, shifting colour.
+      const sweep = 0.32 * Math.sin((i / Math.max(1, last)) * TAU * (1.5 + 1.5 * chaos) - state.tick * 0.08);
+      const field = clamp(0.25 + 0.45 * ageT + 0.3 * (curv / Math.PI) + colourOffset + sweep, 0, 1);
       // width swells with curvature and youth, but stays bounded.
       const wWidth = baseW * (0.7 + 1.4 * (curv / Math.PI) + 0.5 * ageT);
 
@@ -489,8 +740,9 @@ function turnAngle(a: { x: number; y: number }, b: { x: number; y: number }, c: 
   return Math.acos(clamp(dot, -1, 1)); // 0 (straight) … π (reversal)
 }
 
-function isDone(state: State): boolean {
-  return state.done;
+function isDone(_state: State): boolean {
+  // The circus never closes. Always live → constant vivid motion.
+  return false;
 }
 
 export const differentialGrowth: GenerativeSystem<State> = {
