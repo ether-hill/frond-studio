@@ -13,9 +13,10 @@ export default function PageHeader({ title, intro, introSerif, compact }: Props)
         style={{
           fontFamily: "var(--font-display), sans-serif",
           fontWeight: 600,
-          fontSize: compact ? "clamp(39px,6.75vw,111px)" : "clamp(52px,9vw,148px)",
+          // matches the homepage hero h1 size
+          fontSize: compact ? "clamp(27px,4.95vw,86px)" : "clamp(36px,6.6vw,114px)",
           lineHeight: 0.92,
-          letterSpacing: "-0.035em",
+          letterSpacing: "-0.038em",
         }}
       >
         <span className="mask-line">
