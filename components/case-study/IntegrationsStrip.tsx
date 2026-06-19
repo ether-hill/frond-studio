@@ -1,22 +1,33 @@
 import { logoFor } from "./techLogos";
 
-function Chip({ name }: { name: string }) {
+function Cell({ name }: { name: string }) {
   const logo = logoFor(name);
   return (
-    <span className="tag" style={{ gap: 9 }}>
+    <div
+      style={{
+        background: "var(--bg-0)",
+        padding: "clamp(20px,2vw,30px)",
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        minHeight: 78,
+      }}
+    >
       {logo ? (
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style={{ flex: "0 0 auto", opacity: 0.92 }}>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true" style={{ flex: "0 0 auto", color: "var(--fg)" }}>
           <path d={logo.path} />
         </svg>
-      ) : null}
-      {name}
-    </span>
+      ) : (
+        <span style={{ width: 22, height: 22, flex: "0 0 auto" }} aria-hidden="true" />
+      )}
+      <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 500, letterSpacing: "0.06em", color: "var(--fg)", lineHeight: 1.3 }}>{name}</span>
+    </div>
   );
 }
 
 export default function IntegrationsStrip({ integrations }: { integrations: string[] }) {
   return (
-    <section data-rvs style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", padding: "clamp(28px,4vh,48px) 0" }}>
+    <section data-rvs>
       <h2
         style={{
           fontFamily: "var(--font-mono)",
@@ -25,14 +36,23 @@ export default function IntegrationsStrip({ integrations }: { integrations: stri
           letterSpacing: "0.18em",
           textTransform: "uppercase",
           color: "var(--fg-faint)",
-          marginBottom: "clamp(16px,2.2vh,24px)",
+          marginBottom: "clamp(20px,3vh,32px)",
         }}
       >
         Tech &amp; integrations
       </h2>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+      <div
+        className="cs-int-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          gap: 1,
+          background: "var(--line-2)",
+          border: "1px solid var(--line-2)",
+        }}
+      >
         {integrations.map((i) => (
-          <Chip key={i} name={i} />
+          <Cell key={i} name={i} />
         ))}
       </div>
     </section>

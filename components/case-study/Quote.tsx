@@ -2,7 +2,7 @@ import type { Project } from "@/content/projects/_types";
 
 export default function Quote({ quote }: { quote: NonNullable<Project["quote"]> }) {
   return (
-    <section data-rvs style={{ maxWidth: "22ch", marginInline: "auto", textAlign: "center" }}>
+    <section data-rvs style={{ maxWidth: "min(900px, 100%)", marginInline: "auto", textAlign: "center" }}>
       <blockquote style={{ margin: 0 }}>
         <p style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(26px,3.6vw,52px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.02em", color: "var(--fg)" }}>
           &ldquo;{quote.body}&rdquo;
