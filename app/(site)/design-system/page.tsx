@@ -67,7 +67,7 @@ function Section({ id, n, title, intro, children }: { id: string; n: string; tit
     <section id={id} data-rv style={{ borderTop: "1px solid var(--line)", paddingTop: "clamp(28px,4vh,48px)", marginTop: "clamp(52px,8vh,104px)" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 8 }}>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, color: "var(--fg-faint)" }}>{n}</span>
-        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(26px,3vw,44px)", fontWeight: 500, letterSpacing: "-0.015em" }}>{title}</h2>
+        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(20px,2.25vw,33px)", fontWeight: 500, letterSpacing: "-0.015em" }}>{title}</h2>
       </div>
       {intro ? <p style={{ maxWidth: "60ch", color: "var(--fg-dim)", fontSize: "clamp(15px,1.15vw,17px)", lineHeight: 1.6, marginBottom: "clamp(28px,4vh,40px)" }}>{intro}</p> : null}
       {children}
@@ -83,7 +83,7 @@ export default function DesignSystemPage() {
     <RevealRoot>
       <section className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}>
         <PageHeader
-          eyebrow="Reference · Living style guide"
+          compact
           title="Design System"
           intro="One source of truth for how the studio looks, moves and sounds. Everything on the site is wired to these tokens and classes. Change them here, change them everywhere."
           introSerif

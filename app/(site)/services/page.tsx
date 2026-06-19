@@ -4,7 +4,6 @@ import PageHeader from "@/components/PageHeader";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
 import MyceliumBg from "@/components/MyceliumBg";
 import Cta from "@/components/Cta";
-import { PILLARS } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "About · Frond Studio",
@@ -73,7 +72,6 @@ export default function AboutPage() {
           style={{ position: "relative", zIndex: 2, maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) clamp(64px,12vh,128px)" }}
         >
           <PageHeader
-            eyebrow="Frond Studio · our ethos"
             title="About"
             intro="We’re a small, transdisciplinary studio that works the way living systems do: across boundaries, in service of things that grow."
             introSerif
@@ -103,58 +101,6 @@ export default function AboutPage() {
             </div>
           </div>
         ))}
-      </section>
-
-      {/* What we do — disciplines */}
-      <section style={{ background: "var(--bg-1)", borderTop: "1px solid var(--line)" }}>
-        <div className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}>
-          <div data-rv style={{ display: "flex", flexWrap: "wrap", gap: 18, alignItems: "baseline", marginBottom: "clamp(36px,5vh,56px)" }}>
-            <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(30px,4vw,58px)", fontWeight: 500, letterSpacing: "-0.015em" }}>
-              What we do
-            </h2>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-dim)" }}>
-              Design · Development · Consulting
-            </span>
-          </div>
-
-          <div
-            data-stag
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 255px), 1fr))",
-              gap: "clamp(32px,4vw,60px)",
-            }}
-          >
-            {PILLARS.map((p) => (
-              <div key={p.num} style={{ borderTop: "1px solid var(--line)", paddingTop: 22 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 18 }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, color: "var(--fg-faint)" }}>
-                    {p.num}
-                  </span>
-                  <h3 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(24px,2.4vw,36px)", fontWeight: 500, letterSpacing: "-0.012em" }}>
-                    {p.title}
-                  </h3>
-                </div>
-                <p style={{ color: "var(--fg-dim)", fontSize: 15, lineHeight: 1.55, marginBottom: 24 }}>{p.desc}</p>
-                <ul>
-                  {p.items.map((it) => (
-                    <li
-                      key={it}
-                      style={{
-                        borderTop: "1px solid var(--line-2)",
-                        padding: "13px 0",
-                        fontSize: 15,
-                        color: "var(--fg-dim)",
-                      }}
-                    >
-                      {it}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* Capabilities — interactive node graph, full-bleed behind the copy */}

@@ -141,7 +141,6 @@ export default function SmaConfig() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="sma-root">
         <header className="sma-head">
-          <div className="sma-eyebrow">Studio · Jones agent model</div>
           <h1 className="sma-title">SMA Config</h1>
           <p className="sma-intro">
             An advanced real-time GPU studio for the Jones (2010) agent-based Physarum

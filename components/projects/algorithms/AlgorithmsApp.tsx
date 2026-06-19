@@ -53,17 +53,6 @@ export default function AlgorithmsApp() {
           }}
         >
           <div>
-            <div
-              style={{
-                fontFamily: "ui-monospace,'SF Mono',Menlo,monospace",
-                fontSize: 11,
-                letterSpacing: "var(--eyebrow-tracking)",
-                color: "var(--fg4)",
-                marginBottom: 18,
-              }}
-            >
-              THE TOOLBOX · 13 SYSTEMS
-            </div>
             <h1 style={{ margin: 0, fontWeight: 600, fontSize: "clamp(44px,7vw,108px)", lineHeight: 0.94, letterSpacing: "-0.035em" }}>
               Algorithms
             </h1>

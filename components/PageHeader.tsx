@@ -1,39 +1,19 @@
 type Props = {
-  eyebrow?: string;
   title: string;
   intro?: string;
   introSerif?: boolean;
+  /** 25%-smaller headline (used on the design-system reference page). */
+  compact?: boolean;
 };
 
-export default function PageHeader({ eyebrow, title, intro, introSerif }: Props) {
+export default function PageHeader({ title, intro, introSerif, compact }: Props) {
   return (
     <div>
-      {eyebrow ? (
-        <div
-          data-rv
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 13,
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            fontWeight: 500,
-            letterSpacing: "0.26em",
-            textTransform: "uppercase",
-            color: "var(--fg-dim)",
-            marginBottom: "clamp(20px,3vh,30px)",
-          }}
-        >
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)" }} />
-          {eyebrow}
-        </div>
-      ) : null}
-
       <h1
         style={{
           fontFamily: "var(--font-display), sans-serif",
           fontWeight: 600,
-          fontSize: "clamp(52px,9vw,148px)",
+          fontSize: compact ? "clamp(39px,6.75vw,111px)" : "clamp(52px,9vw,148px)",
           lineHeight: 0.92,
           letterSpacing: "-0.035em",
         }}
@@ -47,7 +27,7 @@ export default function PageHeader({ eyebrow, title, intro, introSerif }: Props)
         <p
           data-rv
           style={{
-            transitionDelay: "0.2s",
+            transitionDelay: "0.15s",
             maxWidth: introSerif ? "26ch" : 620,
             marginTop: "clamp(24px,3.5vh,42px)",
             fontFamily: introSerif ? "var(--font-display), sans-serif" : "var(--font-body), sans-serif",

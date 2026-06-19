@@ -19,9 +19,8 @@ export default function ProjectsPage() {
         style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}
       >
         <PageHeader
-          eyebrow="The lab"
           title="Projects"
-          intro="Our own experiments, tools and generative pieces — a growing directory of things we make outside client work, to keep things interesting."
+          intro="Our own experiments, tools and generative pieces: a growing directory of things we make outside client work, to keep things interesting."
         />
 
         <div
