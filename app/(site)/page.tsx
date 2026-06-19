@@ -78,7 +78,7 @@ export default async function Home() {
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 30, zIndex: 2 }}>
           <div style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter)" }}>
             <span className="scroll-cue">
-              <span className="scroll-cue-label">Scroll to explore</span>
+              <span className="scroll-cue-label">Scroll</span>
               <svg className="scroll-cue-arrow" width="20" height="26" viewBox="0 0 20 26" fill="none" aria-hidden="true">
                 <path d="M10 1v22M2 16l8 8 8-8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
