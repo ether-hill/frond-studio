@@ -121,7 +121,7 @@ export default function AboutPage() {
           </div>
           <div className="about-split-vis" aria-hidden>
             <div className="about-split-vis-inner">
-              <CapabilitiesGraph fit />
+              <CapabilitiesGraph fit scale={1.5} />
             </div>
           </div>
         </div>

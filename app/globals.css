@@ -397,7 +397,10 @@ button {
 .about-split-vis-inner {
   position: sticky;
   top: clamp(84px, 11vh, 128px);
-  height: min(90vh, 940px);
+  height: min(92vh, 980px);
+  /* bleed off the right viewport edge so the enlarged cluster has room to spill
+     rather than being cut at the column edge */
+  width: calc(100% + max(0px, (100vw - var(--maxw)) / 2) + var(--gutter));
 }
 
 .about-kicker {
