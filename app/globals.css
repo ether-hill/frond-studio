@@ -381,7 +381,7 @@ button {
   margin: 0 auto;
   padding: clamp(80px, 12vh, 170px) var(--gutter);
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
   gap: clamp(32px, 5vw, 110px);
   /* both columns stretch to the (tall) text column so the diagram can stay
      sticky across the whole scroll. */
@@ -397,7 +397,7 @@ button {
 .about-split-vis-inner {
   position: sticky;
   top: clamp(84px, 11vh, 128px);
-  height: min(76vh, 760px);
+  height: min(90vh, 940px);
 }
 
 .about-kicker {
@@ -423,12 +423,15 @@ button {
   line-height: 1.62;
   color: var(--fg-dim);
 }
-/* the mycelium buffer is square — cover the (wide) hero without stretching it */
-.myc-bg canvas { object-fit: cover; object-position: center; }
+/* square sim buffers — cover their (non-square) container instead of stretching */
+.myc-bg canvas,
+.cta-bg canvas { object-fit: cover; object-position: center; }
 @media (max-width: 860px) {
   .about-split { grid-template-columns: 1fr; gap: clamp(40px, 8vh, 80px); }
   .about-split-text > .ethos-point { max-width: 100%; margin-bottom: clamp(56px, 10vh, 110px); }
-  .about-split-vis-inner { position: static; height: clamp(360px, 60vh, 560px); }
+  /* tall, full-bleed band so the (larger, centred) cluster reads fully on phones */
+  .about-split-vis { margin: 0 calc(var(--gutter) * -1); }
+  .about-split-vis-inner { position: static; height: min(90vh, 760px); }
 }
 
 /* The cloud is a full-bleed layer that runs behind the copy and spills off the

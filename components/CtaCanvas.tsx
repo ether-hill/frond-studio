@@ -119,6 +119,7 @@ export default function CtaCanvas() {
     <div
       ref={hostRef}
       aria-hidden
+      className="cta-bg"
       style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "hidden", opacity: 0.6 }}
     />
   );
