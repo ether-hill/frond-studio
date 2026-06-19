@@ -213,16 +213,17 @@ button {
   right: 0;
   z-index: 60;
   transform: translateY(0);
-  /* Always-on frosted glass: a translucent tint + hairline edge so the bar reads
-     as a defined glass panel everywhere, and the backdrop blur shows through when
-     real (non-canvas) content scrolls under it. A fully transparent bar made the
-     blur imperceptible; over the homepage's WebGL hero the blur can't sample the
-     canvas layer, so the tint/edge is what makes the bar visible there. Light
-     theme overrides the background below. */
+  /* Always-on frosted glass: a light translucent tint + hairline edge + a real
+     backdrop blur. The tint is kept low so the blurred backdrop (hero canvas,
+     headline, sections scrolling under) reads through the glass instead of being
+     masked by an opaque bar. Write ONLY the standard `backdrop-filter` — letting
+     the build's CSS prefixer add `-webkit-` keeps BOTH the prefixed and unprefixed
+     property in the output (hand-writing the -webkit- line made the minifier drop
+     the standard one, so Firefox/non-WebKit lost the blur entirely). Light theme
+     overrides the background below. */
   border-bottom: 1px solid var(--line);
-  background: rgba(11, 10, 8, 0.5);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  background: rgba(11, 10, 8, 0.4);
+  backdrop-filter: blur(22px) saturate(1.4);
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
     background-color 0.5s ease, border-color 0.5s ease;
 }
@@ -230,10 +231,9 @@ button {
   transform: translateY(-115%);
 }
 .nav-bar[data-nav="solid"] {
-  background: var(--nav);
+  background: rgba(11, 10, 8, 0.55);
   border-bottom-color: var(--line);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(22px) saturate(1.4);
 }
 /* Light theme: the bar can float over the dark hero (homepage) where a
    transparent top state would hide the dark nav text, so keep it solid
@@ -245,7 +245,6 @@ button {
   background: var(--nav);
   border-bottom-color: var(--line);
   backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
 }
 .seg button[data-on="true"] {
   background: var(--fg);
@@ -833,7 +832,6 @@ button {
   background: rgba(10, 9, 7, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
   transition: border-color 0.25s ease, background-color 0.25s ease;
   /* Fade in with the sim, then bounce subtly every few seconds. The two
      animations target different properties (opacity vs transform) so they
@@ -920,7 +918,6 @@ button {
   border-radius: 999px;
   cursor: pointer;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 .ui-btn:hover { color: var(--fg); border-color: var(--accent); }
@@ -1345,7 +1342,6 @@ button {
   border: 1px solid rgba(255,255,255,0.6);
   background: rgba(10,10,8,0.4);
   backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   color: #fff;
   cursor: pointer;
   padding-left: 4px;
@@ -1576,7 +1572,6 @@ button {
   border: 1px solid rgba(255,255,255,0.4);
   background: rgba(8,8,8,0.5);
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   color: #fff;
   font-family: var(--font-mono);
   font-size: 11px;
