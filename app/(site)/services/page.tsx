@@ -109,7 +109,7 @@ export default function AboutPage() {
       {/* Full-bleed node cloud behind the copy — same convention, size and layering
           as the homepage Focus-areas section (cloud z0 · scrim z1 · copy z2). The
           cloud is sticky so it holds, viewport-sized, while the copy scrolls over it. */}
-      <section id="services" className="about-flow" style={{ position: "relative", overflow: "hidden", background: "var(--bg-1)" }}>
+      <section id="services" className="about-flow" style={{ position: "relative", background: "var(--bg-1)" }}>
         <div className="about-cloud">
           <div className="about-cloud-inner">
             <CapabilitiesGraph />
