@@ -8,47 +8,92 @@ import { useEffect, useRef } from "react";
  * mounts a lil-gui control panel + WebGL2 sim; we inject that scaffold + its CSS,
  * lazily import the engine (client-only — WebGL/AudioContext never hit SSR), and
  * tear it down (stop the RAF loop, suspend audio) on unmount.
+ *
+ * Layout follows the site system: a header + a margin-aligned grid (the square
+ * visual with RESTART / RANDOMISE overlaid on top, like the Algorithms heroes,
+ * and a sidebar with the controls + About panel). On narrow screens it stacks,
+ * visual first. The engine only reads element ids + the canvas rect, so the
+ * chrome can be re-laid-out freely as long as the ids survive.
  */
 const CSS = `
-.sma-root #stage { position: relative; min-height: calc(100vh - 0px); padding-top: 84px; display: grid; place-items: center; overflow: hidden; background: #000; }
-.sma-root #gl { aspect-ratio: 1 / 1; width: min(100vw, calc(100vh - 120px)); height: min(100vw, calc(100vh - 120px)); image-rendering: auto; touch-action: none; display: block; }
-.sma-root #insight { position: absolute; left: 12px; top: 96px; z-index: 9; width: 322px; max-width: calc(100vw - 24px); max-height: calc(100vh - 130px); overflow-y: auto; background: rgba(6,6,6,0.86); backdrop-filter: blur(9px); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 11px 13px; color: #c4c4c4; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
-.sma-root #paneltoggle { width: 100%; display: flex; justify-content: space-between; align-items: center; background: transparent; border: 0; color: #e6e6e6; cursor: pointer; font: 700 10px ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 0.2em; padding: 0 0 10px; }
+.sma-root { font-family: var(--font-body), 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+
+/* header — site margins */
+.sma-head { max-width: var(--maxw); margin: 0 auto; padding: var(--pad-top) var(--gutter) clamp(26px,4vw,44px); }
+.sma-eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--fg-faint); margin-bottom: 16px; }
+.sma-title { margin: 0; font-family: var(--font-display), sans-serif; font-weight: 600; font-size: clamp(44px,7vw,108px); line-height: 0.94; letter-spacing: -0.035em; }
+.sma-intro { margin: clamp(18px,2.5vh,28px) 0 0; max-width: 58ch; font-size: clamp(14px,1.6vw,17px); line-height: 1.6; color: var(--fg-dim); }
+
+/* layout — square visual + controls sidebar, within the gutter/maxw column */
+.sma-wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter) var(--pad-bottom); }
+.sma-grid { display: grid; grid-template-columns: minmax(0,1fr) 304px; gap: clamp(20px,2.4vw,40px); align-items: start; }
+
+/* the visual — a contained, square "screen" with the controls overlaid on top */
+.sma-visual { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: min(100%, calc(100svh - 180px)); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #000; touch-action: none; }
+.sma-root #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: auto; touch-action: none; }
+.sma-visual::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 88% 88% at 50% 50%, transparent 60%, rgba(0,0,0,0.45) 100%); }
+
+/* RESTART / RANDOMISE — over the visual, top-right (matches the Algorithms heroes) */
+.sma-root #topctl { position: absolute; top: 12px; right: 12px; z-index: 13; display: flex; gap: 8px; }
+.sma-root #topctl button { background: rgba(8,8,8,0.6); color: #ededed; border: 1px solid rgba(255,255,255,0.22); border-radius: 999px; padding: 8px 15px; font: 600 10px ui-monospace,'SF Mono',Menlo,monospace; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: border-color .2s ease, background-color .2s ease; }
+.sma-root #topctl button:hover { border-color: rgba(255,255,255,0.6); background: rgba(8,8,8,0.82); }
+
+/* preset picker — over the visual, top-left */
+.sma-root #presetbar { position: absolute; top: 12px; left: 12px; z-index: 11; display: flex; align-items: center; gap: 8px; background: rgba(8,8,8,0.6); border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; padding: 6px 12px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.sma-root #presetlabel { color: rgba(255,255,255,0.6); font: 700 9px ui-monospace,'SF Mono',Menlo,monospace; letter-spacing: 0.16em; }
+.sma-root #presetbar select { background: rgba(0,0,0,0.45); color: #fff; border: 1px solid rgba(255,255,255,0.24); border-radius: 999px; padding: 4px 9px; font: 11px ui-monospace, monospace; cursor: pointer; }
+.sma-root #algolabel, .sma-root #algorithm { display: none; }
+.sma-root #fps { position: absolute; left: 14px; bottom: 12px; z-index: 11; color: rgba(255,255,255,0.55); font: 11px ui-monospace, monospace; pointer-events: none; }
+.sma-root #fatal { position: absolute; inset: 0; display: none; place-items: center; padding: 2rem; color: #ff9b9b; text-align: center; line-height: 1.6; }
+
+/* sidebar — controls + About, in normal flow (themed, sticks while scrolling) */
+.sma-side { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 92px; }
+.sma-root #ctrltoggle { display: none; align-items: center; gap: 8px; align-self: flex-start; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-dim); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; cursor: pointer; transition: color .2s ease, border-color .2s ease; }
+.sma-root #ctrltoggle:hover { color: var(--fg); border-color: var(--accent); }
+.sma-root #guihost { width: 100%; }
+.sma-root #guihost .lil-gui { --background-color: rgba(8,8,8,0.92); --widget-color: #1c1c1c; --title-background-color: #0c0c0c; max-height: calc(100svh - 150px); overflow-y: auto; }
+.sma-root #guihost .lil-gui.root { width: 100% !important; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+
+/* About panel — themed, in flow (no longer floating over the canvas) */
+.sma-root #insight { background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; color: var(--fg-dim); }
+.sma-root #paneltoggle { width: 100%; display: flex; justify-content: space-between; align-items: center; background: transparent; border: 0; color: var(--fg); cursor: pointer; font: 700 10px var(--font-mono); letter-spacing: 0.18em; padding: 0; }
+.sma-root #paneltoggle .caret { color: var(--fg-dim); }
+.sma-root #panelbody { margin-top: 12px; }
 .sma-root #panelbody.hidden { display: none; }
 .sma-root #blurb { display: none; }
-.sma-root #algolabel, .sma-root #algorithm { display: none; }
-.sma-root #p3desc { color: #a6a6a6; font-size: 11px; line-height: 1.55; margin-top: 2px; }
-.sma-root #p3desc h4 { color: #d8d8d8; font: 700 9.5px ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 0.16em; text-transform: uppercase; margin: 15px 0 6px; }
+.sma-root #p3desc { color: var(--fg-dim); font-size: 12px; line-height: 1.6; }
+.sma-root #p3desc h4 { color: var(--fg); font: 700 9.5px var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; margin: 16px 0 7px; }
 .sma-root #p3desc p { margin: 0 0 9px; }
-.sma-root #p3desc ul { margin: 0 0 4px; padding-left: 15px; }
+.sma-root #p3desc ul { margin: 0 0 4px; padding-left: 16px; }
 .sma-root #p3desc li { margin: 0 0 7px; }
-.sma-root #p3desc b { color: #e4e4e4; font-weight: 600; }
-.sma-root #p3desc i { color: #d0d0d0; font-style: italic; }
-.sma-root #topctl { position: absolute; top: 94px; right: 14px; z-index: 13; display: flex; gap: 8px; }
-.sma-root #topctl button { background: rgba(6,6,6,0.82); color: #e8e8e8; border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; padding: 7px 13px; font: 600 10.5px ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 0.1em; cursor: pointer; backdrop-filter: blur(7px); }
-.sma-root #topctl button:hover { border-color: rgba(255,255,255,0.5); }
-.sma-root #presetbar { position: absolute; top: 132px; right: 14px; z-index: 11; display: flex; align-items: center; gap: 8px; background: rgba(6,6,6,0.82); border: 1px solid rgba(255,255,255,0.16); border-radius: 6px; padding: 6px 10px; backdrop-filter: blur(7px); }
-.sma-root #presetlabel { color: #8a8a8a; font: 700 9px ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 0.16em; }
-.sma-root #presetbar select { background: #111; color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; padding: 4px 7px; font: 11px ui-monospace, monospace; cursor: pointer; }
-.sma-root #guihost { position: absolute; top: 176px; right: 0; z-index: 9; }
-.sma-root #guihost .lil-gui { --background-color: rgba(6,6,6,0.86); --widget-color: #1c1c1c; --title-background-color: #0c0c0c; max-height: calc(100vh - 120px); overflow-y: auto; }
-.sma-root #guihost .lil-gui.root { backdrop-filter: blur(9px); border-left: 1px solid rgba(255,255,255,0.1); }
-.sma-root #fps { position: absolute; left: 16px; bottom: 14px; color: #5a5a5a; font: 11px ui-monospace, monospace; pointer-events: none; }
-.sma-root #fatal { position: absolute; inset: 0; display: none; place-items: center; padding: 2rem; color: #ff9b9b; text-align: center; line-height: 1.6; }
-@media (max-width: 820px) { .sma-root #insight { top: 94px; width: min(330px, calc(100vw - 24px)); max-height: calc(100vh - 170px); } .sma-root #guihost { top: 176px; } .sma-root #guihost .lil-gui.autoPlace { max-height: 66vh; --width: 248px; } }
+.sma-root #p3desc b { color: var(--fg); font-weight: 600; }
+.sma-root #p3desc i { color: var(--fg); font-style: italic; }
+
+/* mobile / tablet — stack, visual on top, controls below */
+@media (max-width: 860px) {
+  .sma-grid { grid-template-columns: 1fr; gap: 16px; }
+  .sma-visual { max-width: 100%; }
+  .sma-side { position: static; top: auto; }
+  .sma-root #ctrltoggle { display: inline-flex; }
+}
 `;
 
 const SCAFFOLD = `
-<section id="stage">
+<div class="sma-visual">
   <canvas id="gl"></canvas>
-  <div id="topctl"><button id="p3-restart">RESTART</button><button id="p3-rand">RANDOMISE</button></div>
   <div id="presetbar">
     <label id="algolabel">ALGORITHM</label>
     <select id="algorithm" aria-label="Algorithm"></select>
     <label id="presetlabel">PRESET</label>
     <select id="version" aria-label="Preset"></select>
   </div>
-  <button id="ctrltoggle" class="toggle" aria-label="Toggle controls">⚙ controls</button>
+  <div id="topctl"><button id="p3-restart">RESTART</button><button id="p3-rand">RANDOMISE</button></div>
+  <div id="fps"></div>
+  <div id="fatal"></div>
+</div>
+<aside class="sma-side">
+  <button id="ctrltoggle" class="toggle" aria-label="Toggle controls">⚙ Controls</button>
+  <div id="guihost"></div>
   <section id="insight" aria-label="About the Jones agent model">
     <button id="paneltoggle"><span>ABOUT · THE JONES MODEL</span><span class="caret">▾</span></button>
     <div id="panelbody">
@@ -70,10 +115,7 @@ const SCAFFOLD = `
       </div>
     </div>
   </section>
-  <div id="guihost"></div>
-  <div id="fps"></div>
-  <div id="fatal"></div>
-</section>
+</aside>
 `;
 
 export default function SmaConfig() {
@@ -97,7 +139,20 @@ export default function SmaConfig() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div ref={ref} id="root" className="sma-root" />
+      <div className="sma-root">
+        <header className="sma-head">
+          <div className="sma-eyebrow">Studio · Jones agent model</div>
+          <h1 className="sma-title">SMA Config</h1>
+          <p className="sma-intro">
+            An advanced real-time GPU studio for the Jones (2010) agent-based Physarum
+            slime-mould model. Sculpt sensing, deposition, diffusion and colour live —
+            RANDOMISE rolls a fresh configuration, RESTART reseeds the field.
+          </p>
+        </header>
+        <div className="sma-wrap">
+          <div ref={ref} id="root" className="sma-grid" />
+        </div>
+      </div>
     </>
   );
 }
