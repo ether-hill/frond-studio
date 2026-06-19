@@ -21,35 +21,63 @@ export function pickMime(): string {
 export class VideoRecorder {
   recording = false;
 
+  /**
+   * Records the live `source` canvas to a `width`×`height` video. The (square)
+   * source is cover-fit into a 2D output canvas each frame and that canvas is
+   * captured — far more reliable across browsers than streaming a WebGL canvas
+   * directly, and it lets the output be any size / aspect ratio.
+   */
   async record(
-    canvas: HTMLCanvasElement,
+    source: HTMLCanvasElement,
+    width: number,
+    height: number,
     fps: number,
     seconds: number,
     onTick?: (progress: number) => void,
   ): Promise<{ blob: Blob; ext: string }> {
     const mime = pickMime();
     const ext = mime.startsWith("video/mp4") ? "mp4" : "webm";
-    const stream = (canvas as any).captureStream(fps) as MediaStream;
+
+    const out = document.createElement("canvas");
+    out.width = Math.max(2, Math.round(width));
+    out.height = Math.max(2, Math.round(height));
+    const ctx = out.getContext("2d")!;
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, out.width, out.height);
+
+    // cover-fit the square source into the (possibly non-square) output
+    const draw = () => {
+      const sw = source.width || 1, sh = source.height || 1;
+      const scale = Math.max(out.width / sw, out.height / sh);
+      const dw = sw * scale, dh = sh * scale;
+      try { ctx.drawImage(source, (out.width - dw) / 2, (out.height - dh) / 2, dw, dh); } catch { /* not ready */ }
+    };
+
+    const stream = out.captureStream(fps);
     const chunks: Blob[] = [];
     const mr = new MediaRecorder(stream, {
       mimeType: mime || undefined,
       videoBitsPerSecond: 24_000_000,
     });
     mr.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
-
     const stopped = new Promise<Blob>((res) => {
       mr.onstop = () => res(new Blob(chunks, { type: mime || "video/webm" }));
     });
 
     this.recording = true;
+    draw();
     mr.start(100);
     const start = performance.now();
+    let raf = 0;
+    const loop = () => { draw(); raf = requestAnimationFrame(loop); };
+    raf = requestAnimationFrame(loop);
     await new Promise<void>((resolve) => {
       const iv = setInterval(() => {
         const t = (performance.now() - start) / 1000;
         onTick?.(Math.min(1, t / seconds));
         if (t >= seconds) {
           clearInterval(iv);
+          cancelAnimationFrame(raf);
           if (mr.state !== "inactive") mr.stop();
           resolve();
         }

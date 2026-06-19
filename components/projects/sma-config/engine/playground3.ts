@@ -267,9 +267,12 @@ document.body.appendChild(audioFileInput);
 // ---- video export ----
 const recorder = new VideoRecorder();
 const fExport = gui.addFolder("Export video");
-const exportState = { resolution: 1024, fps: "30", seconds: 8 };
-// Type any square size (px); rebuild once the value is committed, not mid-drag.
-fExport.add(exportState, "resolution", 128, 4096, 1).name("size (px)").onFinishChange((v: number) => rebuildEngine(Math.max(128, Math.min(4096, Math.round(v)))));
+const exportState = { width: 1024, height: 1024, fps: "30", seconds: 8 };
+// Type any width/height (px). The sim renders square at the larger edge and is
+// cover-fit into the chosen output size; rebuild once a value is committed.
+const syncSimRes = () => rebuildEngine(Math.max(128, Math.min(4096, Math.round(Math.max(exportState.width, exportState.height)))));
+fExport.add(exportState, "width", 128, 4096, 1).name("width (px)").onFinishChange(syncSimRes);
+fExport.add(exportState, "height", 128, 4096, 1).name("height (px)").onFinishChange(syncSimRes);
 fExport.add(exportState, "fps", ["24", "30", "60"]).name("frame rate");
 fExport.add(exportState, "seconds", 2, 60, 1).name("duration (s)");
 const recBtn = fExport.add({ rec: recordVideo }, "rec").name("● render video");
@@ -290,7 +293,7 @@ async function recordVideo() {
   engine.paused = false;
   engine.reset();
   try {
-    const { blob, ext } = await recorder.record(canvas, Number(exportState.fps), exportState.seconds, (p) =>
+    const { blob, ext } = await recorder.record(canvas, exportState.width, exportState.height, Number(exportState.fps), exportState.seconds, (p) =>
       recBtn.name(`● ${Math.round(p * 100)}%`));
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
