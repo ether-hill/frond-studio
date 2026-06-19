@@ -267,8 +267,9 @@ document.body.appendChild(audioFileInput);
 // ---- video export ----
 const recorder = new VideoRecorder();
 const fExport = gui.addFolder("Export video");
-const exportState = { resolution: "1024", fps: "30", seconds: 8 };
-fExport.add(exportState, "resolution", ["512", "1024", "2048"]).name("resolution").onChange((v: string) => rebuildEngine(Number(v)));
+const exportState = { resolution: 1024, fps: "30", seconds: 8 };
+// Type any square size (px); rebuild once the value is committed, not mid-drag.
+fExport.add(exportState, "resolution", 128, 4096, 1).name("size (px)").onFinishChange((v: number) => rebuildEngine(Math.max(128, Math.min(4096, Math.round(v)))));
 fExport.add(exportState, "fps", ["24", "30", "60"]).name("frame rate");
 fExport.add(exportState, "seconds", 2, 60, 1).name("duration (s)");
 const recBtn = fExport.add({ rec: recordVideo }, "rec").name("● render video");

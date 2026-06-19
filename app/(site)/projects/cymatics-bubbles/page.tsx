@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import VideoPlayer from "@/components/projects/symcyto/VideoPlayer";
+import Cta from "@/components/Cta";
 
 export const metadata: Metadata = {
   title: "Spherical Cymatics in High Performance Bubbles · Frond Studio",
@@ -93,38 +93,8 @@ export default function CymaticsBubblesPage() {
           </div>
         </article>
 
-        {/* Let's connect */}
-        <section
-          className="sym-section"
-          style={{ background: "#000", borderTop: "1px solid var(--line-2)", paddingBottom: "clamp(64px,10vh,120px)" }}
-        >
-          <div className="sym-wrap" style={{ textAlign: "center" }}>
-            <h2 className="sym-h2" data-rvs>
-              Let&apos;s connect
-            </h2>
-            <p className="sym-lead" data-rvs style={{ margin: "clamp(20px,3vh,32px) auto 0", maxWidth: "50ch" }}>
-              Cymatics, bubbles, sound made visible — Frond Studio explores where scientific research meets artistic expression.
-              Get in touch about the work or a collaboration.
-            </p>
-            <div
-              data-rvs
-              style={{ marginTop: "clamp(32px,5vh,48px)", display: "flex", flexWrap: "wrap", gap: "14px 18px", justifyContent: "center", alignItems: "center" }}
-            >
-              <Link href="/contact" className="sym-readbtn">
-                Message us
-              </Link>
-              <Link href="/services" className="sym-readbtn">
-                Our services
-              </Link>
-            </div>
-            <div style={{ marginTop: "clamp(40px,6vh,64px)" }}>
-              <Link className="linku" href="/projects" style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.04em", color: "var(--fg-dim)" }}>
-                ← All projects
-              </Link>
-            </div>
-          </div>
-        </section>
       </div>
+      <Cta />
     </RevealRoot>
   );
 }

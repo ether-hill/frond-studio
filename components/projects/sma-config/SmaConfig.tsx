@@ -28,9 +28,10 @@ const CSS = `
 .sma-wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter) var(--pad-bottom); }
 .sma-grid { display: grid; grid-template-columns: minmax(0,1fr) 304px; gap: clamp(20px,2.4vw,40px); align-items: start; }
 
-/* the visual — a contained, square "screen" with the controls overlaid on top */
-.sma-visual { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: min(100%, calc(100svh - 180px)); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #000; touch-action: none; }
-.sma-root #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: auto; touch-action: none; }
+/* the visual — expands to fill the available space (not a fixed square); the
+   square sim covers it without distortion via object-fit. Controls overlaid. */
+.sma-visual { position: relative; width: 100%; height: min(86vh, 1040px); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #000; touch-action: none; }
+.sma-root #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; image-rendering: auto; touch-action: none; }
 .sma-visual::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 88% 88% at 50% 50%, transparent 60%, rgba(0,0,0,0.45) 100%); }
 
 /* RESTART / RANDOMISE — over the visual, top-right (matches the Algorithms heroes) */
@@ -72,7 +73,7 @@ const CSS = `
 /* mobile / tablet — stack, visual on top, controls below */
 @media (max-width: 860px) {
   .sma-grid { grid-template-columns: 1fr; gap: 16px; }
-  .sma-visual { max-width: 100%; }
+  .sma-visual { height: min(72vh, 680px); }
   .sma-side { position: static; top: auto; }
   .sma-root #ctrltoggle { display: inline-flex; }
 }
