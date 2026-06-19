@@ -7,12 +7,15 @@ import AutoVideo from "@/components/AutoVideo";
 import MediaPlaceholder from "@/components/MediaPlaceholder";
 import Cta from "@/components/Cta";
 import { getProject, getProjectSlugs, getAdjacentProjects } from "@/sanity/lib/queries";
+import CaseStudy from "@/components/case-study/CaseStudy";
+import { getContentProject, contentProjectSlugs } from "@/content/projects";
 
 export const revalidate = 60;
 
 export async function generateStaticParams() {
   const slugs = await getProjectSlugs();
-  return slugs.map((slug) => ({ slug }));
+  // Content-file (rich case-study) projects + Sanity-backed ones, de-duplicated.
+  return [...new Set([...contentProjectSlugs, ...slugs])].map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -21,6 +24,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const content = getContentProject(slug);
+  if (content) {
+    return { title: `${content.title} — Frond Studio`, description: content.oneLiner };
+  }
   const project = await getProject(slug);
   if (!project) return { title: "Project — Frond Studio" };
   return {
@@ -54,6 +61,18 @@ export default async function ProjectCaseStudy({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  // Rich, content-file case study (the reusable template) takes precedence.
+  const content = getContentProject(slug);
+  if (content) {
+    return (
+      <RevealRoot>
+        <CaseStudy project={content} />
+        <Cta />
+      </RevealRoot>
+    );
+  }
+
   const project = await getProject(slug);
   if (!project) notFound();
 

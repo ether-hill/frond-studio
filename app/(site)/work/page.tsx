@@ -3,7 +3,8 @@ import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
 import CaseStudyRow from "@/components/CaseStudyRow";
 import Cta from "@/components/Cta";
-import { getProjects } from "@/sanity/lib/queries";
+import { getProjects, type ProjectCard } from "@/sanity/lib/queries";
+import { CONTENT_PROJECTS } from "@/content/projects";
 
 export const metadata: Metadata = {
   title: "Work — Frond Studio",
@@ -12,8 +13,26 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
+// Map a rich content-file project to the card shape the index row expects, so
+// flagship case studies sit in the same list as the Sanity-backed projects.
+const CONTENT_CARDS: ProjectCard[] = CONTENT_PROJECTS.map((p) => ({
+  _id: `content-${p.slug}`,
+  title: p.title,
+  subtitle: p.category ?? null,
+  slug: p.slug,
+  order: null,
+  year: p.year,
+  services: p.services,
+  summary: p.oneLiner,
+  keyPoints: p.after.points,
+  thumbnailVideo: p.heroVideo.src || null,
+  thumbnailImage: null,
+}));
+
 export default async function WorkPage() {
-  const projects = await getProjects();
+  const sanityProjects = await getProjects();
+  // Content-file flagships lead, then the Sanity-backed work.
+  const projects = [...CONTENT_CARDS, ...sanityProjects];
 
   return (
     <RevealRoot>

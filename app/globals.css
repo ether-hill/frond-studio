@@ -589,6 +589,33 @@ button {
   }
 }
 
+/* ── Case study (content-file template: components/case-study/*) ─────────────
+   Section layouts for the rich, reusable case study. Reveals reuse the shared
+   [data-rv]/[data-rvs] hooks; these rules own the responsive column geometry. */
+.cs-fullbleed {
+  /* Break out of the centered page gutter to the full viewport width. */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+.cs-feature[data-flip="true"] .cs-feature-media { order: 2; }
+.cs-feature[data-flip="true"] .cs-feature-text { order: 1; }
+@media (max-width: 900px) {
+  .cs-meta-grid { grid-template-columns: 1fr; }
+  .cs-meta-grid > div:first-child { position: static !important; }
+  .cs-before-after { grid-template-columns: 1fr; }
+  .cs-feature { grid-template-columns: 1fr; gap: 24px; }
+  .cs-feature .cs-feature-media,
+  .cs-feature[data-flip="true"] .cs-feature-media,
+  .cs-feature .cs-feature-text,
+  .cs-feature[data-flip="true"] .cs-feature-text { order: 0; }
+  .cs-devices { grid-template-columns: 1fr 1fr; align-items: start; }
+  .cs-metrics { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .cs-devices { grid-template-columns: 1fr; }
+  .cs-metrics { grid-template-columns: 1fr; }
+}
+
 /* ── Work index (list + cursor preview) ───────────── */
 .wi-row .wi-name {
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s ease;
