@@ -221,6 +221,10 @@ export class Physarum {
     gl.uniform1f(this.u(this.progUpdate, "uStepSize"), p.stepSize);
     gl.uniform1f(this.u(this.progUpdate, "uFrame"), Math.random() * 1000);
     gl.uniform1f(this.u(this.progUpdate, "uAvoid"), p.avoid);
+    // touch: a sense-only scent at the cursor (attracts agents, nothing visible)
+    gl.uniform2f(this.u(this.progUpdate, "uMouse"), this.mouseX, this.mouseY);
+    gl.uniform1f(this.u(this.progUpdate, "uMouseStr"), this.mouseActive && p.mouseFood > 0 ? p.mouseFood : 0);
+    gl.uniform1f(this.u(this.progUpdate, "uMouseRad"), Math.max(1, p.foodRadius));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     // --- Pass 2: deposit (agentsB -> trailA, additive) ---
@@ -237,12 +241,11 @@ export class Physarum {
     gl.uniform1f(this.u(this.progDeposit, "uDeposit"), p.deposit);
     gl.drawArrays(gl.POINTS, 0, w * w);
 
-    // --- Optional: food (cursor + audio spectrum), additive onto trailA ---
+    // --- Optional: food (audio spectrum), additive onto trailA. The cursor is no
+    // longer deposited here — it's a sense-only scent in the update pass, so it
+    // attracts the slime without drawing a visible orb. ---
     const food = this.foodBuf;
     let n = 0;
-    if (p.mouseFood > 0 && this.mouseActive && n < MAX_FOOD) {
-      food[n * 3] = this.mouseX; food[n * 3 + 1] = this.mouseY; food[n * 3 + 2] = p.mouseFood; n++;
-    }
     if (n > 0) {
       for (let k = n * 3; k < food.length; k++) food[k] = 0;
       gl.useProgram(this.progFood);

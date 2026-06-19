@@ -39,12 +39,21 @@ uniform float uTurnSpeed;   // radians
 uniform float uStepSize;    // px
 uniform float uFrame;
 uniform float uAvoid;       // cross-species repulsion 0..1
+uniform vec2  uMouse;       // cursor px (y-up): a sense-only scent, never deposited
+uniform float uMouseStr;    // attraction strength (0 = off)
+uniform float uMouseRad;    // px
 out vec4 outState;
 ${SPECIES_MASK}
 float senseAt(vec2 pos, vec3 mask) {
   // toroidal sampling keeps the world seamless
   vec3 t = texture(uTrail, fract(pos / uRes)).rgb;
-  return dot(t, mask) - uAvoid * dot(t, 1.0 - mask);
+  float s = dot(t, mask) - uAvoid * dot(t, 1.0 - mask);
+  // touch: agents steer toward the cursor without anything visible being drawn
+  if (uMouseStr > 0.0) {
+    float d = distance(pos, uMouse);
+    s += exp(-(d * d) / (2.0 * uMouseRad * uMouseRad)) * uMouseStr * 3.0;
+  }
+  return s;
 }
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
