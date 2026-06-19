@@ -721,7 +721,8 @@ button {
 }
 .hero-btn:hover { border-color: rgba(255, 255, 255, 0.7); background: rgba(10, 9, 7, 0.7); }
 .hero-btn svg { width: 17px; height: 17px; display: block; }
-.hero-btn.hero-btn-wide { padding: 0 20px; }
+.hero-btn.hero-btn-wide { padding: 0 20px; gap: 9px; }
+.hero-btn .hero-ring { width: 16px; height: 16px; flex: 0 0 auto; }
 .hero-btn.on { background: #fff; color: #0b0a08; border-color: #fff; }
 .hero-btn.voted { background: #fff; color: #0b0a08; border-color: #fff; transform: scale(1.08); }
 @media (prefers-reduced-motion: reduce) { .hero-ctl { animation: none; } }

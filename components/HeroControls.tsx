@@ -26,6 +26,17 @@ export default function HeroControls() {
   const rollRef = useRef<(() => void) | null>(null);
   const suspendRef = useRef<(() => void) | null>(null);
 
+  // Auto-remix countdown ring: a circle "fills" over AUTO_MS and, on each
+  // completion, fires a remix and restarts. The progress circle is driven by
+  // the Web Animations API so the visual and the trigger stay in lock-step.
+  const AUTO_MS = 11000;
+  const RING_R = 9;
+  const RING_C = 2 * Math.PI * RING_R;
+  const ringRef = useRef<SVGCircleElement>(null);
+  const animRef = useRef<Animation | null>(null);
+  const remixRef = useRef<() => void>(() => {});
+  const restartRef = useRef<() => void>(() => {});
+
   useEffect(() => {
     const onRender = (ev: Event) => {
       const d = (ev as CustomEvent).detail as Render | undefined;
@@ -49,6 +60,50 @@ export default function HeroControls() {
     window.dispatchEvent(new CustomEvent("hero-physarum-reseed"));
     if (soundOn) rollRef.current?.(); // a new random selection of the soundscape
   };
+  remixRef.current = remix; // keep the timer's callback bound to the latest soundOn
+
+  // A manual click remixes and resets the countdown so the next auto-remix is a
+  // full 11s away (no jarring near-instant re-trigger).
+  const onRemixClick = () => {
+    remix();
+    restartRef.current();
+  };
+
+  // Drive the ring + auto-remix loop. Disabled under reduced-motion; paused when
+  // the tab is hidden so the countdown matches what the visitor actually sees.
+  useEffect(() => {
+    const el = ringRef.current;
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!el || reduce) return;
+
+    const start = () => {
+      animRef.current?.cancel();
+      const a = el.animate(
+        [{ strokeDashoffset: RING_C }, { strokeDashoffset: 0 }],
+        { duration: AUTO_MS, easing: "linear" }
+      );
+      a.onfinish = () => {
+        remixRef.current();
+        start();
+      };
+      animRef.current = a;
+    };
+    restartRef.current = start;
+
+    const onVisibility = () => {
+      if (document.hidden) animRef.current?.pause();
+      else animRef.current?.play();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    start();
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      animRef.current?.cancel();
+    };
+  }, [AUTO_MS, RING_C]);
 
   const toggleSound = async () => {
     if (busy) return;
@@ -107,7 +162,21 @@ export default function HeroControls() {
     <div className="hero-ctl">
       <span className="hero-ctl-cap">Slime mold algorithm visualisation</span>
       <div className="hero-ctl-row" role="group" aria-label="Visualisation controls">
-        <button type="button" className="hero-btn hero-btn-wide" onClick={remix} aria-label="Remix the visualisation">
+        <button type="button" className="hero-btn hero-btn-wide" onClick={onRemixClick} aria-label="Remix the visualisation">
+          <svg className="hero-ring" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r={RING_R} stroke="currentColor" strokeWidth="2" opacity="0.28" />
+            <circle
+              ref={ringRef}
+              cx="12"
+              cy="12"
+              r={RING_R}
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              transform="rotate(-90 12 12)"
+              style={{ strokeDasharray: RING_C, strokeDashoffset: RING_C }}
+            />
+          </svg>
           Remix
         </button>
         <button
