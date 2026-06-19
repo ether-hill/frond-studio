@@ -213,13 +213,16 @@ button {
   right: 0;
   z-index: 60;
   transform: translateY(0);
-  border-bottom: 1px solid transparent;
-  /* Subtle translucent tint so the frosted-glass blur actually reads — a fully
-     transparent bar makes backdrop-filter imperceptible, and over the WebGL hero
-     the blur can't sample the canvas layer at all. Light theme overrides below. */
-  background: rgba(11, 10, 8, 0.45);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  /* Always-on frosted glass: a translucent tint + hairline edge so the bar reads
+     as a defined glass panel everywhere, and the backdrop blur shows through when
+     real (non-canvas) content scrolls under it. A fully transparent bar made the
+     blur imperceptible; over the homepage's WebGL hero the blur can't sample the
+     canvas layer, so the tint/edge is what makes the bar visible there. Light
+     theme overrides the background below. */
+  border-bottom: 1px solid var(--line);
+  background: rgba(11, 10, 8, 0.5);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
     background-color 0.5s ease, border-color 0.5s ease;
 }
