@@ -11,8 +11,12 @@ const MIME_CANDIDATES = [
   "video/webm",
 ];
 
-export function pickMime(): string {
-  for (const m of MIME_CANDIDATES) {
+export function pickMime(preferWebm = false): string {
+  // Large frames overrun the browser's H.264 (mp4) encoder level and silently
+  // produce a 0-byte file; VP9/VP8 (webm) handle big resolutions reliably, so
+  // prefer webm above ~1080p.
+  const list = preferWebm ? MIME_CANDIDATES.filter((m) => m.includes("webm")) : MIME_CANDIDATES;
+  for (const m of list) {
     if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m)) return m;
   }
   return "";
@@ -35,12 +39,16 @@ export class VideoRecorder {
     seconds: number,
     onTick?: (progress: number) => void,
   ): Promise<{ blob: Blob; ext: string }> {
-    const mime = pickMime();
+    // clamp to a size the browser encoders can actually handle (avoids 0-byte
+    // files at very large sizes) and pick a codec that suits the resolution.
+    const W = Math.max(2, Math.min(3840, Math.round(width)));
+    const H = Math.max(2, Math.min(3840, Math.round(height)));
+    const mime = pickMime(Math.max(W, H) > 1920);
     const ext = mime.startsWith("video/mp4") ? "mp4" : "webm";
 
     const out = document.createElement("canvas");
-    out.width = Math.max(2, Math.round(width));
-    out.height = Math.max(2, Math.round(height));
+    out.width = W;
+    out.height = H;
     const ctx = out.getContext("2d")!;
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, out.width, out.height);
@@ -55,11 +63,15 @@ export class VideoRecorder {
 
     const stream = out.captureStream(fps);
     const chunks: Blob[] = [];
+    // Scale the bitrate with the pixel count so bigger resolutions make bigger
+    // files (~0.12 bits/pixel/frame), clamped to a range encoders accept.
+    const bitrate = Math.min(60_000_000, Math.max(2_000_000, Math.round(W * H * fps * 0.12)));
     const mr = new MediaRecorder(stream, {
       mimeType: mime || undefined,
-      videoBitsPerSecond: 24_000_000,
+      videoBitsPerSecond: bitrate,
     });
     mr.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    mr.onerror = (e) => console.error("MediaRecorder error", e);
     const stopped = new Promise<Blob>((res) => {
       mr.onstop = () => res(new Blob(chunks, { type: mime || "video/webm" }));
     });
@@ -78,7 +90,7 @@ export class VideoRecorder {
         if (t >= seconds) {
           clearInterval(iv);
           cancelAnimationFrame(raf);
-          if (mr.state !== "inactive") mr.stop();
+          if (mr.state !== "inactive") { try { mr.requestData(); } catch { /* noop */ } mr.stop(); }
           resolve();
         }
       }, 100);

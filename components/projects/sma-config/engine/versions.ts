@@ -23,7 +23,7 @@ export const VERSIONS: Version[] = [
   {
     id: "v2",
     label: "v2 · Living Ink",
-    blurb: "Move your cursor over the canvas to drop food — the slime swarms toward it and draws with you.",
+    blurb: "Touch the canvas and the slime swarms toward your cursor, drawing with you.",
     params: mk({
       spawn: "random",
       mouseFood: 0.3,

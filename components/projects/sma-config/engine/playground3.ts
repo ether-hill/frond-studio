@@ -149,7 +149,7 @@ ctl.colB = fLook.addColor(params, "colB").name("species 3");
 ctl.intensity = fLook.add(params, "intensity", 0.2, 4, 0.05).name("intensity");
 ctl.gamma = fLook.add(params, "gamma", 0.3, 2.5, 0.05).name("gamma");
 
-const fFood = gui.addFolder("Food (cursor)");
+const fFood = gui.addFolder("Touch (cursor)");
 fFood.add(params, "mouseFood", 0, 1.5, 0.05).name("strength");
 fFood.add(params, "foodRadius", 8, 120, 1).name("radius");
 
@@ -270,7 +270,10 @@ const fExport = gui.addFolder("Export video");
 const exportState = { width: 1024, height: 1024, fps: "30", seconds: 8 };
 // Type any width/height (px). The sim renders square at the larger edge and is
 // cover-fit into the chosen output size; rebuild once a value is committed.
-const syncSimRes = () => rebuildEngine(Math.max(128, Math.min(4096, Math.round(Math.max(exportState.width, exportState.height)))));
+// cap the live sim at a GPU-safe resolution (a 4096² sim can lose the WebGL
+// context → a blank canvas → a 0-byte export); the output video can still be
+// larger, the recorder just upscales the cover-fit.
+const syncSimRes = () => rebuildEngine(Math.max(128, Math.min(2048, Math.round(Math.max(exportState.width, exportState.height)))));
 fExport.add(exportState, "width", 128, 4096, 1).name("width (px)").onFinishChange(syncSimRes);
 fExport.add(exportState, "height", 128, 4096, 1).name("height (px)").onFinishChange(syncSimRes);
 fExport.add(exportState, "fps", ["24", "30", "60"]).name("frame rate");
