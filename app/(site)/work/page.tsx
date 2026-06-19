@@ -23,7 +23,7 @@ export default async function WorkPage() {
           intro="Selected client work in design, development and art direction, for people who care how things are built."
         />
 
-        <div data-stag style={{ marginTop: "clamp(56px,8vh,104px)", display: "flex", flexDirection: "column", gap: "clamp(72px,11vh,140px)" }}>
+        <div style={{ marginTop: "clamp(56px,8vh,104px)", display: "flex", flexDirection: "column", gap: "clamp(72px,11vh,140px)" }}>
           {projects.map((p, i) => (
             <CaseStudyRow key={p._id} project={p} flip={i % 2 === 1} />
           ))}

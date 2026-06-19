@@ -14,10 +14,11 @@ export default function CaseStudyRow({
   const points = project.keyPoints || [];
   const scope = project.services || [];
 
-  // The row is revealed by its parent [data-stag] staggered tween on the Work
-  // page — deliberately no own [data-rvs] (double-targeting fought and flashed).
+  // Each row reveals on its own as it scrolls into view ([data-rvs] → fade+rise,
+  // scroll-triggered when below the fold). Not wrapped in a [data-stag] group, so
+  // there's no double-targeting (which previously fought and flashed).
   return (
-    <article className="cs-row" data-flip={flip ? "true" : "false"}>
+    <article className="cs-row" data-flip={flip ? "true" : "false"} data-rvs>
       {/* Media */}
       <Link className="cs-media vwork" href={href} aria-label={project.title}>
         <div
