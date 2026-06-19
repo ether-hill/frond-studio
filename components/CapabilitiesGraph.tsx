@@ -118,8 +118,9 @@ export default function CapabilitiesGraph() {
       const R = Math.min(W, H) * 0.64;
       // widen the cluster (it's ~spherical) to span / overflow a wide section
       const xStretch = Math.min(1.7, Math.max(1, (W / H) * 0.8));
-      // shifted right so it sits more to the right of the copy
-      const focal = 2.7, ox = W * 0.6, oy = H / 2;
+      // desktop: shifted right so it sits beside the left-hand copy. on narrow
+      // (stacked) layouts the copy is above, so centre the cluster instead.
+      const focal = 2.7, ox = W < 720 ? W * 0.5 : W * 0.6, oy = H / 2;
       for (let i = 0; i < n; i++) {
         const p = pos[i];
         const x1 = p.x * cY - p.z * sY, z1 = p.x * sY + p.z * cY;
@@ -164,12 +165,10 @@ export default function CapabilitiesGraph() {
         ctx.arc(p.sx, p.sy, Math.max(1.4, fs * 0.12), 0, Math.PI * 2);
         ctx.fill();
         ctx.font = FONT.replace("16px", `${fs.toFixed(1)}px`);
-        // labels grow inward near the right edge so they never clip off-canvas
-        const rightSide = p.sx > W * 0.62;
-        ctx.textAlign = rightSide ? "right" : "left";
-        ctx.fillText(nd.label, p.sx + (rightSide ? -1 : 1) * fs * 0.34, p.sy);
+        // labels always sit just to the right of their node point (no side-flip)
+        ctx.textAlign = "left";
+        ctx.fillText(nd.label, p.sx + fs * 0.34, p.sy);
       }
-      ctx.textAlign = "left";
     };
 
     const hitTest = (mx: number, my: number) => {

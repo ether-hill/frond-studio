@@ -102,7 +102,7 @@ export default async function Home() {
         </div>
         <div className="cap-scrim" aria-hidden />
         <div
-          className="page-gutter"
+          className="page-gutter cap-copy"
           style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)", pointerEvents: "none" }}
         >
           <div className="cap-text" data-stag style={{ maxWidth: "40ch", userSelect: "none" }}>
