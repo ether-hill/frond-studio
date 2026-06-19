@@ -215,6 +215,8 @@ button {
   transform: translateY(0);
   border-bottom: 1px solid transparent;
   background: transparent;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
     background-color 0.5s ease, border-color 0.5s ease;
 }
@@ -543,9 +545,12 @@ button {
 /* ── Case-study rows (Projects v2) ───────────────── */
 .cs-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: clamp(32px, 5vw, 84px);
   align-items: center;
+}
+.cs-row[data-flip="true"] {
+  grid-template-columns: 1fr 2fr;
 }
 .cs-row[data-flip="true"] .cs-media {
   order: 2;
