@@ -1,12 +1,12 @@
 import type { Project } from "./_types";
 
 // Source Library — a project Frond Studio consults on (we did not design or build
-// it). The page foregrounds the project, not our role: Frond appears as one line
-// in the intro and a short credit. Copy follows the strict writing rules (short,
-// plain, no marketing voice, no em-dashes, facts over hype). Live numbers move —
-// re-fetch from sourcelibrary.org before publishing. The podcast is unconfirmed
-// and is marked as a placeholder. Media slots are empty -> placeholder boxes
-// until assets land in /public/work/source-library/.
+// it). The page foregrounds the project, not our role. Copy follows the strict
+// writing rules (short, plain, no marketing voice, no em-dashes, facts over hype).
+// Media are real screengrabs of sourcelibrary.org, cropped to ratio and compressed,
+// in /public/work/source-library/. Two slots stay placeholders on purpose: "Open
+// to machines" has no clean public page to grab, and the podcast is unconfirmed.
+// Live numbers move — re-fetch before publishing.
 
 const project: Project = {
   slug: "source-library",
@@ -20,19 +20,18 @@ const project: Project = {
   liveUrl: "https://sourcelibrary.org",
 
   heroVideo: {
-    type: "video",
-    src: "",
-    poster: "",
-    alt: "Screen recording browsing the Source Library.",
-    ratio: "16:9",
-    label: "Source Library walkthrough",
-  },
-  homepageGrab: {
     type: "image",
-    src: "",
+    src: "/work/source-library/hero.jpg",
     alt: "The Source Library homepage.",
     ratio: "16:9",
     label: "sourcelibrary.org",
+  },
+  homepageGrab: {
+    type: "image",
+    src: "/work/source-library/collections.jpg",
+    alt: "Browsing the Source Library collections.",
+    ratio: "16:9",
+    label: "The collection",
   },
 
   intro: [
@@ -54,33 +53,34 @@ const project: Project = {
     {
       title: "AI translation, scholar-confirmed",
       note: "Custom AI translates. A community of scholars confirms it.",
-      clip: { type: "video", src: "", poster: "", alt: "AI translation with scholar review.", ratio: "16:9", label: "Translation" },
+      clip: { type: "image", src: "/work/source-library/translation.jpg", alt: "A translated source text.", ratio: "16:9", label: "A translated source" },
     },
     {
       title: "First-ever translations",
       note: "5,669 texts translated into English for the first time.",
-      clip: { type: "video", src: "", poster: "", alt: "First-ever translated texts.", ratio: "16:9", label: "First translations" },
+      clip: { type: "image", src: "/work/source-library/first-translations.jpg", alt: "On the first-ever translations.", ratio: "16:9", label: "First translations" },
     },
     {
       title: "The Librarian",
       note: "An AI assistant for navigating the collection.",
-      clip: { type: "video", src: "", poster: "", alt: "The Librarian AI assistant.", ratio: "16:9", label: "The Librarian" },
+      clip: { type: "image", src: "/work/source-library/librarian.jpg", alt: "The Librarian AI assistant.", ratio: "16:9", label: "The Librarian" },
     },
     {
       title: "The Gallery",
       note: "Every figure, map, and woodcut, extracted automatically.",
-      clip: { type: "video", src: "", poster: "", alt: "The Gallery of extracted illustrations.", ratio: "16:9", label: "The Gallery" },
+      clip: { type: "image", src: "/work/source-library/gallery.jpg", alt: "The Gallery of extracted illustrations.", ratio: "16:9", label: "The Gallery" },
     },
     {
       title: "Open to machines",
       note: "MCP server, CLI, and API for AI tools and researchers.",
-      clip: { type: "video", src: "", poster: "", alt: "MCP server, CLI, and API access.", ratio: "16:9", label: "Open to machines" },
+      // No clean public page to grab — left as a labelled placeholder.
+      clip: { type: "image", src: "", alt: "MCP server, CLI, and API access.", ratio: "16:9", label: "Open to machines" },
     },
     {
       // Podcast status unconfirmed — do not state it ships until confirmed.
       title: "Podcast",
       note: "[[ in development. Confirm launch before listing as live. ]]",
-      clip: { type: "video", src: "", poster: "", alt: "Podcast.", ratio: "16:9", label: "Podcast" },
+      clip: { type: "image", src: "", alt: "Podcast.", ratio: "16:9", label: "Podcast" },
     },
   ],
 

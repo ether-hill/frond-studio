@@ -26,8 +26,9 @@ const CONTENT_CARDS: ProjectCard[] = CONTENT_PROJECTS.map((p) => ({
   summary: p.oneLiner,
   // Prefer the "after" wins; otherwise lead with the feature titles.
   keyPoints: p.after?.points ?? (p.features ?? []).slice(0, 4).map((f) => f.title),
-  thumbnailVideo: p.heroVideo.src || null,
-  thumbnailImage: null,
+  // Hero is a screengrab image, not a video — surface it as the card thumbnail.
+  thumbnailVideo: null,
+  thumbnailImage: p.heroVideo.src || null,
 }));
 
 export default async function WorkPage() {

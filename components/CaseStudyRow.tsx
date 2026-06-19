@@ -27,6 +27,8 @@ export default function CaseStudyRow({
         >
           {project.thumbnailVideo ? (
             <AutoVideo src={project.thumbnailVideo} poster={`/posters/${project.slug}.jpg`} />
+          ) : project.thumbnailImage ? (
+            <img src={project.thumbnailImage} alt={`${project.title} preview`} loading="lazy" decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
             <MediaPlaceholder label={project.title} />
           )}

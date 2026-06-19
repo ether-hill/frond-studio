@@ -1,11 +1,11 @@
 import type { Project } from "./_types";
 
 // Embassy of the Free Mind — first instance of the reusable case-study template.
-// Unverifiable content (live URL, Lighthouse, counts, ticketing activations, the
-// client quote) is left as a clearly-marked [[ placeholder ]]. Media slots use an
-// empty `src` so each renders a labelled placeholder box until real assets land in
-// /public/work/embassy-of-the-free-mind/. The "Before" claims are inferred — review
-// before launch.
+// Media are real screengrabs of embassyofthefreemind.com (+ sourcelibrary.org for
+// the Source Library feature), cropped to ratio and compressed, in
+// /public/work/embassy-of-the-free-mind/. Unverifiable copy (live URL, the client
+// quote) stays a clearly-marked [[ placeholder ]]. The "Before" claims are
+// inferred — review before launch.
 
 const project: Project = {
   slug: "embassy-of-the-free-mind",
@@ -20,19 +20,18 @@ const project: Project = {
   liveUrl: undefined,
 
   heroVideo: {
-    type: "video",
-    src: "",
-    poster: "",
-    alt: "Screen recording scrolling through the Embassy of the Free Mind homepage.",
+    type: "image",
+    src: "/work/embassy-of-the-free-mind/hero.jpg",
+    alt: "The Embassy of the Free Mind homepage.",
     ratio: "16:9",
-    label: "Homepage scroll capture",
+    label: "Homepage",
   },
   homepageGrab: {
     type: "image",
-    src: "",
-    alt: "Embassy of the Free Mind homepage hero.",
+    src: "/work/embassy-of-the-free-mind/exhibitions.jpg",
+    alt: "The exhibitions page on the Embassy of the Free Mind site.",
     ratio: "16:9",
-    label: "Homepage hero",
+    label: "Exhibitions",
   },
 
   challenge:
@@ -62,39 +61,39 @@ const project: Project = {
     {
       title: "Editorial content model",
       note: "Exhibitions, news/press, the Codex Hermeticus newsletter, FAQs and partners — all editable in-house.",
-      clip: { type: "video", src: "", poster: "", alt: "Editing content in the CMS.", ratio: "16:9", label: "Content model" },
+      clip: { type: "image", src: "/work/embassy-of-the-free-mind/editorial.jpg", alt: "The news and articles section.", ratio: "16:9", label: "News & articles" },
     },
     {
       title: "Accessibility, WCAG AA",
       note: "Keyboard navigation, aria labelling and a full conformance audit — accessibility as a foundation, not an add-on.",
-      clip: { type: "video", src: "", poster: "", alt: "Keyboard navigation across the site.", ratio: "16:9", label: "Accessibility" },
+      clip: { type: "image", src: "/work/embassy-of-the-free-mind/accessibility.jpg", alt: "The accessibility statement page.", ratio: "16:9", label: "Accessibility statement" },
     },
     {
       title: "Dutch / English",
       note: "Complete localisation with no loss of layout or meaning across both languages.",
-      clip: { type: "video", src: "", poster: "", alt: "Switching between Dutch and English.", ratio: "16:9", label: "Localisation" },
+      clip: { type: "image", src: "/work/embassy-of-the-free-mind/localisation.jpg", alt: "Browsing the collection.", ratio: "16:9", label: "The collection" },
     },
     {
       title: "Ticketing & membership",
       note: "Ticket Tailor visits and Stripe-backed membership, live on-site — the institution runs from the page.",
-      clip: { type: "video", src: "", poster: "", alt: "Buying a ticket and joining as a member.", ratio: "16:9", label: "Commerce" },
+      clip: { type: "image", src: "/work/embassy-of-the-free-mind/ticketing.jpg", alt: "The membership page.", ratio: "16:9", label: "Membership" },
     },
     {
       title: "The Source Library",
       note: "The BPH catalogue surfaced via API, opening a rare library to the public. (Source Library deployment led by Derek.)",
-      clip: { type: "video", src: "", poster: "", alt: "Browsing the Source Library catalogue.", ratio: "16:9", label: "Source Library" },
+      clip: { type: "image", src: "/work/embassy-of-the-free-mind/source-library.jpg", alt: "The Source Library.", ratio: "16:9", label: "sourcelibrary.org" },
     },
     {
       title: "Custom interactions",
       note: "Navbar dropdowns, scroll lock, lazy load and video play/pause for smooth, considered browsing.",
-      clip: { type: "video", src: "", poster: "", alt: "Custom navigation and scroll interactions.", ratio: "16:9", label: "Interactions" },
+      clip: { type: "image", src: "/work/embassy-of-the-free-mind/interactions.jpg", alt: "The digital collection search.", ratio: "16:9", label: "Digital collection search" },
     },
   ],
 
   devices: {
-    mobile: { type: "image", src: "", alt: "The site on a phone.", ratio: "4:5", label: "Mobile" },
-    tablet: { type: "image", src: "", alt: "The site on a tablet.", ratio: "3:4", label: "Tablet" },
-    desktop: { type: "image", src: "", alt: "The site on a desktop.", ratio: "16:9", label: "Desktop" },
+    mobile: { type: "image", src: "/work/embassy-of-the-free-mind/device-mobile.jpg", alt: "The site on a phone.", ratio: "4:5", label: "Mobile" },
+    tablet: { type: "image", src: "/work/embassy-of-the-free-mind/device-tablet.jpg", alt: "The site on a tablet.", ratio: "3:4", label: "Tablet" },
+    desktop: { type: "image", src: "/work/embassy-of-the-free-mind/device-desktop.jpg", alt: "The site on a desktop.", ratio: "16:9", label: "Desktop" },
   },
 
   integrations: [
