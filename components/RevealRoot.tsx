@@ -100,6 +100,12 @@ export default function RevealRoot({ children }: { children: React.ReactNode }) 
           // Single elements: fade + rise.
           (["[data-rv]", "[data-rvs]"] as const).forEach((sel) => {
             gsap.utils.toArray<HTMLElement>(sel).forEach((el) => {
+              // Skip nodes already owned by a [data-stag] parent's staggered
+              // tween. Targeting the same element twice (stagger + individual)
+              // had two fromTo tweens fight over its opacity/transform — one
+              // immediate-rendering it back to hidden after the other showed
+              // it — which read as a flash/glitch on reveal.
+              if (el.parentElement?.hasAttribute("data-stag")) return;
               reveal(
                 el,
                 el,
