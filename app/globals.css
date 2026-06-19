@@ -422,6 +422,8 @@ button {
   gap: 10px;
   margin-top: clamp(30px, 4vh, 44px);
 }
+/* the mycelium buffer is square — cover the (wide) hero without stretching it */
+.myc-bg canvas { object-fit: cover; object-position: center; }
 @media (max-width: 760px) {
   .about-row { grid-template-columns: 1fr; gap: 14px; }
   .about-num { font-size: clamp(40px, 16vw, 64px); }

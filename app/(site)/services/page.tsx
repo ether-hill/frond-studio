@@ -3,22 +3,14 @@ import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
 import MyceliumBg from "@/components/MyceliumBg";
+import AboutMyceliumControls from "@/components/AboutMyceliumControls";
 import Cta from "@/components/Cta";
 
 export const metadata: Metadata = {
   title: "About · Frond Studio",
   description:
-    "A small, transdisciplinary studio working the way living systems do: across boundaries, with ethical AI, on projects that nourish people and the planet.",
+    "A growing, transdisciplinary studio working the way living systems do: across boundaries, with ethical AI, on projects that nourish people and the planet.",
 };
-
-const VALUES = [
-  "Transdisciplinary",
-  "Biophilic",
-  "Ethical AI",
-  "Nourishing, not extractive",
-  "Remote · worldwide",
-  "Independent",
-];
 
 const ETHOS = [
   {
@@ -51,10 +43,11 @@ export default function AboutPage() {
   return (
     <RevealRoot>
       {/* Header + manifesto — living mycelium grows behind it */}
-      <section data-theme="dark" style={{ position: "relative", overflow: "hidden", background: "var(--bg-0)", color: "var(--fg)" }}>
+      <section data-theme="dark" style={{ position: "relative", overflow: "hidden", minHeight: "min(86vh, 900px)", background: "var(--bg-0)", color: "var(--fg)" }}>
         <div style={{ position: "absolute", inset: 0, zIndex: 0, opacity: 0.85 }}>
           <MyceliumBg />
         </div>
+        <AboutMyceliumControls />
         {/* scrim: keep the copy legible over the living network */}
         <div
           aria-hidden
@@ -73,17 +66,9 @@ export default function AboutPage() {
         >
           <PageHeader
             title="About"
-            intro="We’re a small, transdisciplinary studio that works the way living systems do: across boundaries, in service of things that grow."
+            intro="We’re a growing, transdisciplinary studio that works the way living systems do: across boundaries, in service of things that grow."
             introSerif
           />
-
-          <div className="about-values" data-stag>
-            {VALUES.map((v) => (
-              <span key={v} className="tag" style={{ color: "var(--fg-dim)" }}>
-                {v}
-              </span>
-            ))}
-          </div>
         </div>
       </section>
 

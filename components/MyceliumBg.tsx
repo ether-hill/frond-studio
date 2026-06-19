@@ -82,6 +82,10 @@ export default function MyceliumBg() {
     const onVis = () => applyVisibility();
     document.addEventListener("visibilitychange", onVis);
 
+    // Remix / 👍 / 👎 from the controls grow a fresh network + palette.
+    const onReseed = () => mount(Math.floor(Math.random() * 1e9));
+    window.addEventListener("about-mycelium-reseed", onReseed);
+
     let resizeT = 0;
     const onResize = () => {
       window.clearTimeout(resizeT);
@@ -93,6 +97,7 @@ export default function MyceliumBg() {
       disposed = true;
       io?.disconnect();
       document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("about-mycelium-reseed", onReseed);
       window.clearTimeout(stillT);
       window.clearTimeout(resizeT);
       window.removeEventListener("resize", onResize);
@@ -108,6 +113,7 @@ export default function MyceliumBg() {
     <div
       ref={hostRef}
       aria-hidden
+      className="myc-bg"
       style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "hidden" }}
     />
   );
