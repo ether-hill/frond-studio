@@ -8,7 +8,7 @@
 // each voice's pattern. Kept separate from theremin.ts so the showcased full
 // instrument is never touched.
 
-import { mtof, noteName, ensureAudio, suspendAudio, MONO, reduceMotion, powerButton, segmented, injectCss } from "./shared";
+import { mtof, noteName, MONO, reduceMotion, powerButton, segmented, injectCss } from "./shared";
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const rnd = () => Math.random();
@@ -56,8 +56,7 @@ class MiniVoice {
 
   get ready(): boolean { return this.started; }
 
-  async start(): Promise<void> {
-    const ctx = await ensureAudio();
+  async start(ctx: AudioContext): Promise<void> {
     if (this.started) return;
     this.ctx = ctx;
 
@@ -224,8 +223,9 @@ export function mountMini(root: HTMLElement): () => void {
   injectCss(); // shared instrument control styles (.inst-power / .inst-seg / .inst-link …)
 
   const voices = Array.from({ length: NVOICES }, () => new MiniVoice());
-  let master: GainNode | null = null;
-  let powered = false;
+  let ctx: AudioContext | null = null;        // the mini's OWN context, isolated
+  let master: GainNode | null = null;         // from the hero biome's shared one,
+  let powered = false;                         // so muting either never affects the other
   let count = 1;
   const FOCUS = 0; // the field always plays voice A
 
@@ -233,17 +233,25 @@ export function mountMini(root: HTMLElement): () => void {
   const drv: Drv[] = Array.from({ length: NVOICES }, () => ({ mode: null, cur: { x: 0.5, vol: 0.5 }, target: { x: 0.5, vol: 0.5 }, nextChange: 0 }));
   let timer = 0;
 
+  // A dedicated AudioContext for this instrument — created on the first user
+  // gesture and resumed/suspended on its own, independent of the shared context
+  // the hero biome (and the full instruments) use.
+  async function localAudio(): Promise<AudioContext> {
+    if (!ctx) ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    if (ctx.state !== "running") { try { await ctx.resume(); } catch { /* gesture needed */ } }
+    return ctx;
+  }
   async function ensureChain(): Promise<void> {
+    const c = await localAudio();
     if (master) return;
-    const ctx = await ensureAudio();
-    const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -12; comp.ratio.value = 4; comp.connect(ctx.destination);
-    master = ctx.createGain(); master.gain.value = 0; master.connect(comp);
+    const comp = c.createDynamicsCompressor();
+    comp.threshold.value = -12; comp.ratio.value = 4; comp.connect(c.destination);
+    master = c.createGain(); master.gain.value = 0; master.connect(comp);
   }
   async function ensureVoice(i: number): Promise<void> {
     await ensureChain();
     const v = voices[i];
-    if (!v.ready) { await v.start(); v.connect(master!); v.setPan(PANS[i]); }
+    if (!v.ready) { await v.start(ctx!); v.connect(master!); v.setPan(PANS[i]); }
   }
   function setMaster(g: number): void {
     if (master) master.gain.setTargetAtTime(g, master.context.currentTime, 0.05);
@@ -351,7 +359,9 @@ export function mountMini(root: HTMLElement): () => void {
     powered = false; power.set(false); setMaster(0);
     for (let i = 0; i < NVOICES; i++) stopAuto(i);
     readout.textContent = "POWER ON OR HIT RANDOMISE";
-    setTimeout(() => { if (!powered) suspendAudio(); }, 240);
+    // Suspend only THIS instrument's context — never the shared one, so the hero
+    // biome keeps playing.
+    setTimeout(() => { if (!powered && ctx && ctx.state === "running") ctx.suspend().catch(() => {}); }, 240);
   }
   async function setCount(n: number): Promise<void> {
     count = clamp(n, 1, NVOICES); voicesSeg.set(String(count));
@@ -435,7 +445,9 @@ export function mountMini(root: HTMLElement): () => void {
     field.removeEventListener("pointercancel", onUp);
     field.removeEventListener("keydown", onKey);
     for (const v of voices) { try { v.gate(false); } catch { /* not started */ } }
-    suspendAudio();
+    // Close this instrument's own context to free resources; the shared context
+    // (hero biome) is untouched.
+    if (ctx) { ctx.close().catch(() => {}); ctx = null; }
     wrap.remove();
   };
 }
