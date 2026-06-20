@@ -24,13 +24,13 @@ const COLORS = [
 // Reads the live type tokens (globals.css :root) — this page renders each row AT
 // its token, so the showcase can never drift from what ships.
 const TYPE = [
-  { label: "Display", cls: "var(--text-display)", weight: 600, sample: "Natural selections" },
-  { label: "Headline", cls: "var(--text-headline)", weight: 500, sample: "We borrow the patterns of living systems." },
-  { label: "Title", cls: "var(--text-title)", weight: 500, sample: "Capabilities" },
-  { label: "Subtitle", cls: "var(--text-subtitle)", weight: 500, sample: "Theraminimal" },
-  { label: "Lead", cls: "var(--text-lead)", weight: 400, sample: "The interesting problems don’t fit inside one discipline." },
-  { label: "Body", cls: "var(--text-body)", weight: 400, sample: "We work across design, engineering, strategy and AI as a single craft." },
-  { label: "Caption", cls: "var(--text-caption)", weight: 400, sample: "Small print, fine details and meta." },
+  { label: "Display", cls: "var(--text-display)", size: "44 → 96px", role: "Page heroes", weight: 600, sample: "Natural selections" },
+  { label: "Headline", cls: "var(--text-headline)", size: "36 → 64px", role: "Big statements / CTA", weight: 500, sample: "We borrow the patterns of living systems." },
+  { label: "Title", cls: "var(--text-title)", size: "28 → 50px", role: "Section headings", weight: 500, sample: "Capabilities" },
+  { label: "Subtitle", cls: "var(--text-subtitle)", size: "22 → 34px", role: "Sub-headings, card titles", weight: 500, sample: "Theraminimal" },
+  { label: "Lead", cls: "var(--text-lead)", size: "19 → 24px", role: "Intro / lead paragraphs", weight: 400, sample: "The interesting problems don’t fit inside one discipline." },
+  { label: "Body", cls: "var(--text-body)", size: "16 → 17px", role: "Body copy", weight: 400, sample: "We work across design, engineering, strategy and AI as a single craft." },
+  { label: "Caption", cls: "var(--text-caption)", size: "13 → 14px", role: "Small print / meta", weight: 400, sample: "Small print, fine details and meta." },
 ];
 
 const TOKENS = [
@@ -150,7 +150,10 @@ export default function DesignSystemPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "clamp(20px,3vh,32px)" }}>
             {TYPE.map((t) => (
               <div key={t.label} style={{ borderTop: "1px solid var(--line-2)", paddingTop: 16 }}>
-                <div style={{ ...monoLabel, marginBottom: 12 }}>{t.label} · {t.cls}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, flexWrap: "wrap", marginBottom: 12 }}>
+                  <span style={monoLabel}>{t.label} — {t.role}</span>
+                  <span style={{ ...monoLabel, color: "var(--fg-faint)" }}>{t.cls} · {t.size}</span>
+                </div>
                 <div style={{ fontFamily: "var(--font-display), sans-serif", fontSize: t.cls, fontWeight: t.weight, lineHeight: 1.05, letterSpacing: "-0.02em" }}>
                   {t.sample}
                 </div>
