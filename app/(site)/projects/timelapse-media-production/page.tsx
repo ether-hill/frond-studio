@@ -37,7 +37,7 @@ export default function TimelapseMediaProductionPage() {
                 margin: "clamp(22px,3.5vh,40px) 0 0",
                 fontFamily: "var(--font-display), sans-serif",
                 fontWeight: 600,
-                fontSize: "clamp(40px,5.6vw,72px)",
+                fontSize: "var(--text-display)",
                 lineHeight: 1.0,
                 letterSpacing: "-0.03em",
                 color: "var(--fg)",

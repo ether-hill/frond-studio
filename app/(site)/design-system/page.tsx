@@ -24,13 +24,13 @@ const COLORS = [
 // Reads the live type tokens (globals.css :root) — this page renders each row AT
 // its token, so the showcase can never drift from what ships.
 const TYPE = [
-  { label: "Display / H1", cls: "var(--text-display)", weight: 600, sample: "Natural selections" },
-  { label: "Section / H2", cls: "var(--text-h2)", weight: 500, sample: "Capabilities" },
-  { label: "Statement", cls: "var(--text-statement)", weight: 500, sample: "We borrow the patterns of living systems." },
-  { label: "Sub-heading", cls: "var(--text-title)", weight: 500, sample: "Theraminimal" },
-  { label: "Card title", cls: "var(--text-card)", weight: 500, sample: "Algorithms V1" },
+  { label: "Display", cls: "var(--text-display)", weight: 600, sample: "Natural selections" },
+  { label: "Headline", cls: "var(--text-headline)", weight: 500, sample: "We borrow the patterns of living systems." },
+  { label: "Title", cls: "var(--text-title)", weight: 500, sample: "Capabilities" },
+  { label: "Subtitle", cls: "var(--text-subtitle)", weight: 500, sample: "Theraminimal" },
   { label: "Lead", cls: "var(--text-lead)", weight: 400, sample: "The interesting problems don’t fit inside one discipline." },
   { label: "Body", cls: "var(--text-body)", weight: 400, sample: "We work across design, engineering, strategy and AI as a single craft." },
+  { label: "Caption", cls: "var(--text-caption)", weight: 400, sample: "Small print, fine details and meta." },
 ];
 
 const TOKENS = [
@@ -71,9 +71,9 @@ function Section({ id, n, title, intro, children }: { id: string; n: string; tit
     <section id={id} data-rv style={{ borderTop: "1px solid var(--line)", paddingTop: "clamp(28px,4vh,48px)", marginTop: "clamp(52px,8vh,104px)" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 8 }}>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, color: "var(--fg-faint)" }}>{n}</span>
-        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(20px,2.25vw,33px)", fontWeight: 500, letterSpacing: "-0.015em" }}>{title}</h2>
+        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-subtitle)", fontWeight: 500, letterSpacing: "-0.015em" }}>{title}</h2>
       </div>
-      {intro ? <p style={{ maxWidth: "60ch", color: "var(--fg-dim)", fontSize: "clamp(15px,1.15vw,17px)", lineHeight: 1.6, marginBottom: "clamp(28px,4vh,40px)" }}>{intro}</p> : null}
+      {intro ? <p style={{ maxWidth: "60ch", color: "var(--fg-dim)", fontSize: "var(--text-body)", lineHeight: 1.6, marginBottom: "clamp(28px,4vh,40px)" }}>{intro}</p> : null}
       {children}
     </section>
   );

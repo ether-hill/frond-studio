@@ -33,10 +33,10 @@ export default function ContactForm() {
         >
           Message sent
         </div>
-        <h3 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(28px,3.4vw,44px)", fontWeight: 500, letterSpacing: "-0.018em", lineHeight: 1.05, marginBottom: 16 }}>
+        <h3 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-title)", fontWeight: 500, letterSpacing: "-0.018em", lineHeight: 1.05, marginBottom: 16 }}>
           Thanks — we&apos;ll be in touch.
         </h3>
-        <p style={{ color: "var(--fg-dim)", fontSize: 15, lineHeight: 1.55, maxWidth: "44ch" }}>
+        <p style={{ color: "var(--fg-dim)", fontSize: "var(--text-body)", lineHeight: 1.55, maxWidth: "44ch" }}>
           We usually reply within a day or two. In the meantime, take a look at our recent projects.
         </p>
       </div>

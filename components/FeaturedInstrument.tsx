@@ -43,7 +43,7 @@ export default function FeaturedInstrument() {
             marginBottom: "clamp(34px,5vh,58px)",
           }}
         >
-          <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-h2)", fontWeight: 500, letterSpacing: "-0.018em" }}>
+          <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-title)", fontWeight: 500, letterSpacing: "-0.018em" }}>
             Featured Instrument
           </h2>
           <Link href="/projects/instruments" className="pill pill-ghost">
@@ -80,7 +80,7 @@ export default function FeaturedInstrument() {
                 margin: 0,
                 fontFamily: "var(--font-display), sans-serif",
                 fontWeight: 500,
-                fontSize: "var(--text-title)",
+                fontSize: "var(--text-subtitle)",
                 lineHeight: 1.0,
                 letterSpacing: "-0.02em",
               }}

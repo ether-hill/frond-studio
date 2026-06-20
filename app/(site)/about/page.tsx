@@ -78,7 +78,7 @@ export default function AboutPage() {
             textShadow: "0 2px 44px rgba(0,0,0,0.62)",
           }}
         >
-          <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(36px,6.6vw,114px)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
+          <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
             <span className="hero-clip">
               <span className="hero-rise" style={{ animationDelay: "0.06s" }}>Studio as</span>
             </span>
@@ -88,7 +88,7 @@ export default function AboutPage() {
           </h1>
           <p
             className="hero-fade"
-            style={{ animationDelay: "0.26s", maxWidth: 620, marginTop: "clamp(22px,3vh,38px)", fontSize: "clamp(19px,1.7vw,27px)", lineHeight: 1.4, color: "var(--fg)" }}
+            style={{ animationDelay: "0.26s", maxWidth: 620, marginTop: "clamp(22px,3vh,38px)", fontSize: "var(--text-lead)", lineHeight: 1.4, color: "var(--fg)" }}
           >
             We work the way nature does: across disciplines, through connection, in every
             direction at once. Always seeking new methods, flavours and interpretations.

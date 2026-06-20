@@ -17,7 +17,7 @@ export default function ContactPage() {
         >
           {/* Left */}
           <div>
-            <h1 style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(52px,9vw,128px)", lineHeight: 0.92, letterSpacing: "-0.035em" }}>
+            <h1 style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 0.92, letterSpacing: "-0.035em" }}>
               <span className="mask-line">
                 <span style={{ transitionDelay: "0.05s" }}>Let&apos;s</span>
               </span>
@@ -26,7 +26,7 @@ export default function ContactPage() {
               </span>
             </h1>
 
-            <p data-rv style={{ transitionDelay: "0.2s", maxWidth: 460, marginTop: "clamp(22px,3vh,38px)", fontSize: "clamp(16px,1.35vw,19px)", lineHeight: 1.55, color: "var(--fg-dim)" }}>
+            <p data-rv style={{ transitionDelay: "0.2s", maxWidth: 460, marginTop: "clamp(22px,3vh,38px)", fontSize: "var(--text-lead)", lineHeight: 1.55, color: "var(--fg-dim)" }}>
               Fill out the form and we&apos;ll get back to you — we look forward to hearing about what you&apos;re building.
             </p>
           </div>

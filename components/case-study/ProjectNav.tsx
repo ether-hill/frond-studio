@@ -12,7 +12,7 @@ function NavLink({ link, dir }: { link: { slug: string; title: string }; dir: "p
       <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--fg-faint)" }}>
         {isNext ? "Next →" : "← Previous"}
       </span>
-      <span style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(20px,2vw,30px)", color: "var(--fg)" }}>{link.title}</span>
+      <span style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-subtitle)", color: "var(--fg)" }}>{link.title}</span>
     </Link>
   );
 }

@@ -28,7 +28,7 @@ export default function Hero({ project }: { project: Project }) {
         <span>{project.title}</span>
       </div>
 
-      <h1 style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(44px,7.4vw,120px)", lineHeight: 0.94, letterSpacing: "-0.035em", maxWidth: "18ch" }}>
+      <h1 style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 0.94, letterSpacing: "-0.035em", maxWidth: "18ch" }}>
         <span className="mask-line">
           <span>{project.title}</span>
         </span>
@@ -41,7 +41,7 @@ export default function Hero({ project }: { project: Project }) {
           maxWidth: 720,
           marginTop: "clamp(24px,3.5vh,42px)",
           fontFamily: "var(--font-display), sans-serif",
-          fontSize: "clamp(22px,2.4vw,34px)",
+          fontSize: "var(--text-subtitle)",
           fontWeight: 400,
           lineHeight: 1.2,
           letterSpacing: "-0.012em",

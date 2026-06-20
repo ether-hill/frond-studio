@@ -105,7 +105,7 @@ export default async function Home() {
           style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)", pointerEvents: "none" }}
         >
           <div className="cap-text" data-stag style={{ maxWidth: "40ch", userSelect: "none" }}>
-            <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-h2)", fontWeight: 400, letterSpacing: "-0.015em" }}>
+            <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-title)", fontWeight: 400, letterSpacing: "-0.015em" }}>
               Focus areas
             </h2>
             <p

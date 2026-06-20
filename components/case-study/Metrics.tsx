@@ -25,13 +25,13 @@ export default function Metrics({ metrics, index }: { metrics: Metric[]; index?:
       <div className="cs-metrics" style={{ display: "grid", gridTemplateColumns: `repeat(${metrics.length}, 1fr)`, gap: "clamp(28px,3vw,52px)" }}>
         {metrics.map((m, i) => (
           <div key={`${m.label}-${i}`} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(56px,6vw,104px)", fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 0.9, color: "var(--fg)" }}>
+            <div style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-display)", fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 0.9, color: "var(--fg)" }}>
               {m.value}
             </div>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg)", lineHeight: 1.4 }}>
               {m.label}
             </div>
-            {m.note ? <p style={{ fontSize: 15, lineHeight: 1.55, color: "var(--fg-dim)" }}>{m.note}</p> : null}
+            {m.note ? <p style={{ fontSize: "var(--text-body)", lineHeight: 1.55, color: "var(--fg-dim)" }}>{m.note}</p> : null}
           </div>
         ))}
       </div>

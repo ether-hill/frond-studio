@@ -38,7 +38,7 @@ function Eyebrow({ children, color = "var(--accent)" }: { children: React.ReactN
 }
 
 function Heading({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return <h2 style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "clamp(30px,4vw,56px)", lineHeight: 1.04, letterSpacing: "-0.025em", color: "var(--fg)", ...style }}>{children}</h2>;
+  return <h2 style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "var(--text-title)", lineHeight: 1.04, letterSpacing: "-0.025em", color: "var(--fg)", ...style }}>{children}</h2>;
 }
 
 function Frame({ media, url }: { media: EditorialMedia; url?: string }) {
@@ -50,7 +50,7 @@ function Frame({ media, url }: { media: EditorialMedia; url?: string }) {
   );
 }
 
-const bodyStyle: React.CSSProperties = { fontFamily: "var(--font-body), sans-serif", fontSize: "clamp(17px,1.5vw,21px)", lineHeight: 1.55, color: "var(--fg-dim)", maxWidth: "54ch" };
+const bodyStyle: React.CSSProperties = { fontFamily: "var(--font-body), sans-serif", fontSize: "var(--text-lead)", lineHeight: 1.55, color: "var(--fg-dim)", maxWidth: "54ch" };
 
 export default function EditorialCaseStudy({ project, moreWork = [] }: { project: EditorialProject; moreWork?: MoreWorkItem[] }) {
   const p = project;
@@ -64,10 +64,10 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
           <span style={{ color: "var(--fg-faint)" }}>/</span>
           <span>{p.title}</span>
         </div>
-        <h1 style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: "clamp(44px,7.4vw,120px)", lineHeight: 0.94, letterSpacing: "-0.035em", maxWidth: "18ch" }}>
+        <h1 style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 0.94, letterSpacing: "-0.035em", maxWidth: "18ch" }}>
           <span className="mask-line"><span>{p.title}</span></span>
         </h1>
-        <p data-rv style={{ transitionDelay: "0.2s", maxWidth: 720, marginTop: "clamp(24px,3.5vh,42px)", fontFamily: DISPLAY, fontSize: "clamp(22px,2.4vw,34px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.012em", color: "var(--fg)" }}>
+        <p data-rv style={{ transitionDelay: "0.2s", maxWidth: 720, marginTop: "clamp(24px,3.5vh,42px)", fontFamily: DISPLAY, fontSize: "var(--text-subtitle)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.012em", color: "var(--fg)" }}>
           {p.oneLiner}
         </p>
       </header>
@@ -87,18 +87,18 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
           {/* ── Intro: text left, meta right ──────────────── */}
           <section className="ecs-intro" data-rvs>
             <div style={{ display: "flex", flexDirection: "column", gap: "clamp(24px,3.5vh,40px)" }}>
-              <p style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "clamp(26px,3.1vw,46px)", lineHeight: 1.18, letterSpacing: "-0.022em", color: "var(--fg)" }}>{p.introLead}</p>
+              <p style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "var(--text-title)", lineHeight: 1.18, letterSpacing: "-0.022em", color: "var(--fg)" }}>{p.introLead}</p>
               <p style={bodyStyle}>{p.introBody}</p>
             </div>
             <div className="ecs-meta">
               <div>
                 <Eyebrow color="var(--fg-faint)">Client</Eyebrow>
-                <div style={{ marginTop: 12, fontSize: 17, color: "var(--fg)" }}>{p.client}</div>
+                <div style={{ marginTop: 12, fontSize: "var(--text-body)", color: "var(--fg)" }}>{p.client}</div>
               </div>
               <div>
                 <Eyebrow color="var(--fg-faint)">Services</Eyebrow>
                 <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 9 }}>
-                  {p.services.map((s) => (<div key={s} style={{ fontSize: 17, color: "var(--fg)" }}>{s}</div>))}
+                  {p.services.map((s) => (<div key={s} style={{ fontSize: "var(--text-body)", color: "var(--fg)" }}>{s}</div>))}
                 </div>
               </div>
               {p.liveUrl ? (
@@ -116,9 +116,9 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             <div className="ecs-grid ecs-stats" style={{ marginTop: "clamp(24px,3.5vh,40px)" }}>
               {p.stats.map((s) => (
                 <div key={s.label} className="ecs-cell">
-                  <div style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "clamp(46px,5vw,80px)", lineHeight: 0.9, letterSpacing: "-0.04em", color: "var(--fg)" }}>{s.value}</div>
+                  <div style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "var(--text-display)", lineHeight: 0.9, letterSpacing: "-0.04em", color: "var(--fg)" }}>{s.value}</div>
                   <div style={{ marginTop: 16, fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{s.label}</div>
-                  <div style={{ marginTop: 12, fontSize: 14, lineHeight: 1.5, color: "var(--fg-dim)" }}>{s.note}</div>
+                  <div style={{ marginTop: 12, fontSize: "var(--text-caption)", lineHeight: 1.5, color: "var(--fg-dim)" }}>{s.note}</div>
                 </div>
               ))}
             </div>
@@ -155,7 +155,7 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
         <Well media={p.band.media} />
         <div className="ecs-band-shade" />
         <div className="ecs-band-inner page-gutter" style={PAD}>
-          <p style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "clamp(32px,5vw,72px)", lineHeight: 1.02, letterSpacing: "-0.025em", color: "#f4efe6" }}>{p.band.text}</p>
+          <p style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "var(--text-display)", lineHeight: 1.02, letterSpacing: "-0.025em", color: "#f4efe6" }}>{p.band.text}</p>
         </div>
       </section>
 
@@ -192,7 +192,7 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
                 <div key={c.caption}>
                   <div className="ecs-circle"><Well media={c.media} /></div>
                   <div style={{ marginTop: 26, textAlign: "center", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{c.caption}</div>
-                  <p style={{ marginTop: 12, maxWidth: 420, marginInline: "auto", textAlign: "center", fontSize: 15, lineHeight: 1.55, color: "var(--fg-dim)" }}>{c.note}</p>
+                  <p style={{ marginTop: 12, maxWidth: 420, marginInline: "auto", textAlign: "center", fontSize: "var(--text-body)", lineHeight: 1.55, color: "var(--fg-dim)" }}>{c.note}</p>
                 </div>
               ))}
             </div>
@@ -202,7 +202,7 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
           <section data-rvs style={{ textAlign: "center" }}>
             <div style={{ maxWidth: 760, margin: "0 auto" }}>
               <Eyebrow>{p.pillars.eyebrow}</Eyebrow>
-              <Heading style={{ marginTop: 18, fontSize: "clamp(28px,3.6vw,50px)" }}>{p.pillars.heading}</Heading>
+              <Heading style={{ marginTop: 18, fontSize: "var(--text-title)" }}>{p.pillars.heading}</Heading>
               {p.pillars.body ? <p style={{ ...bodyStyle, maxWidth: 560, margin: "clamp(16px,2.2vh,26px) auto 0" }}>{p.pillars.body}</p> : null}
             </div>
             <div style={{ maxWidth: 1040, margin: "clamp(34px,5vh,60px) auto 0" }}>
@@ -210,7 +210,7 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             </div>
             <div style={{ marginTop: 24 }}>
               <div style={{ fontFamily: MONO, fontSize: 10, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{p.pillars.caption}</div>
-              <p style={{ marginTop: 12, maxWidth: 480, marginInline: "auto", fontSize: 14, lineHeight: 1.55, color: "var(--fg-dim)" }}>{p.pillars.note}</p>
+              <p style={{ marginTop: 12, maxWidth: 480, marginInline: "auto", fontSize: "var(--text-caption)", lineHeight: 1.55, color: "var(--fg-dim)" }}>{p.pillars.note}</p>
             </div>
           </section>
         </div>
@@ -223,7 +223,7 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
           <div className="ecs-quote-shade" />
           <div className="page-gutter ecs-quote-inner" style={{ maxWidth: 1100, margin: "0 auto", padding: "clamp(80px,14vh,170px) var(--gutter)", textAlign: "center" }}>
             <blockquote style={{ margin: 0 }}>
-              <p style={{ fontFamily: DISPLAY, fontSize: "clamp(26px,3.6vw,52px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.02em", color: "var(--fg)" }}>&ldquo;{p.quote.body}&rdquo;</p>
+              <p style={{ fontFamily: DISPLAY, fontSize: "var(--text-title)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.02em", color: "var(--fg)" }}>&ldquo;{p.quote.body}&rdquo;</p>
               <footer style={{ marginTop: "clamp(20px,3vh,30px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)" }}>{p.quote.author}</footer>
             </blockquote>
           </div>

@@ -28,7 +28,7 @@ export default function CymaticsBubblesPage() {
                 margin: "clamp(16px,2.6vh,26px) 0 0",
                 fontFamily: "var(--font-display), sans-serif",
                 fontWeight: 600,
-                fontSize: "clamp(34px,4.6vw,58px)",
+                fontSize: "var(--text-title)",
                 lineHeight: 1.04,
                 letterSpacing: "-0.03em",
                 color: "var(--fg)",

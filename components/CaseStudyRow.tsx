@@ -59,14 +59,14 @@ export default function CaseStudyRow({
           <Link
             className="cs-title"
             href={href}
-            style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(30px,3.4vw,52px)", fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1, display: "inline-block" }}
+            style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-title)", fontWeight: 500, letterSpacing: "-0.02em", lineHeight: 1, display: "inline-block" }}
           >
             {project.title}
           </Link>
         </h2>
 
         {project.summary ? (
-          <p style={{ color: "var(--fg-dim)", fontSize: "clamp(15px,1.2vw,17px)", lineHeight: 1.55, maxWidth: "46ch", marginBottom: "clamp(20px,3vh,28px)" }}>
+          <p style={{ color: "var(--fg-dim)", fontSize: "var(--text-body)", lineHeight: 1.55, maxWidth: "46ch", marginBottom: "clamp(20px,3vh,28px)" }}>
             {project.summary}
           </p>
         ) : null}
@@ -74,7 +74,7 @@ export default function CaseStudyRow({
         {points.length ? (
           <ul style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: "clamp(22px,3vh,30px)" }}>
             {points.map((pt) => (
-              <li key={pt} style={{ display: "flex", alignItems: "flex-start", gap: 12, fontSize: 15, color: "var(--fg)", lineHeight: 1.5 }}>
+              <li key={pt} style={{ display: "flex", alignItems: "flex-start", gap: 12, fontSize: "var(--text-body)", color: "var(--fg)", lineHeight: 1.5 }}>
                 <span
                   style={{
                     width: 6,

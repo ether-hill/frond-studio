@@ -58,7 +58,7 @@ export default function Footer() {
                 Studio
               </span>
             </div>
-            <p style={{ color: "var(--fg-dim)", fontSize: 19, lineHeight: 1.5, maxWidth: "34ch" }}>
+            <p style={{ color: "var(--fg-dim)", fontSize: "var(--text-lead)", lineHeight: 1.5, maxWidth: "34ch" }}>
               A transdisciplinary design &amp; technology studio working remotely worldwide.
             </p>
           </div>
@@ -78,7 +78,7 @@ export default function Footer() {
 
           <div>
             {label("News & updates")}
-            <p style={{ color: "var(--fg-dim)", fontSize: 15, lineHeight: 1.55, maxWidth: "30ch", marginBottom: 20 }}>
+            <p style={{ color: "var(--fg-dim)", fontSize: "var(--text-body)", lineHeight: 1.55, maxWidth: "30ch", marginBottom: 20 }}>
               Sign up for news and fun updates from the studio.
             </p>
             <NewsletterSignup />

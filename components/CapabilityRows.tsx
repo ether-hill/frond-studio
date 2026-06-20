@@ -25,14 +25,14 @@ export default function CapabilityRows() {
               className="cap-title"
               style={{
                 fontFamily: "var(--font-display), sans-serif",
-                fontSize: "clamp(22px,2.2vw,32px)",
+                fontSize: "var(--text-subtitle)",
                 fontWeight: 400,
                 letterSpacing: "-0.01em",
               }}
             >
               {c.title}
             </h4>
-            <p style={{ color: "var(--fg-dim)", marginTop: 9, maxWidth: "48ch", fontSize: 15, lineHeight: 1.5 }}>
+            <p style={{ color: "var(--fg-dim)", marginTop: 9, maxWidth: "48ch", fontSize: "var(--text-body)", lineHeight: 1.5 }}>
               {c.desc}
             </p>
           </div>

@@ -74,7 +74,7 @@ export default function SymcytoPage() {
                 margin: "clamp(28px,5vh,52px) 0 0",
                 fontFamily: "var(--font-display), sans-serif",
                 fontWeight: 600,
-                fontSize: "clamp(40px,5.4vw,68px)",
+                fontSize: "var(--text-headline)",
                 lineHeight: 1.0,
                 letterSpacing: "-0.03em",
                 color: "var(--fg)",
