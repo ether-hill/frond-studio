@@ -8,7 +8,7 @@
 // each voice's pattern. Kept separate from theremin.ts so the showcased full
 // instrument is never touched.
 
-import { mtof, noteName, MONO, reduceMotion, powerButton, segmented, injectCss } from "./shared";
+import { mtof, noteName, MONO, reduceMotion, powerButton, segmented, slider, injectCss } from "./shared";
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const rnd = () => Math.random();
@@ -227,6 +227,7 @@ export function mountMini(root: HTMLElement): () => void {
   let master: GainNode | null = null;         // from the hero biome's shared one,
   let powered = false;                         // so muting either never affects the other
   let count = 1;
+  let masterVol = 0.7;                          // master volume, driven by the slider
   const FOCUS = 0; // the field always plays voice A
 
   interface Drv { mode: AutoMode | null; cur: { x: number; vol: number }; target: { x: number; vol: number }; nextChange: number; }
@@ -308,6 +309,14 @@ export function mountMini(root: HTMLElement): () => void {
   });
   voicesSeg.el.style.flex = "0 0 auto";
 
+  // volume (shared slider / .inst-range) — master gain, default 70%
+  const volume = slider({
+    label: "VOLUME", min: 0, max: 1, step: 0.01, value: masterVol,
+    format: (v) => `${Math.round(v * 100)}%`,
+    onInput: (v) => { masterVol = v; if (powered) setMaster(v); },
+  });
+  volume.el.style.cssText += ";flex:1 1 130px;min-width:120px;max-width:190px";
+
   // randomise (shared .inst-link button)
   const random = document.createElement("button");
   random.type = "button"; random.className = "inst-link";
@@ -319,7 +328,7 @@ export function mountMini(root: HTMLElement): () => void {
   readout.style.cssText = `flex:1 1 auto;text-align:right;min-width:150px;font-family:${MONO};font-size:12px;letter-spacing:0.08em;color:var(--fg3);font-variant-numeric:tabular-nums`;
   readout.textContent = "TURN ON OR HIT RANDOM AUTO";
 
-  bar.append(power.el, voicesSeg.el, random, readout);
+  bar.append(power.el, voicesSeg.el, volume.el, random, readout);
 
   // the field
   const field = document.createElement("div");
@@ -351,7 +360,7 @@ export function mountMini(root: HTMLElement): () => void {
   // --- power / count / randomise ---
   async function powerOn(): Promise<void> {
     await ensureChain();
-    powered = true; power.set(true); setMaster(0.9);
+    powered = true; power.set(true); setMaster(masterVol);
     await startAuto(FOCUS, "drift");
     for (let i = 1; i < count; i++) await startAuto(i, AUTO_MODES[Math.floor(rnd() * AUTO_MODES.length)]);
   }
@@ -372,7 +381,7 @@ export function mountMini(root: HTMLElement): () => void {
     }
   }
   async function randomise(): Promise<void> {
-    if (!powered) { await ensureChain(); powered = true; power.set(true); setMaster(0.9); }
+    if (!powered) { await ensureChain(); powered = true; power.set(true); setMaster(masterVol); }
     count = 2 + Math.floor(rnd() * 3); voicesSeg.set(String(count)); // 2..4
     for (let i = 0; i < NVOICES; i++) {
       if (i >= count) { stopAuto(i); continue; }
@@ -392,7 +401,7 @@ export function mountMini(root: HTMLElement): () => void {
   }
   function powerUpSilent(): void {
     if (powered) return;
-    powered = true; power.set(true); setMaster(0.9);
+    powered = true; power.set(true); setMaster(masterVol);
   }
   async function begin(clientX: number, clientY: number): Promise<void> {
     await ensureVoice(FOCUS); powerUpSilent();
