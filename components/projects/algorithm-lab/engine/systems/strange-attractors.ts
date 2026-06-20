@@ -38,7 +38,7 @@ const schema: ParamSchema = {
     type: "int",
     min: 50_000,
     max: 500_000,
-    default: 200_000,
+    default: 120_000,
     label: "Iterations / frame",
   },
   totalIterations: {

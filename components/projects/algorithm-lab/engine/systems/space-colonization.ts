@@ -113,7 +113,7 @@ const schema: ParamSchema = {
   influenceRadius: { type: "number", min: 0.04, max: 0.4, step: 0.005, default: 0.16, label: "Influence radius" },
   killRadius: { type: "number", min: 0.005, max: 0.08, step: 0.001, default: 0.02, label: "Kill radius" },
   stepLength: { type: "number", min: 0.004, max: 0.03, step: 0.001, default: 0.009, label: "Step length" },
-  maxNodes: { type: "int", min: 500, max: 9000, default: 6000, label: "Max nodes" },
+  maxNodes: { type: "int", min: 500, max: 9000, default: 3600, label: "Max nodes" },
   thicknessModel: { type: "select", options: ["subtree", "order"], default: "subtree", label: "Thickness" },
   rootCount: { type: "int", min: 1, max: 3, default: 1, label: "Roots" },
   strokeScale: { type: "number", min: 0.2, max: 4, step: 0.05, default: 1.2, hot: true, label: "Stroke scale" },

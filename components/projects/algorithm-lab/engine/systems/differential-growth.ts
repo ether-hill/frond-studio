@@ -77,7 +77,7 @@ const schema: ParamSchema = {
   splitThreshold: { type: "number", min: 0.01, max: 0.06, step: 0.001, default: 0.022, label: "Max edge length" },
   jitter: { type: "number", min: 0, max: 0.004, step: 0.0001, default: 0.0008, label: "Jitter" },
 
-  nodeCap: { type: "int", min: 200, max: 6000, default: 3200, label: "Node cap" },
+  nodeCap: { type: "int", min: 200, max: 6000, default: 2200, label: "Node cap" },
   growthBias: { type: "select", options: ["uniform", "hotspots"], default: "uniform", label: "Growth bias" },
   closed: { type: "bool", default: true, label: "Closed loop" },
 

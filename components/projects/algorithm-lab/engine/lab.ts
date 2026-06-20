@@ -10,48 +10,17 @@ import { recordWebM } from "./harness/video";
 import { SYSTEMS } from "./systems";
 
 /**
- * Mount the Algorithm Lab shell into `root`. Returns a teardown. Ported from the
- * standalone Vite `main.ts` so the framework-agnostic cores run inside the
- * Next.js site (the whole shell scopes under the `.alab` class the host adds).
+ * Wire the engine to a scaffold (provided by AlgorithmLab.tsx) read by id:
+ * #alab-stage (visual host), #alab-algo (algorithm dropdown), #alab-panel
+ * (Tweakpane host), #alab-fps, transport/capture buttons. Returns a teardown.
  */
 export function mountLab(root: HTMLElement): () => void {
-  root.classList.add("alab");
-  root.innerHTML = `
-    <aside class="alab-side">
-      <h1>Algorithm Lab <span>· Wave 2</span></h1>
-      <nav class="alab-systems" id="alab-systems"></nav>
-      <div class="alab-block">
-        <div class="alab-row alab-transport">
-          <button id="alab-play">▶ play</button>
-          <button id="alab-step">step</button>
-          <button id="alab-reset">reset</button>
-        </div>
-        <div class="alab-row"><button id="alab-cine">⛶ cinematic / full-bleed</button></div>
-        <div class="alab-hud" id="alab-hud">—</div>
-      </div>
-      <div class="alab-block" id="alab-panel"></div>
-      <div class="alab-block">
-        <div class="alab-lbl">Export</div>
-        <div class="alab-row"><button id="alab-png">PNG</button><button data-x="2">2×</button><button data-x="4">4×</button><button data-x="8">8×</button></div>
-        <div class="alab-row"><button id="alab-rec">● record webm</button><select id="alab-recsec" class="alab-sel"><option value="5">5s</option><option value="10" selected>10s</option><option value="20">20s</option><option value="30">30s</option></select></div>
-        <div class="alab-row"><button id="alab-copy">copy params JSON</button></div>
-      </div>
-      <div class="alab-block">
-        <div class="alab-lbl">Presets (keepers)</div>
-        <div class="alab-row"><button id="alab-save">★ save current</button></div>
-        <div class="alab-presets" id="alab-presets"></div>
-      </div>
-    </aside>
-    <main class="alab-stage" id="alab-stage">
-      <button class="alab-cine-exit" id="alab-cine-exit">✕ controls</button>
-    </main>
-  `;
-
-  const systemsNav = root.querySelector("#alab-systems") as HTMLElement;
   const stage = root.querySelector("#alab-stage") as HTMLElement;
+  const algoSel = root.querySelector("#alab-algo") as HTMLSelectElement;
   const panelEl = root.querySelector("#alab-panel") as HTMLElement;
-  const hud = root.querySelector("#alab-hud") as HTMLElement;
+  const fpsEl = root.querySelector("#alab-fps") as HTMLElement;
   const presetsEl = root.querySelector("#alab-presets") as HTMLElement;
+  const playBtn = root.querySelector("#alab-play") as HTMLButtonElement;
 
   let active: GenerativeSystem | null = null;
   let params: Params = {};
@@ -65,7 +34,7 @@ export function mountLab(root: HTMLElement): () => void {
 
   function dims() {
     const r = stage.getBoundingClientRect();
-    return { w: Math.max(2, Math.floor(r.width)), h: Math.max(2, Math.floor(r.height)), dpr: Math.min(2, window.devicePixelRatio || 1) };
+    return { w: Math.max(2, Math.floor(r.width)), h: Math.max(2, Math.floor(r.height)), dpr: Math.min(1.5, window.devicePixelRatio || 1) };
   }
 
   function selectSystem(sys: GenerativeSystem): void {
@@ -76,23 +45,21 @@ export function mountLab(root: HTMLElement): () => void {
     if (surface) disposeSurface(surface);
     canvas?.remove();
     canvas = document.createElement("canvas");
-    canvas.className = "alab-view";
-    stage.appendChild(canvas);
+    stage.appendChild(canvas); // overlay chips keep their z-index above it
 
     surface = createSurface(canvas, sys.tier);
     const { w, h, dpr } = dims();
     resizeSurface(surface, w, h, dpr);
 
     loop = createLoop(surface, makeRng, (info) => {
-      hud.textContent = `frame ${info.frame} · ${info.fps} fps · ${info.playing ? "playing" : "paused"}`;
-      (root.querySelector("#alab-play") as HTMLButtonElement).textContent = info.playing ? "❚❚ pause" : "▶ play";
+      fpsEl.textContent = `${info.fps} fps · ${sys.tier}`;
+      playBtn.textContent = info.playing ? "❚❚ pause" : "▶ play";
     });
 
     panel?.dispose();
     panelEl.innerHTML = "";
     const schemaWithSeed = { seed: { type: "seed", default: seed } as const, ...sys.schema };
-    const paramsWithSeed: Params = { seed, ...params };
-    params = paramsWithSeed;
+    params = { seed, ...params };
     panel = buildPanel(panelEl, schemaWithSeed, params, {
       randomSeed: randomSeedString,
       onSeed: (s) => { seed = s; loop?.setSeed(s); loop?.reset(); },
@@ -100,6 +67,7 @@ export function mountLab(root: HTMLElement): () => void {
     });
 
     loop.load(sys, params, seed);
+    if (algoSel.value !== sys.id) algoSel.value = sys.id;
 
     ro = new ResizeObserver(() => {
       window.clearTimeout(resizeT);
@@ -111,22 +79,45 @@ export function mountLab(root: HTMLElement): () => void {
       }, 120) as unknown as number;
     });
     ro.observe(stage);
-
-    systemsNav.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.id === sys.id));
   }
 
+  // populate the dropdown (replaces the old left menu)
   for (const sys of SYSTEMS) {
-    const b = document.createElement("button");
-    b.dataset.id = sys.id;
-    b.innerHTML = `<span class="t">${sys.title}</span><span class="b">${sys.blurb}</span><span class="tier">${sys.tier}</span>`;
-    b.addEventListener("click", () => selectSystem(sys));
-    systemsNav.appendChild(b);
+    const o = document.createElement("option");
+    o.value = sys.id;
+    o.textContent = `${sys.title} — ${sys.blurb}`;
+    algoSel.appendChild(o);
   }
+  algoSel.addEventListener("change", () => {
+    const sys = SYSTEMS.find((s) => s.id === algoSel.value);
+    if (sys) selectSystem(sys);
+  });
 
-  root.querySelector("#alab-play")!.addEventListener("click", () => loop?.toggle());
-  root.querySelector("#alab-step")!.addEventListener("click", () => loop?.stepOnce());
+  // transport
+  playBtn.addEventListener("click", () => loop?.toggle());
   root.querySelector("#alab-reset")!.addEventListener("click", () => loop?.reset());
 
+  // cinematic / full-bleed (covers the nav for a true background preview)
+  const setCine = (on: boolean) => root.classList.toggle("alab-cinematic", on);
+  root.querySelector("#alab-cine")!.addEventListener("click", () => setCine(!root.classList.contains("alab-cinematic")));
+  root.querySelector("#alab-cine-exit")!.addEventListener("click", () => setCine(false));
+
+  // record the live canvas to a WebM background loop
+  root.querySelector("#alab-rec")!.addEventListener("click", async () => {
+    if (!canvas) return;
+    const btn = root.querySelector("#alab-rec") as HTMLButtonElement;
+    const sel = root.querySelector("#alab-recsec") as HTMLSelectElement;
+    const secs = Number(sel.value) || 10;
+    btn.disabled = true;
+    try {
+      const blob = await recordWebM(canvas, secs, 60, (p) => { btn.textContent = `● rec ${Math.round(p * 100)}%`; });
+      download(blob, `${active?.id ?? "lab"}-${seed}-${secs}s.webm`);
+    } catch (err) { console.error("recording failed", err); }
+    btn.textContent = "● record webm";
+    btn.disabled = false;
+  });
+
+  // export
   root.querySelector("#alab-png")!.addEventListener("click", async () => {
     if (!surface || !active) return;
     download(await exportCurrentPng(surface), `${active.id}-${seed}.png`);
@@ -143,29 +134,7 @@ export function mountLab(root: HTMLElement): () => void {
   });
   root.querySelector("#alab-copy")!.addEventListener("click", () => { if (active) copyParamsJson(active.id, seed, params); });
 
-  // cinematic / full-bleed: hide the chrome so a system can be used or recorded
-  // as a motion-graphic background. Esc or the floating chip restores controls.
-  const setCine = (on: boolean) => root.classList.toggle("alab-cinematic", on);
-  root.querySelector("#alab-cine")!.addEventListener("click", () => setCine(!root.classList.contains("alab-cinematic")));
-  root.querySelector("#alab-cine-exit")!.addEventListener("click", () => setCine(false));
-
-  // record the live canvas to a WebM clip you can drop into a motion-graphic comp
-  root.querySelector("#alab-rec")!.addEventListener("click", async () => {
-    if (!canvas) return;
-    const btn = root.querySelector("#alab-rec") as HTMLButtonElement;
-    const sel = root.querySelector("#alab-recsec") as HTMLSelectElement;
-    const secs = Number(sel.value) || 10;
-    btn.disabled = true;
-    try {
-      const blob = await recordWebM(canvas, secs, 60, (p) => { btn.textContent = `● rec ${Math.round(p * 100)}%`; });
-      download(blob, `${active?.id ?? "lab"}-${seed}-${secs}s.webm`);
-    } catch (err) {
-      console.error("recording failed", err);
-    }
-    btn.textContent = "● record webm";
-    btn.disabled = false;
-  });
-
+  // presets
   function renderPresets(list: Preset[]): void {
     presetsEl.innerHTML = "";
     for (const p of list) {
@@ -195,7 +164,7 @@ export function mountLab(root: HTMLElement): () => void {
   renderPresets(loadPresets());
 
   const onKey = (e: KeyboardEvent) => {
-    if (e.target instanceof HTMLInputElement) return;
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
     if (e.key === " ") { e.preventDefault(); loop?.toggle(); }
     else if (e.key === "r") loop?.reset();
     else if (e.key === "Escape") setCine(false);
@@ -213,7 +182,6 @@ export function mountLab(root: HTMLElement): () => void {
     panel?.dispose();
     if (surface) disposeSurface(surface);
     canvas?.remove();
-    root.innerHTML = "";
-    root.classList.remove("alab");
+    root.classList.remove("alab-cinematic");
   };
 }

@@ -80,7 +80,7 @@ const schema: ParamSchema = {
     type: "int",
     min: 60,
     max: 512,
-    default: 200, // KEEP MODEST — this is the grid cells per side; drives solver cost
+    default: 168, // KEEP MODEST — this is the grid cells per side; drives solver cost
     label: "Grid res",
   },
   boundary: {
