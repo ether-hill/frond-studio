@@ -30,7 +30,7 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
           marginBottom: "clamp(34px,5vh,58px)",
         }}
       >
-        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(26px,3.45vw,50px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
+        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-h2)", fontWeight: 500, letterSpacing: "-0.018em" }}>
           Recent Work
         </h2>
         <Link href="/work" className="pill pill-ghost">
@@ -63,7 +63,7 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
                 margin: 0,
                 fontFamily: "var(--font-display), sans-serif",
                 fontWeight: 500,
-                fontSize: "clamp(24px,2.4vw,34px)",
+                fontSize: "var(--text-card)",
                 lineHeight: 1.02,
                 letterSpacing: "-0.018em",
               }}

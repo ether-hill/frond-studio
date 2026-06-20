@@ -21,12 +21,16 @@ const COLORS = [
   { name: "line", role: "Borders / rules", dark: "13% fg", light: "16% fg" },
 ];
 
+// Reads the live type tokens (globals.css :root) — this page renders each row AT
+// its token, so the showcase can never drift from what ships.
 const TYPE = [
-  { label: "Display / H1", cls: "clamp(52px,9vw,148px)", weight: 600, sample: "Natural selections" },
-  { label: "Section / H2", cls: "clamp(34px,4.6vw,66px)", weight: 500, sample: "Capabilities" },
-  { label: "Statement", cls: "clamp(26px,3.1vw,46px)", weight: 500, sample: "We borrow the patterns of living systems." },
-  { label: "Lead", cls: "clamp(19px,1.7vw,27px)", weight: 400, sample: "The interesting problems don’t fit inside one discipline." },
-  { label: "Body", cls: "clamp(15px,1.15vw,17px)", weight: 400, sample: "We work across design, engineering, strategy and AI as a single craft." },
+  { label: "Display / H1", cls: "var(--text-display)", weight: 600, sample: "Natural selections" },
+  { label: "Section / H2", cls: "var(--text-h2)", weight: 500, sample: "Capabilities" },
+  { label: "Statement", cls: "var(--text-statement)", weight: 500, sample: "We borrow the patterns of living systems." },
+  { label: "Sub-heading", cls: "var(--text-title)", weight: 500, sample: "Theraminimal" },
+  { label: "Card title", cls: "var(--text-card)", weight: 500, sample: "Algorithms V1" },
+  { label: "Lead", cls: "var(--text-lead)", weight: 400, sample: "The interesting problems don’t fit inside one discipline." },
+  { label: "Body", cls: "var(--text-body)", weight: 400, sample: "We work across design, engineering, strategy and AI as a single craft." },
 ];
 
 const TOKENS = [
@@ -142,7 +146,7 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* Typography */}
-        <Section id="type" n="04" title="Typography" intro="Schibsted Grotesk for everything visible (var(--font-display) / --font-body), a monospace stack (var(--font-mono)) for micro-labels, nav and controls. No serif. Sizes are fluid clamp() steps.">
+        <Section id="type" n="04" title="Typography" intro="Schibsted Grotesk for everything visible (var(--font-display) / --font-body), a monospace stack (var(--font-mono)) for micro-labels, nav and controls. No serif. Sizes are fluid clamp() steps, exposed as CSS tokens (--text-display … --text-body) — the single source of truth; components reference these, never hardcoded sizes.">
           <div style={{ display: "flex", flexDirection: "column", gap: "clamp(20px,3vh,32px)" }}>
             {TYPE.map((t) => (
               <div key={t.label} style={{ borderTop: "1px solid var(--line-2)", paddingTop: 16 }}>

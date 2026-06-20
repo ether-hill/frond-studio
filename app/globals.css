@@ -27,6 +27,16 @@
   --pad-bottom: clamp(72px, 11vh, 128px); /* page foot before the CTA */
   --section-y: clamp(72px, 11vh, 128px);  /* between in-page sections */
   --eyebrow-tracking: 0.2em;              /* mono micro-label tracking */
+
+  /* Type scale — the single source of truth for headings (showcased on
+     /design-system). Use these tokens; don't hardcode clamp() font sizes. */
+  --text-display:   clamp(27px, 4.95vw, 85px);  /* H1 / hero display */
+  --text-h2:        clamp(26px, 3.45vw, 50px);  /* section headings */
+  --text-statement: clamp(24px, 3.9vw, 58px);   /* big centred statement (CTA) */
+  --text-title:     clamp(28px, 3vw, 44px);     /* sub-heading (e.g. Theraminimal) */
+  --text-card:      clamp(24px, 2.4vw, 34px);   /* card titles */
+  --text-lead:      clamp(19px, 1.7vw, 27px);   /* lead paragraph */
+  --text-body:      clamp(15px, 1.15vw, 17px);  /* body copy */
 }
 
 [data-theme="light"] {
