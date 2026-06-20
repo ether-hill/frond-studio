@@ -36,16 +36,16 @@ export const radialResonance: GenerativeSystem<State> = {
   schema: {
     rings: { type: "int", min: 6, max: 40, default: 18, label: "Rings" },
     spokes: { type: "int", min: 6, max: 60, default: 24, label: "Spokes" },
-    flatten: { type: "number", min: 0.4, max: 1, step: 0.01, default: 0.84, hot: true, label: "Flatten" },
+    flatten: { type: "number", min: 0.4, max: 1, step: 0.01, default: 0.78, hot: true, label: "Flatten" },
     dotBase: { type: "number", min: 0.5, max: 6, step: 0.1, default: 1.2, hot: true, label: "Dot size" },
-    dotGrowth: { type: "number", min: 0, max: 2.5, step: 0.05, default: 0.72, hot: true, label: "Dot growth" },
+    dotGrowth: { type: "number", min: 0, max: 2.5, step: 0.05, default: 0.6, hot: true, label: "Dot growth" },
     waveSpeed: { type: "number", min: 0, max: 4, step: 0.05, default: 1.1, hot: true, label: "Ripple speed" },
     waveFreq: { type: "number", min: 0, max: 1.5, step: 0.01, default: 0.55, hot: true, label: "Ripple density" },
     rotate: { type: "number", min: -0.4, max: 0.4, step: 0.005, default: 0.04, hot: true, label: "Rotation" },
     glow: { type: "bool", default: true, hot: true, label: "Glow" },
     chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 0.4, hot: true, label: "Chaos" },
     bg: { type: "color", default: "#0a0d0e", hot: true, label: "Background" },
-    ringColor: { type: "color", default: "#2f8f88", hot: true, label: "Ring colour" },
+    ringColor: { type: "color", default: "#3aa99e", hot: true, label: "Ring colour" },
     dotColor: { type: "color", default: "#e0683a", hot: true, label: "Dot colour" },
     coreColor: { type: "color", default: "#ff5a2a", hot: true, label: "Core colour" },
   },
@@ -94,8 +94,8 @@ export const radialResonance: GenerativeSystem<State> = {
     ctx.lineWidth = 1.1;
     for (let i = 1; i <= nr; i++) {
       const r = i * spacing;
-      const a = 0.34 + 0.12 * Math.sin(t * P(state, "waveSpeed") - i * 0.3);
-      ctx.strokeStyle = rgba(ringC, clamp(a, 0.12, 0.5));
+      const a = 0.5 + 0.14 * Math.sin(t * P(state, "waveSpeed") - i * 0.3);
+      ctx.strokeStyle = rgba(ringC, clamp(a, 0.22, 0.66));
       ctx.beginPath();
       ctx.ellipse(cx, cy, r, r * flatten, 0, 0, TAU);
       ctx.stroke();
