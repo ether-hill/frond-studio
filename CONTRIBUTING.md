@@ -5,7 +5,7 @@ We have two long-lived branches and two fixed URLs:
 | Branch    | URL                                    | Purpose                          |
 | --------- | -------------------------------------- | -------------------------------- |
 | `staging` | https://frond-studio-staging.vercel.app | Shared work-in-progress. Always live. |
-| `main`    | https://frond-studio.vercel.app         | Production. Protected, PR-only.  |
+| `main`    | https://frond-studio.vercel.app         | Production. Ship only via a `staging → main` PR. |
 
 We both work on `staging`, watch it live at the fixed staging URL, and only
 ship to production when it looks right.
@@ -52,8 +52,9 @@ permanent. After a release, `git switch staging && git pull` to keep going.
 
 ## Rules of the road
 
-- **Never push straight to `main`** — it's protected. Production only changes
-  through a `staging → main` PR.
+- **Never push straight to `main`.** Production only changes through a
+  `staging → main` PR. (This is by agreement — GitHub branch protection needs a
+  paid plan, so it isn't enforced automatically. Be careful.)
 - **`staging` is shared** — pull before you push (`git switch staging && git pull`)
   so you start from the latest and avoid conflicts.
 - **Never `git push --force`** to `staging` or `main`.
