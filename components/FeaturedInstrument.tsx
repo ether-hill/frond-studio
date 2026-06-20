@@ -59,7 +59,7 @@ export default function FeaturedInstrument() {
             display: "flex",
             flexWrap: "wrap",
             gap: "clamp(24px,3vw,52px)",
-            alignItems: "stretch",
+            alignItems: "center",
           }}
         >
           {/* intro + CTA */}
@@ -87,12 +87,12 @@ export default function FeaturedInstrument() {
                 letterSpacing: "-0.02em",
               }}
             >
-              Theraminimal.
+              Theraminimal
             </h3>
             <p style={{ margin: "16px 0 0", maxWidth: "42ch", fontSize: 15.5, lineHeight: 1.6, color: "var(--fg-dim)" }}>
-              No keys, no contact — power on and sweep the field. X bends pitch, Y swells
-              volume, exactly like the two antennae of a real theremin. This is a taste;
-              the full instrument stacks four voices into a breathing chord.
+              A browser-based revival of analog sound generators. This theremin doesn&apos;t
+              just respond to you; given freedom, it plays itself, wandering through gliding
+              pitches indefinitely.
             </p>
             <Link href="/projects/instruments/theremin" className="linku link-cta" style={{ marginTop: 24 }}>
               Play the full Theremin →
@@ -112,6 +112,7 @@ export default function FeaturedInstrument() {
               borderRadius: 10,
               background: "var(--bg-1)",
               padding: "clamp(16px,2vw,24px)",
+              minHeight: "auto", // override .inst-root's 70vh (it's a full-page container default)
             }}
           >
             <div ref={ref} />
