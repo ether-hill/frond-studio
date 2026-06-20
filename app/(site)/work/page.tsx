@@ -43,8 +43,8 @@ const EDITORIAL_CARDS: ProjectCard[] = EDITORIAL_PROJECTS.map((p) => ({
   services: p.services,
   summary: p.oneLiner,
   keyPoints: p.stats.map((s) => `${s.value} ${s.label.toLowerCase()}`),
-  thumbnailVideo: null,
-  thumbnailImage: p.hero.src || null,
+  thumbnailVideo: p.card?.video ?? null,
+  thumbnailImage: p.card?.poster ?? null,
 }));
 
 export default async function WorkPage() {
