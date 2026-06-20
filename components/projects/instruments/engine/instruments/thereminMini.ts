@@ -297,7 +297,7 @@ export function mountMini(root: HTMLElement): () => void {
   bar.style.cssText = "display:flex;align-items:flex-end;gap:clamp(12px,1.6vw,22px);flex-wrap:wrap";
 
   // power (shared .inst-power)
-  const power = powerButton(async (on) => { if (on) await powerOn(); else powerOff(); });
+  const power = powerButton(async (on) => { if (on) await powerOn(); else powerOff(); }, { on: "ON", off: "OFF" });
 
   // voices (shared segmented / .inst-seg)
   const voicesSeg = segmented<string>({
@@ -311,13 +311,13 @@ export function mountMini(root: HTMLElement): () => void {
   // randomise (shared .inst-link button)
   const random = document.createElement("button");
   random.type = "button"; random.className = "inst-link";
-  random.textContent = "RANDOMISE";
+  random.textContent = "Random Auto";
   random.addEventListener("click", () => randomise());
 
   // readout
   const readout = document.createElement("div");
   readout.style.cssText = `flex:1 1 auto;text-align:right;min-width:150px;font-family:${MONO};font-size:12px;letter-spacing:0.08em;color:var(--fg3);font-variant-numeric:tabular-nums`;
-  readout.textContent = "POWER ON OR HIT RANDOMISE";
+  readout.textContent = "TURN ON OR HIT RANDOM AUTO";
 
   bar.append(power.el, voicesSeg.el, random, readout);
 
@@ -358,7 +358,7 @@ export function mountMini(root: HTMLElement): () => void {
   function powerOff(): void {
     powered = false; power.set(false); setMaster(0);
     for (let i = 0; i < NVOICES; i++) stopAuto(i);
-    readout.textContent = "POWER ON OR HIT RANDOMISE";
+    readout.textContent = "TURN ON OR HIT RANDOM AUTO";
     // Suspend only THIS instrument's context — never the shared one, so the hero
     // biome keeps playing.
     setTimeout(() => { if (!powered && ctx && ctx.state === "running") ctx.suspend().catch(() => {}); }, 240);

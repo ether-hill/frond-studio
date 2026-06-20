@@ -219,14 +219,19 @@ export function segmented<T extends string>(o: SegOpts<T>): { el: HTMLElement; s
 }
 
 /** Big POWER control that wires audio start/stop. onToggle resolves before the UI flips. */
-export function powerButton(onToggle: (on: boolean) => Promise<void> | void): { el: HTMLButtonElement; set(on: boolean): void } {
+export function powerButton(
+  onToggle: (on: boolean) => Promise<void> | void,
+  labels?: { on: string; off: string },
+): { el: HTMLButtonElement; set(on: boolean): void } {
+  const onLabel = labels?.on ?? "SOUND ON";
+  const offLabel = labels?.off ?? "POWER ON";
   const b = document.createElement("button");
   b.className = "inst-power"; b.type = "button";
   b.dataset.on = "0";
   b.setAttribute("aria-pressed", "false");
   const render = () => {
     const on = b.dataset.on === "1";
-    b.innerHTML = `<span class="inst-dot"></span>${on ? "SOUND ON" : "POWER ON"}`;
+    b.innerHTML = `<span class="inst-dot"></span>${on ? onLabel : offLabel}`;
     b.setAttribute("aria-pressed", String(on));
   };
   render();
