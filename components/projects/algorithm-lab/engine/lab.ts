@@ -5,19 +5,23 @@ import { createSurface, resizeSurface, disposeSurface } from "./surfaces";
 import { createLoop, type Loop } from "./harness/loop";
 import { buildPanel, type PanelHandle } from "./harness/panel";
 import { exportCurrentPng, exportHiResPng, copyParamsJson, download } from "./harness/export";
-import { loadPresets, savePreset, deletePreset, downloadPreset } from "./harness/presets";
+import { loadPresets, savePreset } from "./harness/presets";
 import { recordWebM } from "./harness/video";
 import { SYSTEMS } from "./systems";
+import { Biome, randomConfig } from "@/components/projects/instruments/engine/instruments/biomeEngine";
+import { ensureAudio, suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
 
-/** Wire the engine to the StudioShell scaffold (read by id). Returns teardown. */
+/**
+ * Wire the engine to the StudioShell scaffold. Every system's panel gets the same
+ * standard footer folders (Touch, Soundscape, Export Video, Snapshot) after its
+ * own settings, matching the SMA Config studio template.
+ */
 export function mountLab(root: HTMLElement): () => void {
   const stage = root.querySelector("#alab-stage") as HTMLElement;
   const algoSel = root.querySelector("#alab-algo") as HTMLSelectElement;
   const presetSel = root.querySelector("#alab-preset") as HTMLSelectElement;
   const panelEl = root.querySelector("#alab-panel") as HTMLElement;
   const fpsEl = root.querySelector("#alab-fps") as HTMLElement;
-  const presetsEl = root.querySelector("#alab-presets") as HTMLElement;
-  const playBtn = root.querySelector("#alab-play") as HTMLButtonElement;
 
   let active: GenerativeSystem | null = null;
   let params: Params = {};
@@ -29,9 +33,97 @@ export function mountLab(root: HTMLElement): () => void {
   let ro: ResizeObserver | null = null;
   let resizeT = 0;
 
+  const setCine = (on: boolean) => root.classList.toggle("studio-cinematic", on);
+
+  // ---- Soundscape (biome) — shared across systems; mixes into video export ----
+  const biome = new Biome();
+  let biomeOn = false;
+  let biomeCtx: AudioContext | null = null;
+  let biomeRecDest: MediaStreamAudioDestinationNode | null = null;
+  const soundState = { volume: 0.7 };
+  async function rollBiome(): Promise<void> {
+    biomeCtx = await ensureAudio();
+    await biome.start();
+    const { strands, master, palette } = randomConfig();
+    biome.setPalette(palette);
+    biome.apply(strands, master);
+    biome.setMaster({ volume: soundState.volume });
+    biome.setMuted(false);
+    biomeOn = true;
+  }
+  function biomeAudioStream(): MediaStream | null {
+    if (!biomeOn || !biomeCtx) return null;
+    if (!biomeRecDest) { biomeRecDest = biomeCtx.createMediaStreamDestination(); biome.tap(biomeRecDest); }
+    return biomeRecDest.stream;
+  }
+
+  // ---- Touch — pointer over the canvas, exposed to systems via params.touch* ----
+  const touchState = { strength: 0.6 };
+  function onPointer(e: PointerEvent, down: boolean): void {
+    if (!canvas) return;
+    const r = canvas.getBoundingClientRect();
+    const p = params as Record<string, number | boolean>;
+    p.touchX = (e.clientX - r.left) / Math.max(1, r.width);
+    p.touchY = (e.clientY - r.top) / Math.max(1, r.height);
+    p.touchActive = down;
+    p.touchStrength = touchState.strength;
+  }
+
   function dims() {
     const r = stage.getBoundingClientRect();
     return { w: Math.max(2, Math.floor(r.width)), h: Math.max(2, Math.floor(r.height)), dpr: Math.min(1.5, window.devicePixelRatio || 1) };
+  }
+
+  async function hiRes(scale: number): Promise<void> {
+    if (!active || !surface || !loop) return;
+    const blob = await exportHiResPng(active, params, seed, scale, surface.width, surface.height, loop.frameCount(), makeRng);
+    download(blob, `${active.id}-${seed}-${scale}x.png`);
+  }
+
+  // The shared panel footer — added after each system's own settings.
+  function addStandardFolders(): void {
+    if (!panel) return;
+    const pane = panel.pane;
+
+    const fTouch = pane.addFolder({ title: "Touch", expanded: false });
+    fTouch.addBinding(touchState, "strength", { min: 0, max: 1.5, step: 0.05, label: "strength" })
+      .on("change", () => { (params as Record<string, number>).touchStrength = touchState.strength; });
+
+    const fSound = pane.addFolder({ title: "Soundscape (biome)", expanded: false });
+    const soundBtn = fSound.addButton({ title: biomeOn ? "■ stop sound" : "▶ enable sound" });
+    soundBtn.on("click", async () => {
+      if (biomeOn) {
+        biome.setMuted(true); biomeOn = false;
+        setTimeout(() => { if (!biomeOn) suspendAudio(); }, 240);
+        soundBtn.title = "▶ enable sound";
+      } else {
+        soundBtn.title = "…"; await rollBiome(); soundBtn.title = "■ stop sound";
+      }
+    });
+    fSound.addButton({ title: "⟲ new soundscape" }).on("click", () => { rollBiome(); });
+    fSound.addBinding(soundState, "volume", { min: 0, max: 1, step: 0.01, label: "volume" })
+      .on("change", () => biome.setMaster({ volume: soundState.volume }));
+
+    const recState = { seconds: 10 };
+    const fVid = pane.addFolder({ title: "Export Video", expanded: false });
+    fVid.addBinding(recState, "seconds", { min: 3, max: 30, step: 1, label: "seconds" });
+    const recBtn = fVid.addButton({ title: "● record video" });
+    recBtn.on("click", async () => {
+      if (!canvas) return;
+      recBtn.disabled = true;
+      try {
+        const blob = await recordWebM(canvas, recState.seconds, 60, (p) => { recBtn.title = `● ${Math.round(p * 100)}%`; }, biomeAudioStream());
+        download(blob, `${active?.id ?? "lab"}-${seed}-${recState.seconds}s.webm`);
+      } catch (err) { console.error("recording failed", err); }
+      recBtn.title = "● record video"; recBtn.disabled = false;
+    });
+
+    const fSnap = pane.addFolder({ title: "Snapshot", expanded: false });
+    fSnap.addButton({ title: "PNG" }).on("click", async () => { if (surface && active) download(await exportCurrentPng(surface), `${active.id}-${seed}.png`); });
+    fSnap.addButton({ title: "2× hi-res" }).on("click", () => hiRes(2));
+    fSnap.addButton({ title: "4× hi-res" }).on("click", () => hiRes(4));
+    fSnap.addButton({ title: "⛶ full-bleed" }).on("click", () => setCine(true));
+    fSnap.addButton({ title: "copy params JSON" }).on("click", () => { if (active) copyParamsJson(active.id, seed, params); });
   }
 
   function selectSystem(sys: GenerativeSystem): void {
@@ -42,16 +134,13 @@ export function mountLab(root: HTMLElement): () => void {
     if (surface) disposeSurface(surface);
     canvas?.remove();
     canvas = document.createElement("canvas");
-    stage.insertBefore(canvas, stage.firstChild); // behind the overlay chips
+    stage.insertBefore(canvas, stage.firstChild);
 
     surface = createSurface(canvas, sys.tier);
     const { w, h, dpr } = dims();
     resizeSurface(surface, w, h, dpr);
 
-    loop = createLoop(surface, makeRng, (info) => {
-      fpsEl.textContent = `${info.fps} fps · ${sys.tier}`;
-      playBtn.textContent = info.playing ? "PAUSE" : "PLAY";
-    });
+    loop = createLoop(surface, makeRng, (info) => { fpsEl.textContent = `${info.fps} fps · ${sys.tier}`; });
 
     panel?.dispose();
     panelEl.innerHTML = "";
@@ -62,6 +151,7 @@ export function mountLab(root: HTMLElement): () => void {
       onSeed: (s) => { seed = s; loop?.setSeed(s); loop?.reset(); },
       onChange: (_k, hot) => { if (!hot) loop?.reset(); },
     });
+    addStandardFolders();
 
     loop.load(sys, params, seed);
     if (algoSel.value !== sys.id) algoSel.value = sys.id;
@@ -78,7 +168,7 @@ export function mountLab(root: HTMLElement): () => void {
     ro.observe(stage);
   }
 
-  // algorithm dropdown (the preset-style picker, like SMA's)
+  // algorithm dropdown (below the summary)
   for (const sys of SYSTEMS) {
     const o = document.createElement("option");
     o.value = sys.id;
@@ -90,58 +180,7 @@ export function mountLab(root: HTMLElement): () => void {
     if (sys) selectSystem(sys);
   });
 
-  // transport: RANDOMISE rolls a fresh seed, RESTART reseeds the same look
-  playBtn.addEventListener("click", () => loop?.toggle());
-  root.querySelector("#alab-randomise")!.addEventListener("click", () => {
-    seed = randomSeedString();
-    (params as Record<string, string>).seed = seed;
-    panel?.refresh();
-    loop?.setSeed(seed);
-    loop?.reset();
-  });
-  root.querySelector("#alab-reset")!.addEventListener("click", () => loop?.reset());
-
-  // cinematic / full-bleed
-  const setCine = (on: boolean) => root.classList.toggle("studio-cinematic", on);
-  root.querySelector("#alab-cine")!.addEventListener("click", () => setCine(!root.classList.contains("studio-cinematic")));
-  root.querySelector("#alab-cine-exit")!.addEventListener("click", () => setCine(false));
-
-  // mobile controls toggle
-  root.querySelector("#alab-ctrltoggle")?.addEventListener("click", () => {
-    panelEl.classList.toggle("studio-hide");
-  });
-
-  // capture: record video + snapshot PNG (+ hi-res)
-  root.querySelector("#alab-rec")!.addEventListener("click", async () => {
-    if (!canvas) return;
-    const btn = root.querySelector("#alab-rec") as HTMLButtonElement;
-    const sel = root.querySelector("#alab-recsec") as HTMLSelectElement;
-    const secs = Number(sel.value) || 10;
-    btn.disabled = true;
-    try {
-      const blob = await recordWebM(canvas, secs, 60, (p) => { btn.textContent = `● rec ${Math.round(p * 100)}%`; });
-      download(blob, `${active?.id ?? "lab"}-${seed}-${secs}s.webm`);
-    } catch (err) { console.error("recording failed", err); }
-    btn.textContent = "● record video";
-    btn.disabled = false;
-  });
-  root.querySelector("#alab-png")!.addEventListener("click", async () => {
-    if (!surface || !active) return;
-    download(await exportCurrentPng(surface), `${active.id}-${seed}.png`);
-  });
-  root.querySelectorAll<HTMLButtonElement>("[data-x]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      if (!active || !surface || !loop) return;
-      const scale = Number(btn.dataset.x);
-      btn.textContent = "…";
-      const blob = await exportHiResPng(active, params, seed, scale, surface.width, surface.height, loop.frameCount(), makeRng);
-      download(blob, `${active.id}-${seed}-${scale}x.png`);
-      btn.textContent = `${scale}×`;
-    });
-  });
-  root.querySelector("#alab-copy")!.addEventListener("click", () => { if (active) copyParamsJson(active.id, seed, params); });
-
-  // presets — a dropdown (like SMA) + a managed list for download/delete
+  // art-window buttons: Presets (dropdown + save), Restart, Randomise
   function refreshPresetDropdown(): void {
     presetSel.innerHTML = `<option value="">none</option>`;
     for (const p of loadPresets()) {
@@ -151,8 +190,8 @@ export function mountLab(root: HTMLElement): () => void {
       presetSel.appendChild(o);
     }
   }
-  function applyPreset(savedAt: string): void {
-    const p = loadPresets().find((x) => String(x.savedAt) === savedAt);
+  presetSel.addEventListener("change", () => {
+    const p = loadPresets().find((x) => String(x.savedAt) === presetSel.value);
     if (!p) return;
     const sys = SYSTEMS.find((s) => s.id === p.systemId);
     if (!sys) return;
@@ -162,30 +201,30 @@ export function mountLab(root: HTMLElement): () => void {
     panel?.refresh();
     loop?.setSeed(seed);
     loop?.reset();
-  }
-  presetSel.addEventListener("change", () => { if (presetSel.value) applyPreset(presetSel.value); });
-
-  function renderPresets(): void {
-    presetsEl.innerHTML = "";
-    for (const p of loadPresets()) {
-      const row = document.createElement("div");
-      row.className = "studio-preset";
-      row.innerHTML = `<button class="studio-btn load">${p.systemId} · ${p.name || p.seed}</button><button class="studio-btn dl" title="download">⤓</button><button class="studio-btn del" title="delete">✕</button>`;
-      row.querySelector(".load")!.addEventListener("click", () => applyPreset(String(p.savedAt)));
-      row.querySelector(".dl")!.addEventListener("click", () => downloadPreset(p));
-      row.querySelector(".del")!.addEventListener("click", () => { deletePreset(p.savedAt); renderPresets(); refreshPresetDropdown(); });
-      presetsEl.appendChild(row);
-    }
-  }
+  });
   root.querySelector("#alab-save")!.addEventListener("click", () => {
     if (!active) return;
     const name = prompt("Preset name", `${seed}`) || seed;
     savePreset({ name, systemId: active.id, seed, params: { ...params } });
-    renderPresets();
     refreshPresetDropdown();
   });
   refreshPresetDropdown();
-  renderPresets();
+
+  root.querySelector("#alab-reset")!.addEventListener("click", () => loop?.reset());
+  root.querySelector("#alab-randomise")!.addEventListener("click", () => {
+    seed = randomSeedString();
+    (params as Record<string, string>).seed = seed;
+    panel?.refresh();
+    loop?.setSeed(seed);
+    loop?.reset();
+  });
+  root.querySelector("#alab-cine-exit")!.addEventListener("click", () => setCine(false));
+  root.querySelector("#alab-ctrltoggle")?.addEventListener("click", () => panelEl.classList.toggle("studio-hide"));
+
+  // touch on the canvas
+  stage.addEventListener("pointerdown", (e) => onPointer(e, true));
+  stage.addEventListener("pointermove", (e) => onPointer(e, (e.buttons & 1) === 1));
+  stage.addEventListener("pointerup", (e) => onPointer(e, false));
 
   // About toggle
   const aboutBody = root.querySelector("#alab-panelbody") as HTMLElement | null;
@@ -215,6 +254,7 @@ export function mountLab(root: HTMLElement): () => void {
     panel?.dispose();
     if (surface) disposeSurface(surface);
     canvas?.remove();
+    try { biome.setMuted(true); suspendAudio(); } catch { /* no audio */ }
     root.classList.remove("studio-cinematic");
   };
 }

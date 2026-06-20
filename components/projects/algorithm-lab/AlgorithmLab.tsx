@@ -9,19 +9,20 @@ import StudioShell from "@/components/studio/StudioShell";
  * scaffold (studio classes + alab ids) and the About copy; engine/lab.ts wires it.
  */
 const SCAFFOLD = `
+<div class="studio-selectbar">
+  <label for="alab-algo">Algorithm</label>
+  <select id="alab-algo" aria-label="Algorithm"></select>
+</div>
 <div class="studio-grid">
   <div class="studio-visual" id="alab-stage">
     <div class="studio-presetbar">
-      <label for="alab-algo">Algorithm</label>
-      <select id="alab-algo" aria-label="Algorithm"></select>
-      <label for="alab-preset">Preset</label>
-      <select id="alab-preset" aria-label="Preset"><option value="">none</option></select>
+      <label for="alab-preset">Presets</label>
+      <select id="alab-preset" aria-label="Presets"><option value="">none</option></select>
+      <button id="alab-save" title="Save current as preset">★</button>
     </div>
     <div class="studio-topctl">
-      <button id="alab-play">PLAY</button>
-      <button id="alab-randomise">RANDOMISE</button>
       <button id="alab-reset">RESTART</button>
-      <button id="alab-cine">FULL-BLEED</button>
+      <button id="alab-randomise">RANDOMISE</button>
     </div>
     <div id="alab-fps" class="studio-fps"></div>
     <button id="alab-cine-exit" class="studio-cine-exit">✕ controls</button>
@@ -29,13 +30,6 @@ const SCAFFOLD = `
   <aside class="studio-side">
     <button id="alab-ctrltoggle" class="studio-ctrltoggle" aria-label="Toggle controls">⚙ Controls</button>
     <div id="alab-panel" class="studio-controls"></div>
-    <div class="studio-actions">
-      <div class="studio-lbl">Capture</div>
-      <div class="studio-row"><button class="studio-btn" id="alab-rec">● record video</button><select id="alab-recsec"><option value="6">6s</option><option value="10" selected>10s</option><option value="20">20s</option><option value="30">30s</option></select></div>
-      <div class="studio-row"><button class="studio-btn" id="alab-png">snapshot PNG</button><button class="studio-btn" data-x="2">2×</button><button class="studio-btn" data-x="4">4×</button></div>
-      <div class="studio-row"><button class="studio-btn" id="alab-copy">copy JSON</button><button class="studio-btn" id="alab-save">★ save preset</button></div>
-      <div class="studio-presets" id="alab-presets"></div>
-    </div>
   </aside>
 </div>
 <section class="studio-about" aria-label="About the Algorithm Lab">

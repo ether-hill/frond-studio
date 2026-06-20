@@ -19,8 +19,10 @@ export function recordWebM(
   seconds: number,
   fps: number,
   onProgress?: (p: number) => void,
+  audioStream?: MediaStream | null,
 ): Promise<Blob> {
   const stream = canvas.captureStream(fps);
+  if (audioStream) for (const tr of audioStream.getAudioTracks()) stream.addTrack(tr);
   const mime = pickVideoMime();
   const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 32_000_000 });
   const chunks: BlobPart[] = [];

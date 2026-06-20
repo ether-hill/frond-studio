@@ -11,8 +11,8 @@ import type { ParamSchema, Params } from "../core/types";
 
 type TpEvent = { value: unknown };
 interface Binding { on(ev: "change", cb: (e: TpEvent) => void): Binding; }
-interface Button { on(ev: "click", cb: () => void): Button; }
-interface PaneLike {
+interface Button { on(ev: "click", cb: () => void): Button; title: string; disabled: boolean; }
+export interface PaneLike {
   addBinding(obj: object, key: string, opts?: Record<string, unknown>): Binding;
   addButton(opts: { title: string }): Button;
   addFolder(opts: { title: string; expanded?: boolean }): PaneLike;
@@ -29,6 +29,7 @@ export interface PanelHandlers {
 }
 
 export interface PanelHandle {
+  pane: PaneLike;
   refresh: () => void;
   dispose: () => void;
   seedLocked: () => boolean;
@@ -82,6 +83,7 @@ export function buildPanel(
   }
 
   return {
+    pane,
     refresh: () => pane.refresh(),
     dispose: () => pane.dispose(),
     seedLocked: () => locked,

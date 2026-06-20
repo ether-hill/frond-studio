@@ -29,6 +29,14 @@ export const STUDIO_CSS = `
 .studio-wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter) var(--pad-bottom); }
 .studio-grid { display: grid; grid-template-columns: minmax(0,1fr) 304px; gap: clamp(20px,2.4vw,40px); align-items: start; }
 
+/* algorithm selector — sits below the summary, above the art window */
+.studio-selectbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: clamp(16px,2vw,24px); }
+.studio-selectbar label { font: 700 10px var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-faint); }
+.studio-selectbar select { background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 11px 20px; font: 500 14px var(--font-body), sans-serif; cursor: pointer; min-width: min(460px, 84vw); }
+.studio-selectbar select:hover { border-color: var(--accent); }
+.studio-presetbar button { background: rgba(0,0,0,0.45); color: #fff; border: 1px solid rgba(255,255,255,0.24); border-radius: 999px; width: 28px; height: 24px; padding: 0; font: 12px ui-monospace, monospace; cursor: pointer; }
+.studio-presetbar button:hover { border-color: rgba(255,255,255,0.6); }
+
 /* the visual — expands to fill the space; the sim covers it via object-fit */
 .studio-visual { position: relative; width: 100%; height: min(86vh, 1040px); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #000; touch-action: none; }
 .studio-visual canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; image-rendering: auto; touch-action: none; }
