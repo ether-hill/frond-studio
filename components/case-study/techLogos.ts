@@ -6,6 +6,11 @@
 export type TechLogo = { title: string; path: string; viewBox?: string };
 
 export const TECH_LOGOS: Record<string, TechLogo> = {
+  "cookieyes": {
+    "title": "CookieYes",
+    "viewBox": "0 0 26 30",
+    "path": "M13.2251 2.95435C19.4896 2.95435 24.1722 6.45433 25.6909 12.1816H18.667C17.5913 9.89068 15.5664 8.80887 13.1618 8.80887C9.23859 8.80887 6.51764 11.7361 6.51764 16.4452C6.51764 21.1543 9.23859 24.0815 13.1618 24.0815C15.5664 24.0815 17.5913 22.9361 18.667 20.7088H25.6909C24.1722 26.4361 19.4896 29.9361 13.2251 29.9361C5.44191 29.8724 0 24.3361 0 16.3816C0 8.42705 5.44191 2.95435 13.2251 2.95435Z"
+  },
   "weglot": {
     "title": "Weglot",
     "viewBox": "0 0 27.5 24",
@@ -46,6 +51,7 @@ const ALIASES: Record<string, string> = {
   "google analytics": "googleanalytics",
   zapier: "zapier",
   weglot: "weglot",
+  cookieyes: "cookieyes",
   "ticket tailor": "tickettailor",
 };
 

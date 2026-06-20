@@ -1694,7 +1694,8 @@ button {
 .ecs-quote { position: relative; overflow: hidden; width: 100vw; margin-left: calc(50% - 50vw); border-top: 1px solid var(--line); }
 .quote-vid { opacity: 0.8; pointer-events: none; z-index: 0; }
 [data-theme="dark"] .quote-vid { filter: invert(1) sepia(1) saturate(5) hue-rotate(3deg) brightness(1.2); mix-blend-mode: screen; opacity: 0.9; }
-[data-theme="light"] .quote-vid { filter: saturate(1.2) contrast(1.1); mix-blend-mode: multiply; opacity: 0.95; }
+[data-theme="light"] .quote-vid { filter: saturate(2.2) contrast(1.95) brightness(0.78); mix-blend-mode: multiply; opacity: 1; }
+[data-theme="light"] .ecs-quote-vignette { background: radial-gradient(ellipse at center, transparent 55%, var(--bg-0) 100%); }
 .ecs-quote-vignette { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 42%, var(--bg-0) 98%); }
 .ecs-quote-inner { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; text-align: center; padding: clamp(80px, 13vh, 170px) var(--gutter); }
 
