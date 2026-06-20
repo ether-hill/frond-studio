@@ -99,8 +99,12 @@ export default function FeaturedInstrument() {
             </Link>
           </div>
 
-          {/* the condensed playable instrument */}
+          {/* the condensed playable instrument — `inst-root` brings the engine's
+              token bridge (--lw / --fg2..4 / --panel) into scope so the shared
+              instrument controls render with their proper borders/pill/segments.
+              The inline background overrides inst-root's default, keeping our frame. */}
           <div
+            className="inst-root"
             style={{
               flex: "2 1 440px",
               minWidth: 280,
