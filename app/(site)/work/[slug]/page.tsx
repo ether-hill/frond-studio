@@ -8,15 +8,18 @@ import MediaPlaceholder from "@/components/MediaPlaceholder";
 import Cta from "@/components/Cta";
 import { getProject, getProjects, getProjectSlugs } from "@/sanity/lib/queries";
 import CaseStudy from "@/components/case-study/CaseStudy";
+import EditorialCaseStudy from "@/components/case-study/EditorialCaseStudy";
 import MoreWork, { type MoreWorkItem } from "@/components/case-study/MoreWork";
 import { getContentProject, contentProjectSlugs, CONTENT_PROJECTS } from "@/content/projects";
+import { getEditorialProject, editorialSlugs, EDITORIAL_PROJECTS } from "@/content/projects/editorial";
 
-// Unified cross-project list for the "See more work" slider — content-file
+// Unified cross-project list for the "See more work" slider — editorial + content-file
 // flagships first, then Sanity-backed work; the current project is filtered out
 // by the caller.
 async function moreWorkItems(): Promise<MoreWorkItem[]> {
   const sanity = await getProjects();
   return [
+    ...EDITORIAL_PROJECTS.map((p) => ({ slug: p.slug, title: p.title, label: p.category, image: p.hero?.src || undefined })),
     ...CONTENT_PROJECTS.map((p) => ({ slug: p.slug, title: p.title, label: p.category, image: p.homepageGrab?.src || undefined })),
     ...sanity.map((p) => ({ slug: p.slug, title: p.title, label: p.subtitle ?? undefined, image: p.thumbnailImage || `/posters/${p.slug}.jpg` })),
   ];
@@ -26,8 +29,8 @@ export const revalidate = 60;
 
 export async function generateStaticParams() {
   const slugs = await getProjectSlugs();
-  // Content-file (rich case-study) projects + Sanity-backed ones, de-duplicated.
-  return [...new Set([...contentProjectSlugs, ...slugs])].map((slug) => ({ slug }));
+  // Editorial + content-file case studies + Sanity-backed ones, de-duplicated.
+  return [...new Set([...editorialSlugs, ...contentProjectSlugs, ...slugs])].map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -36,6 +39,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const editorial = getEditorialProject(slug);
+  if (editorial) {
+    return { title: `${editorial.title} — Frond Studio`, description: editorial.oneLiner };
+  }
   const content = getContentProject(slug);
   if (content) {
     return { title: `${content.title} — Frond Studio`, description: content.oneLiner };
@@ -73,6 +80,18 @@ export default async function ProjectCaseStudy({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  // Editorial long-scroll case study takes precedence over every other layout.
+  const editorial = getEditorialProject(slug);
+  if (editorial) {
+    const moreWork = (await moreWorkItems()).filter((it) => it.slug !== slug);
+    return (
+      <RevealRoot>
+        <EditorialCaseStudy project={editorial} moreWork={moreWork} />
+        <Cta />
+      </RevealRoot>
+    );
+  }
 
   // Rich, content-file case study (the reusable template) takes precedence.
   const content = getContentProject(slug);

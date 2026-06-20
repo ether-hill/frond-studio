@@ -5,6 +5,7 @@ import CaseStudyRow from "@/components/CaseStudyRow";
 import Cta from "@/components/Cta";
 import { getProjects, type ProjectCard } from "@/sanity/lib/queries";
 import { CONTENT_PROJECTS } from "@/content/projects";
+import { EDITORIAL_PROJECTS } from "@/content/projects/editorial";
 
 export const metadata: Metadata = {
   title: "Work — Frond Studio",
@@ -31,10 +32,25 @@ const CONTENT_CARDS: ProjectCard[] = CONTENT_PROJECTS.map((p) => ({
   thumbnailImage: p.heroVideo.src || null,
 }));
 
+// Editorial (long-scroll) case studies, mapped to the same index-row card shape.
+const EDITORIAL_CARDS: ProjectCard[] = EDITORIAL_PROJECTS.map((p) => ({
+  _id: `editorial-${p.slug}`,
+  title: p.title,
+  subtitle: p.category ?? null,
+  slug: p.slug,
+  order: null,
+  year: "2026",
+  services: p.services,
+  summary: p.oneLiner,
+  keyPoints: p.stats.map((s) => `${s.value} ${s.label.toLowerCase()}`),
+  thumbnailVideo: null,
+  thumbnailImage: p.hero.src || null,
+}));
+
 export default async function WorkPage() {
   const sanityProjects = await getProjects();
-  // Content-file flagships lead, then the Sanity-backed work.
-  const projects = [...CONTENT_CARDS, ...sanityProjects];
+  // Editorial flagship leads, then content-file case studies, then Sanity work.
+  const projects = [...EDITORIAL_CARDS, ...CONTENT_CARDS, ...sanityProjects];
 
   return (
     <RevealRoot>
