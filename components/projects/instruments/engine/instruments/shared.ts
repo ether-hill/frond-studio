@@ -41,7 +41,7 @@ export function suspendAudio(): void {
 // ---- one-time CSS ----------------------------------------------------------
 
 let cssDone = false;
-function injectCss(): void {
+export function injectCss(): void {
   if (cssDone) return;
   cssDone = true;
   const s = document.createElement("style");

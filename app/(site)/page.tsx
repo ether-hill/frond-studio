@@ -3,6 +3,7 @@ import HeroPhysarum from "@/components/HeroPhysarum";
 import HeroControls from "@/components/HeroControls";
 import SelectedWork from "@/components/SelectedWork";
 import SelectedProjects from "@/components/SelectedProjects";
+import FeaturedInstrument from "@/components/FeaturedInstrument";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
 import Cta from "@/components/Cta";
 import { getProjects } from "@/sanity/lib/queries";
@@ -129,6 +130,8 @@ export default async function Home() {
       </section>
 
       <SelectedProjects />
+
+      <FeaturedInstrument />
 
       <Cta />
     </RevealRoot>
