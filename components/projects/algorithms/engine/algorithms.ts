@@ -12,7 +12,7 @@ import { VERSIONS, HERO_VERSION_ID } from "./versions";
 
 // Jones (2010) agent-model presets for the algorithms demo — the 2D versions from
 // the SMA Config studio, surfaced via the same preset chooser as Mycelium.
-const JONES_PRESETS = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => ({
+export const JONES_PRESETS = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => ({
   key: v.id, label: v.label.replace(/^v\d+\s*·\s*/, ""), params: v.params,
 }));
 
@@ -21,7 +21,7 @@ const JONES_PRESETS = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => ({
 // the old CPU grid sim. The page opens on a transport-network preset; RANDOMISE rolls
 // through the curated archetypes below. The render is monochrome (white-on-black).
 type Preset = { name: string; p: Partial<MParams> };
-const PHYS_PRESETS: Preset[] = [
+export const PHYS_PRESETS: Preset[] = [
   { name: "Reticulum", p: { SensorDistance0: 7, SD_exponent: 4, SD_amplitude: 0.25, SensorAngle0: 0.42, RotationAngle0: 0.42, MoveDistance0: 0.8, MD_exponent: 5, MD_amplitude: 0.11, defaultScalingFactor: 22 } },
   { name: "Network", p: { SensorDistance0: 9, SD_exponent: 3, SD_amplitude: 0.2, SensorAngle0: 0.45, RotationAngle0: 0.4, MoveDistance0: 0.9, MD_exponent: 4, MD_amplitude: 0.1, defaultScalingFactor: 20 } },
   { name: "Enmeshed", p: { SensorDistance0: 3, SD_exponent: 7, SD_amplitude: 0.46, SensorAngle0: 0.5, RotationAngle0: 0.4, MoveDistance0: 0.85, MD_exponent: 9, MD_amplitude: 0.18, defaultScalingFactor: 34 } },
@@ -41,13 +41,13 @@ const HERO_PX = 680;
 
 interface Step { n: string; title: string; text: string; }
 interface Param { label: string; value: string; }
-interface Algo {
+export interface Algo {
   i: string; tag: string; gen: string; name: string; sub: string; filename: string; note: string;
   group: "NATURE SYSTEM" | "GENERATIVE MOVEMENT";
   paras: string[]; steps: Step[]; params: Param[];
 }
 
-const DATA: Algo[] = [
+export const DATA: Algo[] = [
   {
     i: "01", tag: "physarum", gen: "physarum", name: "Physarum", sub: "SLIME MOLD TRANSPORT NETWORKS", filename: "physarum_polycephalum.sim",
     group: "NATURE SYSTEM",

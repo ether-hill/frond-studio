@@ -1,0 +1,319 @@
+import { Pane } from "tweakpane";
+import { DATA, JONES_PRESETS, PHYS_PRESETS } from "./algorithms";
+import { renderArt } from "./artGenerators";
+import { PhysMod, M_DEFAULTS, type MParams } from "./physmod";
+import { Physarum, DEFAULTS, type Params } from "./physarum";
+import { recordWebM } from "@/components/projects/algorithm-lab/engine/harness/video";
+import { Biome, randomConfig } from "@/components/projects/instruments/engine/instruments/biomeEngine";
+import { ensureAudio, suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
+
+// Tweakpane shim (its published types re-export from @tweakpane/core, not installed)
+type TpEvent = { value: unknown };
+interface Binding { on(ev: "change", cb: (e: TpEvent) => void): Binding; }
+interface TpButton { on(ev: "click", cb: () => void): TpButton; title: string; disabled: boolean; }
+interface PaneLike {
+  addBinding(o: object, k: string, opts?: Record<string, unknown>): Binding;
+  addButton(o: { title: string }): TpButton;
+  addFolder(o: { title: string; expanded?: boolean }): PaneLike;
+  refresh(): void; dispose(): void;
+}
+
+type Def =
+  | { key: string; label: string; type: "num"; min: number; max: number; step?: number; def: number }
+  | { key: string; label: string; type: "sel"; options: string[]; def: string }
+  | { key: string; label: string; type: "col"; def: string };
+
+const n = (key: string, label: string, min: number, max: number, def: number, step?: number): Def => ({ key, label, type: "num", min, max, def, step });
+const c = (key: string, label: string, def: string): Def => ({ key, label, type: "col", def });
+const s = (key: string, label: string, options: string[], def: string): Def => ({ key, label, type: "sel", options, def });
+
+// The "key algorithm settings" exposed per generator (every generator already
+// reads these via gp(params, …) / setParams).
+const SCHEMA: Record<string, Def[]> = {
+  "gray-scott": [n("speed", "speed", 1, 20, 10, 1), n("feed", "feed F", 0.02, 0.07, 0.037, 0.001), n("kill", "kill k", 0.05, 0.07, 0.06, 0.001)],
+  boids: [n("count", "flock size", 100, 900, 380, 10), n("separation", "separation", 0.4, 3, 1.5, 0.1), n("trailFade", "trail fade", 4, 40, 17, 1), n("speed", "speed", 4, 20, 12, 0.5), n("wander", "wander", 0, 1.5, 0.55, 0.05)],
+  "l-system": [n("plants", "plants", 2, 12, 5, 1)],
+  "voronoi-recursive": [n("seeds", "seeds", 40, 300, 104, 2), n("drift", "drift", 0, 4, 1, 0.1), n("relaxation", "relaxation", 0, 8, 4, 1)],
+  dla: [n("radius", "spread", 0.2, 0.6, 0.43, 0.01), n("shimmer", "shimmer", 0, 0.5, 0.13, 0.01), n("density", "density", 10, 120, 52, 1)],
+  "organic-turbulence": [n("noiseScale", "noise scale", 0.0005, 0.005, 0.0018, 0.0001), n("particles", "particles", 200, 1600, 700, 20), n("speed", "speed", 0.5, 8, 3.3, 0.1), n("evolve", "evolve", 0, 0.02, 0.005, 0.001)],
+  "quantum-harmonics": [n("symmetry", "symmetry", 3, 14, 8, 1), n("sources", "sources", 3, 14, 8, 1), n("phaseSpeed", "phase speed", 0, 3, 1, 0.05)],
+  "recursive-whispers": [n("splitAngle", "split angle", 0.2, 1.2, 0.55, 0.01), n("maxDepth", "max depth", 4, 12, 9, 1)],
+  "field-dynamics": [n("singularities", "singularities", 2, 8, 4, 1), n("fade", "fade", 1, 20, 5, 1), n("particles", "particles", 200, 1600, 700, 20), n("speed", "speed", 0.5, 8, 4, 0.1)],
+  "stochastic-crystallization": [n("breathe", "breathe", 0, 0.2, 0.05, 0.005), n("churn", "churn", 0, 2, 0.5, 0.05), n("count", "count", 300, 1600, 950, 10)],
+  mycelium: [s("preset", "habit", ["wild", "filigree", "cords", "bloom"], "bloom"), n("tips", "tips", 10, 400, 120, 5)],
+  physarum: [n("SensorDistance0", "sensor dist", 0, 15, 0, 0.5), n("SD_exponent", "SD power", 1, 10, 4, 0.1), n("SD_amplitude", "SD amp", 0, 0.6, 0.3, 0.01), n("SensorAngle0", "sensor angle", 0.1, 1.2, 0.4, 0.01), n("RotationAngle0", "turn angle", 0.1, 1, 0.45, 0.01), n("MoveDistance0", "move dist", 0.2, 1.5, 0.4, 0.01), n("MD_exponent", "MD power", 1, 12, 3, 0.1), n("MD_amplitude", "MD amp", 0, 0.3, 0.1, 0.01), n("defaultScalingFactor", "scaling", 10, 40, 22, 1), n("depositFactor", "deposit", 0.001, 0.02, 0.0075, 0.0005), n("decayFactor", "decay", 0.6, 0.95, 0.78, 0.01), n("exposure", "exposure", 0.4, 2.5, 1, 0.05)],
+  "physarum-jones": [n("sensorAngle", "sensor angle", 5, 45, 22, 1), n("sensorDist", "sensor dist", 2, 20, 9, 0.5), n("turnSpeed", "turn speed", 5, 60, 28, 1), n("stepSize", "step size", 0.4, 2, 1, 0.05), n("deposit", "deposit", 0.02, 0.4, 0.18, 0.01), n("decay", "decay", 0.85, 0.99, 0.93, 0.005), n("diffuse", "diffuse", 0, 1, 0.45, 0.01), n("intensity", "intensity", 0.5, 4, 1.4, 0.05), n("gamma", "gamma", 0.3, 1.2, 0.8, 0.01), c("bg", "background", "#07060c"), c("lo", "low", "#3a1d6e"), c("hi", "high", "#f7d774")],
+};
+
+type Eng = { render(): void; dispose(): void; reset(): void; setParams(p: unknown): void; setMouse(x: number, y: number, a: boolean): void };
+
+type Kind = "physmod" | "physarum" | "p5";
+const kindOf = (gen: string): Kind => (gen === "physarum" ? "physmod" : gen === "physarum-jones" ? "physarum" : "p5");
+
+function presetsFor(gen: string): { label: string; params: Record<string, unknown> }[] {
+  if (gen === "physarum") return PHYS_PRESETS.map((p) => ({ label: p.name, params: p.p as Record<string, unknown> }));
+  if (gen === "physarum-jones") return JONES_PRESETS.map((p) => ({ label: p.label, params: p.params as unknown as Record<string, unknown> }));
+  if (gen === "mycelium") return [
+    { label: "Wild", params: { preset: "wild", color: 0 } },
+    { label: "Filigree", params: { preset: "filigree", color: 1 } },
+    { label: "Cords", params: { preset: "cords", color: 1 } },
+    { label: "Bloom", params: { preset: "bloom", color: 1 } },
+  ];
+  return [];
+}
+
+const baseSeed = (i: number) => 1000 + i * 131 + 7;
+const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+export function mountAlgoStudio(root: HTMLElement): () => void {
+  const stage = root.querySelector("#algo-stage") as HTMLElement;
+  const algoSel = root.querySelector("#algo-algo") as HTMLSelectElement;
+  const presetSel = root.querySelector("#algo-preset") as HTMLSelectElement;
+  const panelHost = root.querySelector("#algo-panel") as HTMLElement;
+  const fpsEl = root.querySelector("#algo-fps") as HTMLElement;
+  const aboutBody = root.querySelector("#algo-about-body") as HTMLElement;
+
+  let sel = 0;
+  let seed = baseSeed(0);
+  let instance: { remove?: () => void } | null = null;
+  let engine: Eng | null = null;
+  let canvas: HTMLCanvasElement | null = null;
+  let pane: PaneLike | null = null;
+  let raf = 0;
+  let recreateT = 0;
+  const values: Record<string, number | string> = {};
+  let gpuBase: Record<string, unknown> = {};
+
+  // ---- Soundscape (biome) — shared, mixes into video export ----
+  const biome = new Biome();
+  let biomeOn = false;
+  let biomeCtx: AudioContext | null = null;
+  let biomeRecDest: MediaStreamAudioDestinationNode | null = null;
+  const soundState = { volume: 0.7 };
+  async function rollBiome() {
+    biomeCtx = await ensureAudio();
+    await biome.start();
+    const cfg = randomConfig();
+    biome.setPalette(cfg.palette); biome.apply(cfg.strands, cfg.master);
+    biome.setMaster({ volume: soundState.volume }); biome.setMuted(false); biomeOn = true;
+  }
+  function biomeStream(): MediaStream | null {
+    if (!biomeOn || !biomeCtx) return null;
+    if (!biomeRecDest) { biomeRecDest = biomeCtx.createMediaStreamDestination(); biome.tap(biomeRecDest); }
+    return biomeRecDest.stream;
+  }
+
+  // ---- Touch ----
+  const touchState = { strength: 0.5 };
+  function onPointer(e: PointerEvent, down: boolean) {
+    if (!canvas || !engine?.setMouse) return;
+    const r = canvas.getBoundingClientRect();
+    engine.setMouse((e.clientX - r.left) / Math.max(1, r.width), (e.clientY - r.top) / Math.max(1, r.height), down && touchState.strength > 0);
+  }
+
+  const curGen = () => DATA[sel].gen;
+
+  function teardownArt() {
+    cancelAnimationFrame(raf);
+    try { instance?.remove?.(); } catch { /* noop */ }
+    try { engine?.dispose(); } catch { /* noop */ }
+    instance = null; engine = null;
+    canvas?.remove(); canvas = null;
+  }
+
+  function p5Params(): Record<string, unknown> {
+    return { ...values, color: 1 };
+  }
+
+  function runGpuLoop() {
+    let n0 = 0, t0 = performance.now();
+    const loop = () => {
+      engine!.render();
+      n0++;
+      const now = performance.now();
+      if (now - t0 > 500) { fpsEl.textContent = `${Math.round((n0 * 1000) / (now - t0))} fps · GPU`; n0 = 0; t0 = now; }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+  }
+
+  function buildArt() {
+    teardownArt();
+    const gen = curGen();
+    const kind = kindOf(gen);
+    if (kind === "p5") {
+      instance = renderArt(stage, gen, seed, 840, 30, p5Params() as Parameters<typeof renderArt>[5]);
+      canvas = stage.querySelector("canvas");
+      fpsEl.textContent = "p5 · 30 fps";
+      return;
+    }
+    canvas = document.createElement("canvas");
+    stage.insertBefore(canvas, stage.firstChild);
+    try {
+      if (kind === "physmod") {
+        gpuBase = { ...M_DEFAULTS, agentTexW: 768, ...values };
+        engine = new PhysMod(canvas, 640, gpuBase as unknown as MParams);
+      } else {
+        gpuBase = { ...DEFAULTS, ...values };
+        engine = new Physarum(canvas, 512, gpuBase as unknown as Params);
+      }
+      runGpuLoop();
+    } catch { fpsEl.textContent = "WebGL2 unavailable"; }
+  }
+
+  function onParamChange() {
+    if (kindOf(curGen()) === "p5") {
+      window.clearTimeout(recreateT);
+      recreateT = window.setTimeout(buildArt, 170) as unknown as number;
+    } else {
+      for (const k in values) gpuBase[k] = values[k];
+      engine?.setParams(gpuBase);
+    }
+  }
+
+  function buildControls() {
+    pane?.dispose();
+    panelHost.innerHTML = "";
+    pane = new Pane({ container: panelHost }) as unknown as PaneLike;
+    const gen = curGen();
+    for (const k of Object.keys(values)) delete values[k];
+    for (const d of SCHEMA[gen] || []) values[d.key] = d.def;
+
+    const fSet = pane.addFolder({ title: "Settings", expanded: true });
+    for (const d of SCHEMA[gen] || []) {
+      const opts: Record<string, unknown> = { label: d.label };
+      if (d.type === "num") { opts.min = d.min; opts.max = d.max; opts.step = d.step; }
+      else if (d.type === "sel") opts.options = Object.fromEntries(d.options.map((o) => [o, o]));
+      fSet.addBinding(values, d.key, opts).on("change", onParamChange);
+    }
+    addStandardFolders(pane);
+  }
+
+  function addStandardFolders(p: PaneLike) {
+    const fTouch = p.addFolder({ title: "Touch", expanded: false });
+    fTouch.addBinding(touchState, "strength", { min: 0, max: 1, step: 0.05, label: "strength" });
+
+    const fSound = p.addFolder({ title: "Soundscape (biome)", expanded: false });
+    const sb = fSound.addButton({ title: biomeOn ? "■ stop sound" : "▶ enable sound" });
+    sb.on("click", async () => {
+      if (biomeOn) { biome.setMuted(true); biomeOn = false; setTimeout(() => { if (!biomeOn) suspendAudio(); }, 240); sb.title = "▶ enable sound"; }
+      else { sb.title = "…"; await rollBiome(); sb.title = "■ stop sound"; }
+    });
+    fSound.addButton({ title: "⟲ new soundscape" }).on("click", () => { rollBiome(); });
+    fSound.addBinding(soundState, "volume", { min: 0, max: 1, step: 0.01, label: "volume" }).on("change", () => biome.setMaster({ volume: soundState.volume }));
+
+    const recState = { seconds: 10 };
+    const fVid = p.addFolder({ title: "Export Video", expanded: false });
+    fVid.addBinding(recState, "seconds", { min: 3, max: 30, step: 1, label: "seconds" });
+    const rb = fVid.addButton({ title: "● record video" });
+    rb.on("click", async () => {
+      if (!canvas) return;
+      rb.disabled = true;
+      try { const blob = await recordWebM(canvas, recState.seconds, 60, (pr) => { rb.title = `● ${Math.round(pr * 100)}%`; }, biomeStream()); download(blob, `${curGen()}-${seed}-${recState.seconds}s.webm`); }
+      catch (err) { console.error(err); }
+      rb.title = "● record video"; rb.disabled = false;
+    });
+
+    const fSnap = p.addFolder({ title: "Snapshot", expanded: false });
+    fSnap.addButton({ title: "PNG" }).on("click", () => snapshot());
+    fSnap.addButton({ title: "⛶ full-bleed" }).on("click", () => setCine(true));
+  }
+
+  function snapshot() {
+    if (!canvas) return;
+    canvas.toBlob((b) => { if (b) download(b, `${curGen()}-${seed}.png`); }, "image/png");
+  }
+  function download(blob: Blob, name: string) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
+  function refreshPresets() {
+    const list = presetsFor(curGen());
+    presetSel.innerHTML = `<option value="">default</option>`;
+    list.forEach((p, idx) => { const o = document.createElement("option"); o.value = String(idx); o.textContent = p.label; presetSel.appendChild(o); });
+    presetSel.style.display = list.length ? "" : "none";
+  }
+  function applyPreset(idx: number) {
+    const list = presetsFor(curGen());
+    const preset = list[idx];
+    if (!preset) return;
+    const gen = curGen();
+    if (kindOf(gen) === "p5") {
+      for (const k of Object.keys(preset.params)) if (k in values) values[k] = preset.params[k] as number | string;
+      pane?.refresh();
+      buildArt();
+    } else {
+      const base = kindOf(gen) === "physmod" ? { ...M_DEFAULTS, agentTexW: 768 } : { ...DEFAULTS };
+      gpuBase = { ...base, ...preset.params };
+      for (const d of SCHEMA[gen] || []) if (d.key in gpuBase) values[d.key] = gpuBase[d.key] as number | string;
+      pane?.refresh();
+      engine?.setParams(gpuBase);
+    }
+  }
+
+  function updateAbout() {
+    const d = DATA[sel];
+    const steps = d.steps.map((st) => `<li><b>${esc(st.title)}</b> — ${esc(st.text)}</li>`).join("");
+    const facts = d.params.map((pf) => `<li><b>${esc(pf.label)}</b>: ${esc(pf.value)}</li>`).join("");
+    aboutBody.innerHTML =
+      `<p class="studio-about-lead">${d.paras.map(esc).join('</p><p style="margin:0 0 18px">')}</p>` +
+      `<div class="studio-about-cols"><div><h4>How it works</h4><ul>${steps}</ul></div>` +
+      `<div><h4>Parameters</h4><ul>${facts}</ul></div></div>`;
+  }
+
+  function setCine(on: boolean) { root.classList.toggle("studio-cinematic", on); }
+
+  function selectAlgo(i: number) {
+    sel = i; seed = baseSeed(i);
+    buildControls();
+    buildArt();
+    refreshPresets();
+    updateAbout();
+    if (algoSel.selectedIndex !== i) algoSel.selectedIndex = i;
+  }
+
+  // dropdown
+  DATA.forEach((d, i) => { const o = document.createElement("option"); o.value = String(i); o.textContent = `${d.name} · ${d.sub.toLowerCase()}`; algoSel.appendChild(o); });
+  algoSel.addEventListener("change", () => selectAlgo(Number(algoSel.value)));
+  presetSel.addEventListener("change", () => { if (presetSel.value) applyPreset(Number(presetSel.value)); });
+
+  root.querySelector("#algo-reset")!.addEventListener("click", () => { if (engine) engine.reset(); else buildArt(); });
+  root.querySelector("#algo-randomise")!.addEventListener("click", () => {
+    seed = Math.floor(Math.abs(Math.sin(seed * 99991) * 1e6)) + 1;
+    if (kindOf(curGen()) === "p5") buildArt(); else engine?.reset();
+  });
+  root.querySelector("#algo-cine-exit")!.addEventListener("click", () => setCine(false));
+  root.querySelector("#algo-ctrltoggle")?.addEventListener("click", () => panelHost.classList.toggle("studio-hide"));
+
+  stage.addEventListener("pointerdown", (e) => onPointer(e, true));
+  stage.addEventListener("pointermove", (e) => onPointer(e, (e.buttons & 1) === 1));
+  stage.addEventListener("pointerup", (e) => onPointer(e, false));
+
+  const aboutToggle = root.querySelector("#algo-paneltoggle") as HTMLElement | null;
+  const aboutWrap = root.querySelector("#algo-panelbody") as HTMLElement | null;
+  aboutToggle?.addEventListener("click", () => {
+    const hidden = aboutWrap?.classList.toggle("hidden");
+    const caret = aboutToggle.querySelector(".caret");
+    if (caret) caret.textContent = hidden ? "▸" : "▾";
+  });
+
+  const onKey = (e: KeyboardEvent) => {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+    if (e.key === "Escape") setCine(false);
+    else if (e.key === "f") setCine(!root.classList.contains("studio-cinematic"));
+  };
+  window.addEventListener("keydown", onKey);
+
+  selectAlgo(0);
+
+  return () => {
+    window.removeEventListener("keydown", onKey);
+    window.clearTimeout(recreateT);
+    teardownArt();
+    pane?.dispose();
+    try { biome.setMuted(true); suspendAudio(); } catch { /* no audio */ }
+    root.classList.remove("studio-cinematic");
+  };
+}

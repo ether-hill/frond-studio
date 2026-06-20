@@ -1,87 +1,57 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import StudioShell from "@/components/studio/StudioShell";
 
 /**
- * Live "Algorithms" toolbox — a growing collection of generative systems, each running in the
- * browser (p5.js sketches + a WebGL2 GPU Physarum engine). Ported from
- * generatives.vercel.app and reskinned to Frond's tokens. The heavy engine
- * modules are imported lazily (client-only) so p5/WebGL never touch SSR.
+ * Algorithms — the live generative toolbox, now on the shared StudioShell master
+ * template (same layout/styles/chrome as SMA Config and the Algorithm Lab). The
+ * algorithm dropdown sits below the summary; each system renders into the art
+ * window with live controls (its own settings + Touch / Soundscape / Export Video
+ * / Snapshot) in the sidebar, and Presets / Restart / Randomise over the window.
  */
-export default function AlgorithmsApp() {
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let teardown: (() => void) | undefined;
-    let cancelled = false;
-
-    import("./engine/algorithms")
-      .then(({ mountAlgorithms }) => {
-        if (cancelled || !rootRef.current) return;
-        teardown = mountAlgorithms(rootRef.current);
-      })
-      .catch((err) => console.error("Failed to mount algorithms engine:", err));
-
-    return () => {
-      cancelled = true;
-      teardown?.();
-    };
-  }, []);
-
-  return (
-    <div
-      ref={rootRef}
-      className="algo-root"
-      style={{ fontFamily: "var(--font-body), 'Helvetica Neue', Helvetica, Arial, sans-serif", overflowX: "hidden" }}
-    >
-      <section
-        style={{
-          padding: "var(--pad-top) 0 clamp(36px,5vw,52px)",
-          borderBottom: "1px solid rgba(var(--lw),0.1)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "var(--maxw)",
-            margin: "0 auto",
-            padding: "0 var(--gutter)",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            gap: 24,
-          }}
-        >
-          <div>
-            <h1 style={{ margin: 0, fontWeight: 600, fontSize: "clamp(44px,7vw,108px)", lineHeight: 0.94, letterSpacing: "-0.035em" }}>
-              Algorithms
-            </h1>
-          </div>
-          <p style={{ margin: 0, maxWidth: "46ch", fontSize: "clamp(14px,1.7vw,16px)", lineHeight: 1.6, color: "var(--fg2)" }}>
-            A growing collection of generative systems, each running live. Every one builds complex structure from a
-            handful of simple rules: no blueprint, just local interactions. Pick one to watch it run.
-          </p>
-        </div>
-      </section>
-
-      <section style={{ padding: "clamp(34px,5vw,56px) 0 var(--pad-bottom)" }}>
-        <div style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter)" }}>
-          <div
-            id="algoGrid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "168px minmax(0,1.3fr) minmax(0,0.92fr)",
-              gap: "clamp(22px,2.8vw,44px)",
-              alignItems: "start",
-            }}
-          >
-            <nav id="algoIndex" style={{ display: "flex", flexDirection: "column", gap: 1 }} />
-            <div id="algoHero" />
-            <div id="algoText" />
-          </div>
-          <div id="algoBelow" style={{ marginTop: "clamp(44px,6vw,80px)" }} />
-        </div>
-      </section>
+const SCAFFOLD = `
+<div class="studio-selectbar">
+  <label for="algo-algo">Algorithm</label>
+  <select id="algo-algo" aria-label="Algorithm"></select>
+</div>
+<div class="studio-grid">
+  <div class="studio-visual" id="algo-stage">
+    <div class="studio-presetbar">
+      <label for="algo-preset">Presets</label>
+      <select id="algo-preset" aria-label="Presets"><option value="">default</option></select>
     </div>
+    <div class="studio-topctl">
+      <button id="algo-reset">RESTART</button>
+      <button id="algo-randomise">RANDOMISE</button>
+    </div>
+    <div id="algo-fps" class="studio-fps"></div>
+    <button id="algo-cine-exit" class="studio-cine-exit">✕ controls</button>
+  </div>
+  <aside class="studio-side">
+    <button id="algo-ctrltoggle" class="studio-ctrltoggle" aria-label="Toggle controls">⚙ Controls</button>
+    <div id="algo-panel" class="studio-controls"></div>
+  </aside>
+</div>
+<section class="studio-about" aria-label="About this algorithm">
+  <button id="algo-paneltoggle" class="studio-paneltoggle"><span>About · This algorithm</span><span class="caret">▾</span></button>
+  <div id="algo-panelbody" class="studio-panelbody">
+    <div id="algo-about-body" class="studio-about-body"></div>
+  </div>
+</section>
+`;
+
+const load = async () => {
+  const m = await import("./engine/algoStudio");
+  return (root: HTMLElement) => m.mountAlgoStudio(root);
+};
+
+export default function AlgorithmsApp() {
+  return (
+    <StudioShell
+      title="Algorithms"
+      intro="A growing collection of generative systems, each running live. Every one builds complex structure from a handful of simple rules: no blueprint, just local interactions. Pick one below, tune it in real time, and capture it."
+      scaffold={SCAFFOLD}
+      load={load}
+    />
   );
 }
