@@ -37,7 +37,7 @@ const schema: ParamSchema = {
   colorA: { type: "color", default: "#0a1418", hot: true, label: "Colour A (low B)" },
   colorB: { type: "color", default: "#e9c46a", hot: true, label: "Colour B (high B)" },
   rotate: { type: "number", min: -1, max: 1, step: 0.01, default: 0.12, hot: true, label: "Rotate speed" },
-  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 0.85, hot: true, label: "Chaos" },
+  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 1.0, hot: true, label: "Chaos" },
 };
 
 // ── Param accessors ──────────────────────────────────────────────────────────

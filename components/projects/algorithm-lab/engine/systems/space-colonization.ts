@@ -66,6 +66,14 @@ interface Colony {
   hueShift: number; // per-colony colour rotation so they read distinctly
   paletteIndex: number; // which palette this colony currently rides
   finished: boolean; // reached cap / attractors gone → will be reseeded
+  // Cinematic drift: each colony glides gracefully between waypoints in render-
+  // space. `driftX/Y` is the smoothed current offset; `driftTX/TY` the target it
+  // eases toward. `driftPhase` desynchronises each colony's breathing.
+  driftX: number;
+  driftY: number;
+  driftTX: number;
+  driftTY: number;
+  driftPhase: number;
 }
 
 export interface State {
@@ -88,7 +96,7 @@ export interface State {
 
 const schema: ParamSchema = {
   palette: { type: "select", options: PALETTE_IDS, default: "fern", hot: true, label: "Palette" },
-  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 0.85, hot: true, label: "Chaos" },
+  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 1.0, hot: true, label: "Chaos" },
   attractorCount: { type: "int", min: 200, max: 6000, default: 2200, label: "Attractors" },
   distribution: {
     type: "select",
@@ -268,6 +276,11 @@ function makeColony(
     hueShift: rng.next(), // 0..1 colour rotation, unique per colony
     paletteIndex: rng.int(0, PALETTE_IDS.length - 1),
     finished: false,
+    driftX: 0,
+    driftY: 0,
+    driftTX: rng.range(-1, 1),
+    driftTY: rng.range(-1, 1),
+    driftPhase: rng.next() * TAU,
   };
 }
 
@@ -343,11 +356,34 @@ function driveChaos(state: State): void {
   state.maxNodes = Math.round(clamp(baseMax + capAmp * wob(200, 0.5), 500, 9000));
 }
 
+// Cinematic glide. Each colony eases its drift offset toward a slowly chosen
+// waypoint, and we add a big, slow, eased breathing sway on top. This is the
+// LARGE, SLOW, GRACEFUL layer that sits UNDER the fine growth detail so the whole
+// vein field reads as a living tapestry drifting and blooming, not nervous jitter.
+function driveDrift(state: State): void {
+  const t = state.tick;
+  for (let c = 0; c < state.colonies.length; c++) {
+    const col = state.colonies[c];
+
+    // Occasionally pick a fresh waypoint so each colony wanders to new ground.
+    if (state.rng.next() < 0.006) {
+      col.driftTX = state.rng.range(-1, 1);
+      col.driftTY = state.rng.range(-1, 1);
+    }
+
+    // Critically-damped-ish ease toward the target (very slow → cinematic).
+    col.driftX += (col.driftTX - col.driftX) * 0.012;
+    col.driftY += (col.driftTY - col.driftY) * 0.012;
+  }
+  void t;
+}
+
 function step(state: State, dt: number): State {
   void dt;
   state.tick++;
 
   driveChaos(state);
+  driveDrift(state);
 
   const chaos = clamp(Number(state.params.chaos), 0, 1);
 
@@ -634,10 +670,27 @@ function render(state: State, surface: RenderSurface): void {
   const chaos = clamp(Number(state.params.chaos), 0, 1);
   const t = state.tick;
 
-  // Global colour churn: a time-varying offset added to the depth value before
-  // fieldToColor, plus a slow drift through PALETTE_IDS, so hue shifts vividly.
-  const globalChurn = 0.5 + 0.5 * Math.sin(t / 60); // 0..1
-  const paletteDrift = Math.floor(t / 90); // step through palettes over time
+  // ── Lush, continuously evolving colour ──────────────────────────────────────
+  // A SMOOTH, slow hue drift (no strobing): the depth value gets a gently moving
+  // offset so colour breathes through the palette over many seconds. We blend two
+  // out-of-phase low-frequency sines for an organic, non-repeating wash.
+  const globalChurn =
+    0.5 + 0.35 * Math.sin(t / 260) + 0.15 * Math.sin(t / 410 + 1.3); // ~0..1, gentle
+  // Smoothly cross-fade between consecutive palettes instead of hard-cutting, so
+  // the whole field morphs hue elegantly with no full-frame flash.
+  const paletteFloat = t / 520; // very slow march through PALETTE_IDS
+  const paletteDrift = Math.floor(paletteFloat);
+  const paletteBlend = paletteFloat - paletteDrift; // 0..1 fade to next palette
+
+  // ── Large, slow, eased breathing of the WHOLE vein field ────────────────────
+  // Low-frequency sin/cos of the internal tick gives a big graceful sway that the
+  // fine growth detail rides on top of. Amplitude is generous so the piece truly
+  // breathes; it stays inside the frame thanks to the modest unit fraction.
+  const breath = unit * 0.05; // amplitude of global breathing drift (in px)
+  const breatheX = breath * (0.7 * Math.sin(t / 230) + 0.3 * Math.cos(t / 350));
+  const breatheY = breath * (0.7 * Math.cos(t / 270) + 0.3 * Math.sin(t / 310));
+  // Slow, eased global zoom-breath so the tapestry inhales and exhales.
+  const breatheScale = 1 + 0.03 * Math.sin(t / 300);
 
   const baseW = unit * 0.0016;
   ctx.lineCap = "round";

@@ -72,8 +72,8 @@ const schema: ParamSchema = {
     type: "number",
     min: 0,
     max: 1,
-    default: 0.85,
-    hot: true, // scales η/growth wander, reseed rate, and flicker depth
+    default: 1.0, // PUSHED to the max — η/growth wander, reseed rate, palette churn
+    hot: true,
     label: "Chaos",
   },
   gridRes: {
@@ -281,12 +281,16 @@ function step(s: State, _dt: number): State {
   // cycle; rng adds per-frame jitter; both scaled by `chaos`.
   const tick = s.tick;
   const baseEta = asNum(p.eta, 1.0);
+  // Slow, breathing η drift — gentle jitter only, so morphology evolves
+  // gracefully between forked and creeping rather than thrashing frame to frame.
   const etaWander =
-    Math.sin(tick * 0.013) * 2.0 + (s.rng.next() - 0.5) * 1.6;
+    Math.sin(tick * 0.006) * 1.7 + (s.rng.next() - 0.5) * 0.6;
   const eta = clamp(baseEta + etaWander * chaos, 0.4, 6);
 
+  // GROWTH RATE: kept measured so branches UNFURL rather than snap into place.
+  // A slow sinusoid breathes the pace; chaos adds only mild variance.
   const baseGrowth = clamp(asInt(p.growthPerStep, 14), 1, 100);
-  const growthWander = 1 + 0.6 * Math.sin(tick * 0.021) + (s.rng.next() - 0.5) * 0.7;
+  const growthWander = 1 + 0.35 * Math.sin(tick * 0.011) + (s.rng.next() - 0.5) * 0.35;
   const growthPerStep = clamp(
     Math.round(baseGrowth * (1 + (growthWander - 1) * chaos)),
     1,

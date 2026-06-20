@@ -175,7 +175,7 @@ const schema: ParamSchema = {
     min: 0,
     max: 1,
     step: 0.01,
-    default: 0.85, // scales auto-splat rate/strength + the param wander
+    default: 1.0, // pushed to the max → richest billowing blooms
     hot: true,
     label: "chaos",
   },

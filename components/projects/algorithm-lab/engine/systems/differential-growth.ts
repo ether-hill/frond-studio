@@ -83,7 +83,7 @@ const schema: ParamSchema = {
 
   // Global energy knob. Scales jitter, repulsion swing, split-threshold wander,
   // hotspot migration speed, jolt frequency and colour churn. The circus dial.
-  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 0.85, hot: true, label: "Chaos" },
+  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 1.0, hot: true, label: "Chaos" },
 };
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -285,6 +285,13 @@ function step(state: State, _dt: number): State {
     relax(state, repulsionRadius, repulsionStrength, springStrength, splitThreshold, jitter, bias, closed);
   }
 
+  // ── (poetic flow) large, slow, eased breathing of the whole ribbon ──
+  // Beneath the fine relaxation detail we glide every node along a smooth,
+  // low-frequency vector field — slow migrating buckles, a swell and undulation
+  // that makes the coral flow like it is suspended underwater. Eased so it never
+  // reads as nervous jitter: graceful, cinematic, large in amplitude.
+  breathe(state, T, chaos);
+
   // ── (3) injection: sudden jolts to random node spans ──
   state.framesSinceJolt++;
   const joltGap = Math.max(8, Math.round(70 - 60 * chaos));
@@ -431,6 +438,58 @@ function relax(
     }
     a.x += dx;
     a.y += dy;
+  }
+}
+
+// Large, slow, eased breathing of the whole writhing ribbon. We push every node
+// along a smooth low-frequency vector field built from a handful of out-of-phase
+// sines of the internal clock — a few big rolling cells that migrate across the
+// canvas. The result is a graceful underwater swell + slowly travelling buckles
+// layered *under* the fine relaxation detail, not a fast jitter. Amplitude is
+// generous so the motion is unmistakably alive, but every term is low-frequency
+// and smoothstep-eased so it stays cinematic and background-safe.
+function breathe(state: State, T: number, chaos: number): void {
+  const nodes = state.nodes;
+  const n = nodes.length;
+  if (n < 2) return;
+
+  // Slow clocks. These are deliberately a fraction of the relaxation tempo so the
+  // whole membrane heaves over many seconds rather than twitching frame-to-frame.
+  const t1 = T * 0.011;
+  const t2 = T * 0.0073;
+  const t3 = T * 0.017;
+
+  // Eased global swell: the entire ribbon gently inhales and exhales in scale.
+  // smoothstep-shaped so the turn-arounds are soft, never snappy.
+  const sw = 0.5 + 0.5 * Math.sin(t2);
+  const swell = (sw * sw * (3 - 2 * sw)) - 0.5; // smoothstep, centred → [-0.5,0.5]
+
+  // Amplitude of the graceful flow — raised with chaos so PUSHING the dial makes
+  // the undulation grander, not more frantic (frequency stays low regardless).
+  const amp = (0.0011 + 0.0026 * chaos);
+
+  // Two slow rotating drift directions give migrating buckles that wander the form.
+  const dax = Math.cos(t1 * TAU * 0.5);
+  const day = Math.sin(t1 * TAU * 0.5);
+  const dbx = Math.cos(-t3 * TAU * 0.5 + 1.3);
+  const dby = Math.sin(-t3 * TAU * 0.5 + 1.3);
+
+  for (let i = 0; i < n; i++) {
+    const node = nodes[i];
+    // Low spatial frequency so neighbouring nodes move almost together → the
+    // ribbon flexes as smooth long waves, not pixel noise.
+    const u = node.x;
+    const v = node.y;
+
+    // Travelling undulation along the form (migrating buckles).
+    const wave1 = Math.sin(u * 4.3 + v * 2.1 + t1 * TAU);
+    const wave2 = Math.sin(v * 3.7 - u * 1.9 - t3 * TAU);
+    const flowX = dax * wave1 + dbx * wave2;
+    const flowY = day * wave1 + dby * wave2;
+
+    // Gentle radial swell about the centre — the whole coral breathes.
+    node.x += flowX * amp + u * swell * amp * 1.4;
+    node.y += flowY * amp + v * swell * amp * 1.4;
   }
 }
 

@@ -54,7 +54,7 @@ const schema: ParamSchema = {
   blendBg: { type: "color", default: "#06060a", hot: true, label: "Background" },
   // The circus dial. Scales coefficient-drift speed/amplitude, density decay and
   // colour-cycle. 0 ≈ near-static plate, 1 = wild constant morphing chaos.
-  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 0.85, hot: true, label: "Chaos" },
+  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 1.0, hot: true, label: "Chaos" },
 };
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -342,40 +342,35 @@ export const strangeAttractors: GenerativeSystem<State> = {
     state.tick++;
     const t = state.tick;
 
-    // ── 1. Occasional JUMP to a fresh non-degenerate form ─────────────────────
-    // Probability scales with chaos. A jump snaps the coefficients somewhere new
-    // and reseeds the iterate so the new attractor builds cleanly.
-    const jumpChance = 0.002 + chaos * 0.012;
-    if (state.rng.next() < jumpChance) {
-      const [na, nb, nc, nd] = freshCoeffs(state.rng);
-      state.ca = na;
-      state.cb = nb;
-      state.cc = nc;
-      state.cd = nd;
-      state.x = 0.0001;
-      state.y = 0.0001;
-    } else {
-      // ── 2. Continuous DRIFT — sin(tick·freq) breathing + rng wander, all
-      // gently pulled back toward the base a/b/c/d so it morphs but never
-      // runs away forever. Speed and amplitude both scale with chaos.
-      const freq = 0.006 + chaos * 0.05; // breathing rate
-      const amp = 0.25 + chaos * 1.4; // sine swing magnitude
-      const wander = chaos * 0.06; // per-frame random walk
-      const pull = 0.01; // weak restoring force toward the base coeffs
+    // ── 1. POETIC FLOW: slow, eased, low-frequency coefficient drift ──────────
+    // No abrupt jumps, no per-frame jitter. Each coefficient is the smooth sum
+    // of a few low-frequency sines (layered like ocean swell), so the attractor
+    // shape reshapes gracefully — luminous filaments flowing like smoke/aurora.
+    // "chaos" widens the swing and very gently quickens the swell, never frantic.
+    //
+    // PUSH but stay beautiful: amplitude grows with chaos so at 1.0 the form
+    // explores boldly, while the eased low-frequency motion keeps it graceful.
+    const baseFreq = 0.0016 + chaos * 0.0026; // very slow breathing swell
+    const amp = 0.55 + chaos * 1.35; // exploration radius around the base
+    const ease = 0.012 + chaos * 0.014; // how softly it eases toward target
 
-      const drift = (cur: number, base: number, phase: number, k: number) => {
-        const target = base + Math.sin(t * freq + phase) * amp * (0.7 + 0.3 * Math.sin(t * 0.013 + k));
-        let v = cur + (target - cur) * (0.02 + chaos * 0.06); // ease toward target
-        v += state.rng.range(-wander, wander); // chaotic jitter
-        v += (base - v) * pull; // mild restoring pull
-        return v;
-      };
+    // A coefficient's target: a base point plus three layered low-frequency
+    // sines on incommensurate periods, so the path never simply repeats and
+    // the drift feels organic and ever-unfolding rather than looping mechanically.
+    const swell = (base: number, phase: number, k: number) =>
+      base +
+      amp *
+        (0.62 * Math.sin(t * baseFreq + phase) +
+          0.26 * Math.sin(t * baseFreq * 0.41 + phase * 1.7 + k) +
+          0.12 * Math.sin(t * baseFreq * 2.13 + k * 0.6));
 
-      state.ca = drift(state.ca, baseA, state.pa, 0);
-      state.cb = drift(state.cb, baseB, state.pb, 1.7);
-      state.cc = drift(state.cc, baseC, state.pc, 3.1);
-      state.cd = drift(state.cd, baseD, state.pd, 4.9);
-    }
+    // Critically-damped-feeling ease: glide current toward target, no jitter.
+    const drift = (cur: number, target: number) => cur + (target - cur) * ease;
+
+    state.ca = drift(state.ca, swell(baseA, state.pa, 0));
+    state.cb = drift(state.cb, swell(baseB, state.pb, 1.7));
+    state.cc = drift(state.cc, swell(baseC, state.pc, 3.1));
+    state.cd = drift(state.cd, swell(baseD, state.pd, 4.9));
 
     // Guard against NaN/escape in the coefficients themselves.
     if (

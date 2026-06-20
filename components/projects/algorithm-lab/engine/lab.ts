@@ -6,6 +6,7 @@ import { createLoop, type Loop } from "./harness/loop";
 import { buildPanel, type PanelHandle } from "./harness/panel";
 import { exportCurrentPng, exportHiResPng, copyParamsJson, download } from "./harness/export";
 import { loadPresets, savePreset, deletePreset, downloadPreset, type Preset } from "./harness/presets";
+import { recordWebM } from "./harness/video";
 import { SYSTEMS } from "./systems";
 
 /**
@@ -25,12 +26,14 @@ export function mountLab(root: HTMLElement): () => void {
           <button id="alab-step">step</button>
           <button id="alab-reset">reset</button>
         </div>
+        <div class="alab-row"><button id="alab-cine">⛶ cinematic / full-bleed</button></div>
         <div class="alab-hud" id="alab-hud">—</div>
       </div>
       <div class="alab-block" id="alab-panel"></div>
       <div class="alab-block">
         <div class="alab-lbl">Export</div>
         <div class="alab-row"><button id="alab-png">PNG</button><button data-x="2">2×</button><button data-x="4">4×</button><button data-x="8">8×</button></div>
+        <div class="alab-row"><button id="alab-rec">● record webm</button><select id="alab-recsec" class="alab-sel"><option value="5">5s</option><option value="10" selected>10s</option><option value="20">20s</option><option value="30">30s</option></select></div>
         <div class="alab-row"><button id="alab-copy">copy params JSON</button></div>
       </div>
       <div class="alab-block">
@@ -39,7 +42,9 @@ export function mountLab(root: HTMLElement): () => void {
         <div class="alab-presets" id="alab-presets"></div>
       </div>
     </aside>
-    <main class="alab-stage" id="alab-stage"></main>
+    <main class="alab-stage" id="alab-stage">
+      <button class="alab-cine-exit" id="alab-cine-exit">✕ controls</button>
+    </main>
   `;
 
   const systemsNav = root.querySelector("#alab-systems") as HTMLElement;
@@ -138,6 +143,29 @@ export function mountLab(root: HTMLElement): () => void {
   });
   root.querySelector("#alab-copy")!.addEventListener("click", () => { if (active) copyParamsJson(active.id, seed, params); });
 
+  // cinematic / full-bleed: hide the chrome so a system can be used or recorded
+  // as a motion-graphic background. Esc or the floating chip restores controls.
+  const setCine = (on: boolean) => root.classList.toggle("alab-cinematic", on);
+  root.querySelector("#alab-cine")!.addEventListener("click", () => setCine(!root.classList.contains("alab-cinematic")));
+  root.querySelector("#alab-cine-exit")!.addEventListener("click", () => setCine(false));
+
+  // record the live canvas to a WebM clip you can drop into a motion-graphic comp
+  root.querySelector("#alab-rec")!.addEventListener("click", async () => {
+    if (!canvas) return;
+    const btn = root.querySelector("#alab-rec") as HTMLButtonElement;
+    const sel = root.querySelector("#alab-recsec") as HTMLSelectElement;
+    const secs = Number(sel.value) || 10;
+    btn.disabled = true;
+    try {
+      const blob = await recordWebM(canvas, secs, 60, (p) => { btn.textContent = `● rec ${Math.round(p * 100)}%`; });
+      download(blob, `${active?.id ?? "lab"}-${seed}-${secs}s.webm`);
+    } catch (err) {
+      console.error("recording failed", err);
+    }
+    btn.textContent = "● record webm";
+    btn.disabled = false;
+  });
+
   function renderPresets(list: Preset[]): void {
     presetsEl.innerHTML = "";
     for (const p of list) {
@@ -170,6 +198,8 @@ export function mountLab(root: HTMLElement): () => void {
     if (e.target instanceof HTMLInputElement) return;
     if (e.key === " ") { e.preventDefault(); loop?.toggle(); }
     else if (e.key === "r") loop?.reset();
+    else if (e.key === "Escape") setCine(false);
+    else if (e.key === "f") setCine(!root.classList.contains("alab-cinematic"));
   };
   window.addEventListener("keydown", onKey);
 

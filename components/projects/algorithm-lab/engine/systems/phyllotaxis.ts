@@ -3,12 +3,13 @@
 // golden angle (137.507°) the florets pack with no preferred direction; detune a
 // few degrees and the latent Fibonacci spiral arms snap into view as ridges.
 //
-// This build is NOT static — it's a visual circus. An internal frame `tick`
-// continuously oscillates the divergence angle around the golden angle, so the
-// spiral arms morph and swirl forever. scaleC and baseSize pulse, the whole
-// field slowly rotates, per-floret jitter churns, the angle occasionally jolts
-// for sudden re-organisation, and the colour field ripples outward and rotates
-// while the palette cycles. It never stops.
+// This build is NOT static — it's a slow, hypnotic mandala. An internal frame
+// `tick` eases the divergence angle around the golden angle with a low-frequency
+// breath, so the spiral arms swirl and morph languidly. scaleC and baseSize
+// pulse like breathing, the whole field rotates with a slow majestic drift, and
+// luminous colour waves ripple outward and rotate while palettes cross-fade
+// gently. Big graceful motion under a fine sparkle. It never stops — loop it
+// behind a title card.
 
 import type {
   Canvas2DSurface,
@@ -46,7 +47,7 @@ const schema: ParamSchema = {
   colorBy: { type: "select", options: ["radius", "angle"], default: "radius", hot: true, label: "Colour by" },
   relax: { type: "bool", default: false, hot: true, label: "Relax packing" },
   palette: { type: "select", options: PALETTE_IDS, default: "fluoro", hot: true, label: "Palette" },
-  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 0.85, hot: true, label: "Chaos" },
+  chaos: { type: "number", min: 0, max: 1, step: 0.01, default: 1.0, hot: true, label: "Chaos" },
 };
 
 // ── State ─────────────────────────────────────────────────────────────────--
@@ -88,29 +89,37 @@ function ensureJitter(state: State, need: number, rng: RNG): void {
   state.jitterCount = need;
 }
 
-// The *effective* divergence angle in radians for the current tick. This is the
-// money effect: a constant sinusoidal swirl around 137.5° plus a slow random
-// wander, plus any transient jolt, all scaled by `chaos`.
+// Smoothstep-style ease so oscillations glide rather than tick like a metronome.
+const easeWave = (x: number): number => {
+  const s = Math.sin(x);
+  return s * (1.5 - 0.5 * s * s); // gentle cubic shaping → languid, never snappy
+};
+
+// The *effective* divergence angle in radians for the current tick. The motion is
+// a SLOW, eased low-frequency breath around 137.5° (no fast jitter, no jolts),
+// gently detuned so the latent Fibonacci arms swirl and morph languidly. A slow
+// random wander keeps it from ever exactly repeating. All scaled by `chaos`.
 function effectiveAngleRad(state: State): number {
   const p = state.params;
   const base = num(p, "goldenAngle", 137.507);
-  const chaos = clamp(num(p, "chaos", 0.85), 0, 1);
+  const chaos = clamp(num(p, "chaos", 1.0), 0, 1);
   const t = state.tick;
-  // Layered sines so the morph never settles into an obvious period.
-  const osc =
-    Math.sin(t * 0.55) * 1.9 +
-    Math.sin(t * 0.21 + 1.3) * 1.1 +
-    Math.sin(t * 1.07 + 2.1) * 0.5;
-  const deg = base + chaos * (osc + state.angleWander) + state.jolt;
+  // Two very-low-frequency eased waves of slightly different periods so the
+  // breath drifts in and out of phase — hypnotic, never an obvious loop.
+  const breath =
+    easeWave(t * 0.045) * 2.3 +
+    easeWave(t * 0.027 + 1.3) * 1.4;
+  const deg = base + chaos * (breath + state.angleWander);
   return deg * RAD;
 }
 
-// The *effective* spacing for the current tick — a gentle breathing pulse.
+// The *effective* spacing for the current tick — a slow breathing pulse that
+// lets the whole head gently expand and contract.
 function effectiveScaleC(state: State): number {
   const p = state.params;
   const c = num(p, "scaleC", 8);
-  const chaos = clamp(num(p, "chaos", 0.85), 0, 1);
-  const pulse = 1 + chaos * 0.18 * Math.sin(state.tick * 0.7 + 0.6);
+  const chaos = clamp(num(p, "chaos", 1.0), 0, 1);
+  const pulse = 1 + chaos * 0.12 * Math.sin(state.tick * 0.11 + 0.6);
   return c * pulse;
 }
 

@@ -34,7 +34,14 @@ const CSS = `
 .alab-preset .load { flex:1; text-align:left; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .alab-stage { position:relative; overflow:hidden; background:#000; min-width:0; }
 .alab-view { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.alab-sel { background:var(--panel); color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:6px 8px; font:inherit; cursor:pointer; }
 .alab .tp-dfwv { width:100%; }
+/* cinematic / full-bleed: drop the sidebar, canvas fills everything */
+.alab-cine-exit { position:absolute; top:12px; right:12px; z-index:5; display:none; opacity:0.35; transition:opacity .2s; }
+.alab-cine-exit:hover { opacity:1; }
+.alab.alab-cinematic { grid-template-columns:1fr; }
+.alab.alab-cinematic .alab-side { display:none; }
+.alab.alab-cinematic .alab-cine-exit { display:inline-flex; }
 @media (max-width: 720px) {
   .alab { grid-template-columns:1fr; grid-template-rows:auto 1fr; }
   .alab-side { max-height:42vh; }
