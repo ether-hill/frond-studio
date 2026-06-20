@@ -25,6 +25,7 @@ const project: EditorialProject = {
     ratio: "16:9",
     label: "embassyofthefreemind.com",
   },
+  heroBg: `${M}/videos/hero-bg.jpg`,
 
   introLead:
     "The Embassy of the Free Mind holds a world-class collection of hermetic texts. Its old site got in the way: hard to navigate, single language, and cut off from ticketing and the library catalogue.",
@@ -81,9 +82,9 @@ const project: EditorialProject = {
     body: "Exhibitions, news, editorial pieces, partners and FAQs all run on one system, editable in-house in both Dutch and English. Every template was built to make a complex institution easy to browse.",
   },
   devices: {
-    phone: { type: "image", src: `${M}/device-mobile.jpg`, alt: "Booking a visit on a phone.", ratio: "4:5", label: "Tickets" },
-    tablet: { type: "image", src: `${M}/device-tablet.jpg`, alt: "The Embassy front entrance on a tablet.", ratio: "3:4", label: "Visit" },
-    laptop: { type: "image", src: `${M}/interactions.jpg`, alt: "Searching the library catalogue on a laptop.", ratio: "16:9", label: "Collection search" },
+    phone: { type: "image", src: `${M}/mock-tickets.jpg`, alt: "Booking a museum visit on a phone.", ratio: "4:5", label: "Tickets" },
+    tablet: { type: "image", src: `${M}/mock-tours.jpg`, alt: "Guided tours page on a tablet.", ratio: "3:4", label: "Tours" },
+    laptop: { type: "image", src: `${M}/mock-catalogue.jpg`, alt: "The library catalogue on a laptop.", ratio: "16:9", label: "Collection search" },
   },
 
   film: {
@@ -126,6 +127,13 @@ const project: EditorialProject = {
     body: "Frond gave a centuries-old collection a home that finally feels as open and alive as the ideas inside it.",
     author: "Chiara, Embassy of the Free Mind",
     needsConfirmation: true,
+  },
+  quoteBg: {
+    type: "video",
+    src: `${M}/videos/flowing-lines.mp4`,
+    poster: `${M}/videos/flowing-lines.jpg`,
+    alt: "",
+    ratio: "16:9",
   },
 
   credits: "Design and build by Frond Studio. Source Library deployment by Derek. EFM lead, Chiara.",

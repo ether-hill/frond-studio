@@ -38,6 +38,8 @@ export type EditorialProject = {
 
   /** Hero media, shown inside a browser frame. */
   hero: EditorialMedia;
+  /** Full-bleed blurred image shown behind the hero browser frame. */
+  heroBg?: string;
 
   /** Positioning. Lead is the large serif statement, body the supporting line. */
   introLead: string;
@@ -67,6 +69,8 @@ export type EditorialProject = {
 
   /** Client testimonial. May be a clearly-marked placeholder. */
   quote?: { body: string; author: string; needsConfirmation?: boolean };
+  /** Looping video shown behind the quote (distinct dark/light treatment in CSS). */
+  quoteBg?: EditorialMedia;
   credits?: string;
 
   prev?: { slug: string; title: string };
