@@ -68,7 +68,7 @@ const load = async () => {
 export default function AlgorithmLab() {
   return (
     <StudioShell
-      title="Algorithm Lab"
+      title="Algorithms V2"
       intro="A living collection of nature-inspired generative systems. Pick one, tune it live, and capture it as a smooth, loopable motion-graphic background. Built to run light, ready for banner and page visuals."
       scaffold={SCAFFOLD}
       load={load}

@@ -156,17 +156,35 @@ const organicTurbulence: Gen = (p, seed, size, params) => {
   for (let i = 0; i < N; i++) spawn(i);
   const step = size * 0.001 * gp(params, "speed", 3.3);
   const evolve = gp(params, "evolve", 0.005);
+  const cursorR = size * 0.26;            // interaction radius
   return () => {
     p.noStroke();
     p.fill(BG[0], BG[1], BG[2], 15);
     p.rect(0, 0, size, size);
     const ctx = p.drawingContext;
     ctx.globalCompositeOperation = "lighter";
+    // cursor: attract nearby particles (repel when pressed), with a soft glow
+    const over = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    const mx = p.mouseX, my = p.mouseY, repel = p.mouseIsPressed;
+    if (over) {
+      const g = ctx.createRadialGradient(mx, my, 0, mx, my, cursorR * 0.7);
+      g.addColorStop(0, "rgba(255,255,255,0.16)");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(mx, my, cursorR * 0.7, 0, Math.PI * 2); ctx.fill();
+    }
     p.strokeWeight(big ? 1.3 : 0.85);
     for (let i = 0; i < N; i++) {
       const a = p.noise(x[i] * scl, y[i] * scl, z) * Math.PI * 4;
-      const nx = x[i] + Math.cos(a) * step;
-      const ny = y[i] + Math.sin(a) * step;
+      let nx = x[i] + Math.cos(a) * step;
+      let ny = y[i] + Math.sin(a) * step;
+      if (over) {
+        const dx = mx - x[i], dy = my - y[i];
+        const d = Math.hypot(dx, dy);
+        if (d < cursorR && d > 0.5) {
+          const f = (1 - d / cursorR) * step * 2.2 * (repel ? -1 : 1);
+          nx += (dx / d) * f; ny += (dy / d) * f;
+        }
+      }
       const c = colors[i % colors.length];
       p.stroke(c[0], c[1], c[2], 44);
       p.line(x[i], y[i], nx, ny);
@@ -212,8 +230,17 @@ const quantumHarmonics: Gen = (p, seed, size, params) => {
   const wedge = (Math.PI * 2) / sym;
   const surf = gridSurface(G);
   const data = surf.data;
+  // live cursor wave source: position/phase/amplitude in compute-grid space
+  let curPh = 0;
+  const curFr = (0.10) * (160 / G);
+  let curAmp = 0;                          // eased in/out so it never pops
   return () => {
     for (let i = 0; i < M; i++) ph[i] += dph[i] * phaseSpeed;
+    const over = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    const curX = (p.mouseX / size) * G, curY = (p.mouseY / size) * G;
+    curAmp += ((over ? (p.mouseIsPressed ? 2.4 : 1.4) : 0) - curAmp) * 0.12;
+    curPh += 0.13 * phaseSpeed;
+    const liveCur = curAmp > 0.02;
     for (let y = 0; y < G; y++) {
       for (let x = 0; x < G; x++) {
         const dx = x - cx;
@@ -229,6 +256,11 @@ const quantumHarmonics: Gen = (p, seed, size, params) => {
           const d = Math.hypot(px - sx[i], py - sy[i]);
           v += amp[i] * Math.sin(d * fr[i] - ph[i]);
           w += Math.sin(d * fr[i] * 0.45 + ph[i] * 1.3); // slow second field → hue drift
+        }
+        if (liveCur) {                      // an extra wave source radiating from the cursor
+          const d = Math.hypot(px - curX, py - curY);
+          v += curAmp * Math.sin(d * curFr - curPh);
+          w += Math.sin(d * curFr * 0.45 + curPh * 1.3);
         }
         v /= Math.sqrt(M); // keep amplitude → fringes stay crisp, not averaged to mush
         const band = (Math.sin(v * bandK) + 1) / 2; // periodic colour map → bright concentric/hyperbolic fringes
@@ -316,15 +348,30 @@ const recursiveWhispers: Gen = (p, seed, size, params) => {
   let mode = 0; // 0 grow · 1 hold · 2 dissolve
   let t = 0;
   let perFrame = Math.max(8, Math.ceil(segs.length / 55));
+  // soft glowing cursor disturbance, drawn over the accumulated canopy
+  const drawCursorGlow = () => {
+    const over = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    if (!over) return;
+    const ctx = p.drawingContext as CanvasRenderingContext2D;
+    const r = size * (p.mouseIsPressed ? 0.16 : 0.10);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    const g = ctx.createRadialGradient(p.mouseX, p.mouseY, 0, p.mouseX, p.mouseY, r);
+    g.addColorStop(0, "rgba(150,170,255,0.30)");
+    g.addColorStop(1, "rgba(150,170,255,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.mouseX, p.mouseY, r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  };
   return () => {
     if (mode === 2) {
       p.noStroke();
       p.fill(BG[0], BG[1], BG[2], 30);
       p.rect(0, 0, size, size);
       if (t++ > 22) { s = nextSeed(s); grow(); shown = 0; mode = 0; t = 0; perFrame = Math.max(8, Math.ceil(segs.length / 55)); }
+      drawCursorGlow();
       return;
     }
-    if (shown >= segs.length) { if (t++ > 12) { mode = 2; t = 0; } return; }
+    if (shown >= segs.length) { if (t++ > 12) { mode = 2; t = 0; } drawCursorGlow(); return; }
     const end = Math.min(segs.length, shown + perFrame);
     const ctx = p.drawingContext as CanvasRenderingContext2D;
     ctx.lineCap = "round"; ctx.lineJoin = "round";
@@ -344,6 +391,7 @@ const recursiveWhispers: Gen = (p, seed, size, params) => {
       ctx.lineWidth = e.w; ctx.stroke(e.pa);
     });
     shown = end;
+    drawCursorGlow();
   };
 };
 
@@ -405,19 +453,37 @@ const fieldDynamics: Gen = (p, seed, size, params) => {
   };
   for (let i = 0; i < N; i++) spawn(i);
   const step = size * 0.001 * gp(params, "speed", 4);
+  const cursorR = size * 0.28;
   return () => {
     p.noStroke();
     p.fill(BG[0], BG[1], BG[2], fade); // near-persistent: the full field-line structure accumulates
     p.rect(0, 0, size, size);
     const ctx = p.drawingContext;
     ctx.globalCompositeOperation = "lighter";
+    // cursor acts as an extra singularity: attract nearby particles, repel when pressed
+    const over = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    const mx = p.mouseX, my = p.mouseY, repel = p.mouseIsPressed;
+    if (over) {
+      const g = ctx.createRadialGradient(mx, my, 0, mx, my, cursorR * 0.6);
+      g.addColorStop(0, "rgba(255,255,255,0.14)");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(mx, my, cursorR * 0.6, 0, Math.PI * 2); ctx.fill();
+    }
     p.strokeWeight(big ? 1.7 : 1.0); // bolder so the thin field lines survive scaling
     for (let i = 0; i < N; i++) {
       const [vx, vy] = field(x[i], y[i]);
       const m = Math.hypot(vx, vy);
       if (m < 0.02 || --life[i] <= 0) { spawn(i); continue; }
-      const nx = x[i] + (vx / m) * step;
-      const ny = y[i] + (vy / m) * step;
+      let nx = x[i] + (vx / m) * step;
+      let ny = y[i] + (vy / m) * step;
+      if (over) {
+        const dx = mx - x[i], dy = my - y[i];
+        const d = Math.hypot(dx, dy);
+        if (d < cursorR && d > 0.5) {
+          const f = (1 - d / cursorR) * step * 2 * (repel ? -1 : 1);
+          nx += (dx / d) * f; ny += (dy / d) * f;
+        }
+      }
       const c = colors[col[i]];
       p.stroke(c[0], c[1], c[2], 42 + Math.min(50, m * 70));
       p.line(x[i], y[i], nx, ny);
@@ -477,6 +543,10 @@ const stochasticCrystallization: Gen = (p, seed, size, params) => {
     rings[i] = 1 + Math.floor(cr[i] / (size * 0.022)); // bigger circles nest more rings inside
   }
   const lineW = Math.max(0.7, size * 0.0021);
+  // per-circle live offset, eased toward a cursor-driven displacement then back to 0
+  const dxo = new Float32Array(n);
+  const dyo = new Float32Array(n);
+  const cursorR = size * 0.3;
   let f = 0;
   return () => {
     f++;
@@ -485,6 +555,16 @@ const stochasticCrystallization: Gen = (p, seed, size, params) => {
     p.stroke(170, 172, 182, 90);
     p.strokeWeight(lineW);
     p.circle(cxC, cyC, BR * 2); // the bounding membrane
+    const over = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    const mx = p.mouseX, my = p.mouseY, repel = p.mouseIsPressed;
+    if (over) {
+      const ctx = p.drawingContext as CanvasRenderingContext2D;
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createRadialGradient(mx, my, 0, mx, my, cursorR * 0.5);
+      g.addColorStop(0, "rgba(200,205,225,0.10)"); g.addColorStop(1, "rgba(200,205,225,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(mx, my, cursorR * 0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
     for (let k = 0; k < 2; k++) {
       if (p.random() < churnRate) {
         const i = Math.floor(p.random(n));
@@ -496,15 +576,26 @@ const stochasticCrystallization: Gen = (p, seed, size, params) => {
       scale[i] += (target[i] - scale[i]) * 0.16;
       if (target[i] === 0 && scale[i] < 0.06) target[i] = 1;
       if (scale[i] < 0.02) continue;
+      // cursor: nudge nearby circles aside (toward it when pressed), eased and reversible
+      let tox = 0, toy = 0;
+      if (over) {
+        const dx = cx[i] - mx, dy = cy[i] - my, d = Math.hypot(dx, dy);
+        if (d < cursorR && d > 0.5) {
+          const f2 = (1 - d / cursorR) * cursorR * 0.22 * (repel ? -1 : 1);
+          tox = (dx / d) * f2; toy = (dy / d) * f2;
+        }
+      }
+      dxo[i] += (tox - dxo[i]) * 0.12; dyo[i] += (toy - dyo[i]) * 0.12;
       const breath = 0.9 + 0.1 * Math.sin(f * breatheSpeed + phase[i]);
       const baseR = cr[i] * scale[i] * breath;
       const c = colors[colIdx[i]];
       p.stroke(c[0], c[1], c[2], 235);
       p.strokeWeight(lineW);
       const nr = Math.min(rings[i], 4); // nested concentric rings → circles within circles
+      const px = cx[i] + dxo[i], py = cy[i] + dyo[i];
       for (let k = 0; k < nr; k++) {
         const rk = baseR * (1 - k * 0.28);
-        if (rk > size * 0.004) p.circle(cx[i], cy[i], rk * 2);
+        if (rk > size * 0.004) p.circle(px, py, rk * 2);
       }
     }
   };
@@ -648,7 +739,23 @@ const grayScott: Gen = (p, seed, size, params) => {
   let Vc = V;
   let Un = U2;
   let Vn = V2;
+  const injR = Math.max(1, Math.round(G * 0.04));
   return () => {
+    // inject reagent V at the cursor → reaction blooms from where you point
+    const over = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    if (over) {
+      const gx = Math.round((p.mouseX / size) * (G - 1));
+      const gy = Math.round((p.mouseY / size) * (G - 1));
+      const rr = p.mouseIsPressed ? injR + 2 : injR;
+      for (let yy = -rr; yy <= rr; yy++) {
+        for (let xx = -rr; xx <= rr; xx++) {
+          const x = gx + xx, y = gy + yy;
+          if (x < 0 || y < 0 || x >= G || y >= G || xx * xx + yy * yy > rr * rr) continue;
+          const i = y * G + x;
+          Vc[i] = 1; Uc[i] = Math.min(Uc[i], 0.3);
+        }
+      }
+    }
     for (let it = 0; it < iters; it++) {
       for (let y = 0; y < G; y++) {
         const ym = ((y - 1 + G) % G) * G;
@@ -727,9 +834,13 @@ const boids: Gen = (p, seed, size, params) => {
   let gdir = p.random(Math.PI * 2);
   const DUR = [180 + p.random() * 200, 210 + p.random() * 130, 150 + p.random() * 140];
 
+  const cursorR = size * 0.3, cursorR2 = cursorR * cursorR;
   const stepFlock = () => {
     flowT += 0.0019;                             // field drifts → direction keeps changing
     frame++; pt++;
+    // cursor: attract the flock toward the pointer, or scatter it when pressed
+    const over = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    const mx = p.mouseX, my = p.mouseY, repel = p.mouseIsPressed;
     // phase machine (eased ramps between regimes)
     if (phase === 0) {                           // CHAOS
       kGlobal += (0 - kGlobal) * 0.05; curWander += (wanderW - curWander) * 0.04;
@@ -788,6 +899,14 @@ const boids: Gen = (p, seed, size, params) => {
       if (pred.on) {
         const dx = px[i] - pred.x, dy = py[i] - pred.y, d2 = dx * dx + dy * dy;
         if (d2 < PR2) { const d = Math.sqrt(d2) || 1; const f = (1 - d / PR) * maxS * 3.2; ax += dx / d * f; ay += dy / d * f; }
+      }
+      // cursor: pull toward (or, when pressed, push away from) the pointer
+      if (over) {
+        const dx = mx - px[i], dy = my - py[i], d2 = dx * dx + dy * dy;
+        if (d2 < cursorR2) {
+          const d = Math.sqrt(d2) || 1, f = (1 - d / cursorR) * maxS * (repel ? -2.4 : 1.6);
+          ax += dx / d * f; ay += dy / d * f;
+        }
       }
       vx[i] += ax * 0.16; vy[i] += ay * 0.16;
       const sp = Math.hypot(vx[i], vy[i]) || 1;          // clamp speed into [minS,maxS]
@@ -1088,6 +1207,17 @@ const lSystem: Gen = (p, seed, size, params) => {
       if (pl.state === 2) { pl.alpha -= 0.01; if (pl.alpha <= 0) { plants.splice(i, 1); continue; } }
       drawPlant(pl);
     }
+    // cursor: a soft glowing disturbance hovering over the jungle (sun shaft / firefly)
+    const over = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    if (over) {
+      const ctx = p.drawingContext as CanvasRenderingContext2D;
+      const r = size * (p.mouseIsPressed ? 0.18 : 0.12);
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createRadialGradient(p.mouseX, p.mouseY, 0, p.mouseX, p.mouseY, r);
+      g.addColorStop(0, "rgba(170,210,150,0.26)"); g.addColorStop(1, "rgba(170,210,150,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.mouseX, p.mouseY, r, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
   };
 };
 
@@ -1360,9 +1490,28 @@ const voronoiRecursive: Gen = (p, seed, size, params) => {
     }
   };
 
+  // cursor displacement applied to the drift base, eased in/out so it's reversible
+  const cdx = new Float64Array(N), cdy = new Float64Array(N);
+  const baseX = Float64Array.from(ox0), baseY = Float64Array.from(oy0);
+  const cursorR = size * 0.32;
   let t = 0;
   return () => {
     t += 1;
+    // nudge nearby seeds toward the cursor (away when pressed); relax back otherwise
+    const over = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    const mx = p.mouseX, my = p.mouseY, repel = p.mouseIsPressed;
+    for (let i = 0; i < N; i++) {
+      let tx = 0, ty = 0;
+      if (over) {
+        const dx = mx - baseX[i], dy = my - baseY[i], d = Math.hypot(dx, dy);
+        if (d < cursorR && d > 0.5) {
+          const f = (1 - d / cursorR) * cursorR * 0.32 * (repel ? -1 : 1);
+          tx = (dx / d) * f; ty = (dy / d) * f;
+        }
+      }
+      cdx[i] += (tx - cdx[i]) * 0.12; cdy[i] += (ty - cdy[i]) * 0.12;
+      ox0[i] = baseX[i] + cdx[i]; oy0[i] = baseY[i] + cdy[i];
+    }
     if (t % 2 === 1) { // rebuild geometry every other frame (drift is slow) → redraw stays cheap
       const px: number[] = [], py: number[] = [];
       for (let i = 0; i < N; i++) {
@@ -1456,6 +1605,8 @@ const dla: Gen = (p, seed, size, params) => {
     stuck = 1;
   };
   reset();
+  // cursor in grid space → walkers get an extra pull toward it (push when pressed)
+  let curGX = -1, curGY = -1, curOn = false, curRepel = false;
   const grow = (count: number) => {
     for (let k = 0; k < count; k++) {
       if (stuck >= maxParticles) break;
@@ -1467,6 +1618,15 @@ const dla: Gen = (p, seed, size, params) => {
       for (let walk = 0; walk < 3 * G; walk++) {
         x += Math.floor(p.random(3)) - 1;
         y += Math.floor(p.random(3)) - 1;
+        // bias the random walk toward the cursor → the dendrite grows where you point
+        if (curOn && p.random() < 0.35) {
+          const tx = x - curGX, ty = y - curGY, td = Math.hypot(tx, ty);
+          if (td > 1 && td < G * 0.5) {
+            const s = curRepel ? 1 : -1;
+            if (tx) x += s * (tx > 0 ? 1 : -1) * (p.random() < 0.6 ? 1 : 0);
+            if (ty) y += s * (ty > 0 ? 1 : -1) * (p.random() < 0.6 ? 1 : 0);
+          }
+        }
         let dx = x - cxg;
         let dy = y - cyg;
         // gentle inward drift → walkers reach the cluster from every direction,
@@ -1518,9 +1678,21 @@ const dla: Gen = (p, seed, size, params) => {
       data[idx + 3] = 255;
     }
     blit(p, surf, size, true);
+    // soft glow at the cursor so the interaction reads on the canvas
+    if (curOn) {
+      const ctx = p.drawingContext as CanvasRenderingContext2D;
+      const mx = (curGX / G) * size, my = (curGY / G) * size, r = size * (curRepel ? 0.14 : 0.10);
+      ctx.save(); ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createRadialGradient(mx, my, 0, mx, my, r);
+      g.addColorStop(0, "rgba(180,200,255,0.22)"); g.addColorStop(1, "rgba(180,200,255,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(mx, my, r, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
   };
   return () => {
     f++;
+    curOn = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    curGX = (p.mouseX / size) * G; curGY = (p.mouseY / size) * G; curRepel = p.mouseIsPressed;
     if (mode === 0) {
       grow(300);
       if (stuck >= maxParticles) { mode = 1; t = 0; }
@@ -1757,6 +1929,9 @@ const mycelium: Gen = (p, seed, size, params) => {
     let dx = x - cx0, dy = y - cy0; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l];
   };
 
+  // cursor state, refreshed each frame; tips are steered toward it (away when pressed)
+  let curOn = false, curX = 0, curY = 0, curRepel = false;
+  const cursorR = size * 0.34;
   let frame = 0;
   const advance = () => {
     frame++;
@@ -1776,6 +1951,14 @@ const mycelium: Gen = (p, seed, size, params) => {
       const wa = p.noise(t.x * 0.01, t.y * 0.01, frame * 0.006) * TAU * 2;
       let dx = hx + cfg.Kchemo * gnx - cfg.Kauto * gdx + cfg.Kbias * bx + cfg.Kwander * Math.cos(wa);
       let dy = hy + cfg.Kchemo * gny - cfg.Kauto * gdy + cfg.Kbias * by + cfg.Kwander * Math.sin(wa);
+      // chemotropism toward the cursor: tips bend to grow toward (or away from) the pointer
+      if (curOn) {
+        const tx = curX - t.x, ty = curY - t.y, td = Math.hypot(tx, ty);
+        if (td < cursorR && td > 1) {
+          const k = (1 - td / cursorR) * 1.1 * (curRepel ? -1 : 1);
+          dx += (tx / td) * k; dy += (ty / td) * k;
+        }
+      }
       const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
       let da = Math.atan2(dy, dx) - t.a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU;
       t.a += Math.max(-cfg.maxTurn, Math.min(cfg.maxTurn, da));
@@ -1881,6 +2064,8 @@ const mycelium: Gen = (p, seed, size, params) => {
   const ctx = p.drawingContext as CanvasRenderingContext2D;
   ctx.lineCap = "round"; ctx.lineJoin = "round";
   return () => {
+    curOn = p.mouseX >= 0 && p.mouseX <= size && p.mouseY >= 0 && p.mouseY <= size;
+    curX = p.mouseX; curY = p.mouseY; curRepel = p.mouseIsPressed;
     advance();                                       // grow → push this frame's segments
 
     const buckets = new Map<string, { pa: Path2D; r: number; g: number; b: number; w: number }>();

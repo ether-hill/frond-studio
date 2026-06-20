@@ -20,7 +20,7 @@ export type PersonalProject = {
 export const PERSONAL_PROJECTS: PersonalProject[] = [
   {
     slug: "algorithms",
-    title: "Algorithms",
+    title: "Algorithms V1",
     kicker: "GENERATIVE · LIVE IN BROWSER",
     summary:
       "A growing collection of generative systems: Physarum slime-mould networks, reaction–diffusion, boids, L-systems, Voronoi, DLA and more, each running live in the browser, building complex structure from a handful of simple rules.",
@@ -53,7 +53,7 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
   },
   {
     slug: "algorithm-lab",
-    title: "Algorithm Lab",
+    title: "Algorithms V2",
     kicker: "GENERATIVE · LIVE SANDBOX",
     summary:
       "A live sandbox for seven nature-inspired generative systems: space colonization, differential growth, phyllotaxis, strange attractors, dielectric breakdown, stable fluids and reaction-diffusion. Each one is seedable, tunable in real time and exportable to hi-res.",

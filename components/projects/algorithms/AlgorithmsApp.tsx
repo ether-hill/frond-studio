@@ -48,7 +48,7 @@ const load = async () => {
 export default function AlgorithmsApp() {
   return (
     <StudioShell
-      title="Algorithms"
+      title="Algorithms V1"
       intro="A growing collection of generative systems, each running live. Every one builds complex structure from a handful of simple rules: no blueprint, just local interactions. Pick one below, tune it in real time, and capture it."
       scaffold={SCAFFOLD}
       load={load}

@@ -200,6 +200,22 @@ function seedBolt(s: State, boundary: string): void {
   }
 }
 
+/** Seed a discharge near a target grid point (used by the touch interaction). */
+function seedBoltNear(s: State, gx: number, gy: number, rad: number): void {
+  const { gw, gh, occ, fixed } = s;
+  const idx = (x: number, y: number) => y * gw + x;
+  for (let attempt = 0; attempt < 16; attempt++) {
+    const jx = s.rng.range(-rad, rad);
+    const jy = s.rng.range(-rad, rad);
+    const x = clamp((gx + jx) | 0, 1, gw - 2);
+    const y = clamp((gy + jy) | 0, 1, gh - 2);
+    const i = idx(x, y);
+    if (occ[i] || fixed[i]) continue;
+    addCluster(s, i, s.step);
+    return;
+  }
+}
+
 // ── init ─────────────────────────────────────────────────────────────────────
 function init(_surface: RenderSurface, params: Params, rng: RNG): State {
   const gridRes = clamp(asInt(params.gridRes, 200), 8, 512);
@@ -302,6 +318,49 @@ function step(s: State, _dt: number): State {
   const use8 = asStr(p.neighborhood, "8") === "8";
 
   const { phi, occ, fixed, gw, gh } = s;
+
+  // ── TOUCH: draw lightning to the finger. Read defensively (not in the schema).
+  // We raise the potential φ in a soft well around the cursor (an attracting
+  // high-potential "electrode"), so the (φ)^η growth law biases every tip toward
+  // where you touch, and we periodically seed a fresh discharge nearby so bolts
+  // visibly reach for the cursor. Coords map touch 0..1 → grid cells (gw×gh).
+  const ta = !!p.touchActive;
+  if (ta) {
+    const tx = (p.touchX as number) || 0;
+    const ty = (p.touchY as number) || 0;
+    const ts = (p.touchStrength as number) ?? 0.6;
+    const tcx = clamp(tx, 0, 1) * (gw - 1);
+    const tcy = clamp(ty, 0, 1) * (gh - 1);
+    // Radius of the potential well scales gently with grid size and strength.
+    const trad = Math.max(3, Math.min(gw, gh) * (0.07 + 0.06 * clamp(ts / 1.5, 0, 1)));
+    const tr2 = trad * trad;
+    // How hard we pull φ up toward 1 at the cursor (smooth radial falloff).
+    const pull = clamp(0.4 + ts * 0.7, 0, 1.2);
+    const gx0 = Math.max(1, Math.floor(tcx - trad));
+    const gx1 = Math.min(gw - 2, Math.ceil(tcx + trad));
+    const gy0 = Math.max(1, Math.floor(tcy - trad));
+    const gy1 = Math.min(gh - 2, Math.ceil(tcy + trad));
+    for (let yy = gy0; yy <= gy1; yy++) {
+      const dy = yy - tcy;
+      for (let xx = gx0; xx <= gx1; xx++) {
+        const dx = xx - tcx;
+        const d2 = dx * dx + dy * dy;
+        if (d2 > tr2) continue;
+        const i = yy * gw + xx;
+        if (occ[i]) continue; // never override the conductor (φ=0)
+        const fall = 1 - d2 / tr2; // 1 at centre → 0 at edge
+        // Raise φ toward 1 — the higher the local field, the more growth is drawn
+        // here. Blend so the well is strong at the core and feathers at the rim.
+        const boost = pull * fall * fall;
+        if (boost > 0) phi[i] = clamp(phi[i] + (1 - phi[i]) * Math.min(1, boost), 0, 1);
+      }
+    }
+    // Occasionally seed a fresh discharge launching from near the cursor so a
+    // bolt visibly grows out toward the finger. Rate scales with strength.
+    if (s.rng.next() < 0.08 + ts * 0.22) {
+      seedBoltNear(s, tcx, tcy, trad);
+    }
+  }
 
   // Neighbour offsets (4- or 8-connected). 8-conn diagonals give rounder,
   // more dendritic clusters; 4-conn gives blockier, axis-biased growth.

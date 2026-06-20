@@ -335,13 +335,53 @@ function render(state: State, surface: RenderSurface): void {
   const reveal = Math.floor(state.grown);
   const drawCount = Math.min(n, Math.max(reveal, 1));
 
+  // ── cursor "Touch": warp the floret field toward/around the pointer ──
+  // The harness writes these onto the shared params object on every pointer move;
+  // they are NOT in the schema, so read defensively. When active we ripple the
+  // mandala: florets near the cursor are displaced outward from it with a smooth
+  // radial falloff, and slightly swirled, so touching sends a bulge through the
+  // spiral. touchStrength scales the amplitude.
+  const ta = !!p.touchActive;
+  const tx = (p.touchX as number) || 0;
+  const ty = (p.touchY as number) || 0;
+  const tStr = clamp((p.touchStrength as number) ?? 0.6, 0, 1.5);
+  const touchOn = ta && tStr > 0;
+  const tpx = tx * w; // cursor in screen px
+  const tpy = ty * h;
+  const touchRadius = Math.min(w, h) * 0.28; // influence radius in px
+  const touchR2 = touchRadius * touchRadius;
+  // outward push amplitude + a gentle swirl, both in px, scaled by strength.
+  const touchPush = touchRadius * 0.45 * tStr;
+  const touchSwirl = 0.6 * tStr;
+
   for (let i = 0; i < drawCount; i++) {
     const f = florets[i];
     // rotate the field
     const rx = f.x * cosR - f.y * sinR;
     const ry = f.x * sinR + f.y * cosR;
-    const sx = cx + rx * fit;
-    const sy = cy + ry * fit;
+    let sx = cx + rx * fit;
+    let sy = cy + ry * fit;
+
+    if (touchOn) {
+      const dx = sx - tpx;
+      const dy = sy - tpy;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < touchR2 && d2 > 1e-6) {
+        const d = Math.sqrt(d2);
+        const k = 1 - d / touchRadius;
+        const fall = k * k * (3 - 2 * k); // smoothstep falloff → soft ripple edge
+        const inv = 1 / d;
+        const nx = dx * inv;
+        const ny = dy * inv;
+        // displace outward from the cursor + swirl tangentially for a vortex feel.
+        sx += nx * touchPush * fall + -ny * touchPush * touchSwirl * fall;
+        sy += ny * touchPush * fall + nx * touchPush * touchSwirl * fall;
+      } else if (d2 <= 1e-6) {
+        // a floret sitting exactly on the cursor: nudge it deterministically.
+        sx += state.rng.range(-1, 1) * touchPush * 0.5;
+        sy += state.rng.range(-1, 1) * touchPush * 0.5;
+      }
+    }
 
     const rNorm = f.r / rNormDen;
 

@@ -3,7 +3,7 @@ import { DATA, JONES_PRESETS, PHYS_PRESETS } from "./algorithms";
 import { renderArt } from "./artGenerators";
 import { PhysMod, M_DEFAULTS, type MParams } from "./physmod";
 import { Physarum, DEFAULTS, type Params } from "./physarum";
-import { recordWebM } from "@/components/projects/algorithm-lab/engine/harness/video";
+import { recordSequence } from "@/components/projects/algorithm-lab/engine/harness/video";
 import { Biome, randomConfig } from "@/components/projects/instruments/engine/instruments/biomeEngine";
 import { ensureAudio, suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
 
@@ -103,12 +103,18 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     return biomeRecDest.stream;
   }
 
-  // ---- Touch ----
+  // ---- Touch ---- the GPU engines want resolution-pixel coords (y bottom-up);
+  // the square engine canvas covers the wide visual, so undo the cover-fit crop.
   const touchState = { strength: 0.5 };
-  function onPointer(e: PointerEvent, down: boolean) {
-    if (!canvas || !engine?.setMouse) return;
+  let gpuRes = 0;
+  function onPointer(e: PointerEvent, _down: boolean) {
+    if (!canvas || !engine || !gpuRes) return;
     const r = canvas.getBoundingClientRect();
-    engine.setMouse((e.clientX - r.left) / Math.max(1, r.width), (e.clientY - r.top) / Math.max(1, r.height), down && touchState.strength > 0);
+    const D = Math.max(r.width, r.height);
+    const sx = (e.clientX - r.left - (r.width - D) / 2) / D;
+    const sy = (e.clientY - r.top - (r.height - D) / 2) / D;
+    const over = sx >= 0 && sx <= 1 && sy >= 0 && sy <= 1;
+    engine.setMouse(sx * gpuRes, (1 - sy) * gpuRes, over && touchState.strength > 0);
   }
 
   const curGen = () => DATA[sel].gen;
@@ -151,11 +157,13 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     stage.insertBefore(canvas, stage.firstChild);
     try {
       if (kind === "physmod") {
+        gpuRes = 640;
         gpuBase = { ...M_DEFAULTS, agentTexW: 768, ...values };
-        engine = new PhysMod(canvas, 640, gpuBase as unknown as MParams);
+        engine = new PhysMod(canvas, gpuRes, gpuBase as unknown as MParams);
       } else {
-        gpuBase = { ...DEFAULTS, ...values };
-        engine = new Physarum(canvas, 512, gpuBase as unknown as Params);
+        gpuRes = 512;
+        gpuBase = { ...DEFAULTS, mouseFood: 0.7, foodRadius: 42, ...values };
+        engine = new Physarum(canvas, gpuRes, gpuBase as unknown as Params);
       }
       runGpuLoop();
     } catch { fpsEl.textContent = "WebGL2 unavailable"; }
@@ -202,21 +210,23 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     fSound.addButton({ title: "⟲ new soundscape" }).on("click", () => { rollBiome(); });
     fSound.addBinding(soundState, "volume", { min: 0, max: 1, step: 0.01, label: "volume" }).on("change", () => biome.setMaster({ volume: soundState.volume }));
 
-    const recState = { seconds: 10 };
+    const recState = { width: 1280, height: 720, fps: 30, seconds: 10 };
     const fVid = p.addFolder({ title: "Export Video", expanded: false });
+    fVid.addBinding(recState, "width", { min: 256, max: 3840, step: 2, label: "width" });
+    fVid.addBinding(recState, "height", { min: 256, max: 3840, step: 2, label: "height" });
+    fVid.addBinding(recState, "fps", { min: 12, max: 60, step: 1, label: "fps" });
     fVid.addBinding(recState, "seconds", { min: 3, max: 30, step: 1, label: "seconds" });
-    const rb = fVid.addButton({ title: "● record video" });
+    const rb = fVid.addButton({ title: "● render video" });
     rb.on("click", async () => {
-      if (!canvas) return;
       rb.disabled = true;
-      try { const blob = await recordWebM(canvas, recState.seconds, 60, (pr) => { rb.title = `● ${Math.round(pr * 100)}%`; }, biomeStream()); download(blob, `${curGen()}-${seed}-${recState.seconds}s.webm`); }
+      try { await recordVideo(recState.width, recState.height, recState.fps, recState.seconds, (pr) => { rb.title = `● ${Math.round(pr * 100)}%`; }); }
       catch (err) { console.error(err); }
-      rb.title = "● record video"; rb.disabled = false;
+      rb.title = "● render video"; rb.disabled = false;
     });
 
     const fSnap = p.addFolder({ title: "Snapshot", expanded: false });
     fSnap.addButton({ title: "PNG" }).on("click", () => snapshot());
-    fSnap.addButton({ title: "⛶ full-bleed" }).on("click", () => setCine(true));
+    fSnap.addButton({ title: "⛅ Preview in new tab" }).on("click", () => window.open(previewUrl(), "_blank"));
   }
 
   function snapshot() {
@@ -227,6 +237,28 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob); a.download = name; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
+  // cover-fit the live square render into the target W×H without distortion
+  function coverDraw(ctx: CanvasRenderingContext2D, src: HTMLCanvasElement, W: number, H: number) {
+    const sw = src.width, sh = src.height, sa = sw / sh, da = W / H;
+    let sx = 0, sy = 0, scw = sw, sch = sh;
+    if (sa > da) { scw = sh * da; sx = (sw - scw) / 2; } else { sch = sw / da; sy = (sh - sch) / 2; }
+    ctx.drawImage(src, sx, sy, scw, sch, 0, 0, W, H);
+  }
+  async function recordVideo(W: number, H: number, fps: number, seconds: number, onP: (p: number) => void) {
+    if (!canvas) return;
+    const src = canvas;
+    const blob = await recordSequence(W, H, fps, seconds, (ctx) => coverDraw(ctx, src, W, H), onP, biomeStream());
+    download(blob, `${curGen()}-${seed}-${W}x${H}.webm`);
+  }
+  function previewUrl(): string {
+    const u = new URL(window.location.href);
+    u.searchParams.set("preview", "1");
+    u.searchParams.set("algo", String(sel));
+    u.searchParams.set("seed", String(seed));
+    try { u.searchParams.set("p", btoa(JSON.stringify(values))); } catch { /* too big */ }
+    return u.toString();
   }
 
   function refreshPresets() {
@@ -281,8 +313,12 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
 
   root.querySelector("#algo-reset")!.addEventListener("click", () => { if (engine) engine.reset(); else buildArt(); });
   root.querySelector("#algo-randomise")!.addEventListener("click", () => {
-    seed = Math.floor(Math.abs(Math.sin(seed * 99991) * 1e6)) + 1;
-    if (kindOf(curGen()) === "p5") buildArt(); else engine?.reset();
+    seed = Math.floor(Math.abs(Math.sin(seed * 99991 + 1.7) * 1e6)) + 1;
+    const list = presetsFor(curGen());
+    if (list.length) { const idx = seed % list.length; presetSel.value = String(idx); applyPreset(idx); }
+    if (kindOf(curGen()) === "p5") { if (!list.length) buildArt(); }
+    else engine?.reset();
+    if (biomeOn) rollBiome(); // a fresh roll also restarts a random soundscape
   });
   root.querySelector("#algo-cine-exit")!.addEventListener("click", () => setCine(false));
   root.querySelector("#algo-ctrltoggle")?.addEventListener("click", () => panelHost.classList.toggle("studio-hide"));
@@ -302,11 +338,23 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
   const onKey = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
     if (e.key === "Escape") setCine(false);
-    else if (e.key === "f") setCine(!root.classList.contains("studio-cinematic"));
   };
   window.addEventListener("keydown", onKey);
 
-  selectAlgo(0);
+  // boot — honour a ?preview=1 link (full-bleed with the given algo/params)
+  function boot() {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("preview")) {
+      selectAlgo(Math.min(DATA.length - 1, Math.max(0, Number(sp.get("algo")) || 0)));
+      const sd = sp.get("seed"); if (sd) seed = Number(sd) || seed;
+      const pp = sp.get("p"); if (pp) { try { Object.assign(values, JSON.parse(atob(pp))); pane?.refresh(); } catch { /* bad payload */ } }
+      buildArt();
+      setCine(true);
+    } else {
+      selectAlgo(0);
+    }
+  }
+  boot();
 
   return () => {
     window.removeEventListener("keydown", onKey);

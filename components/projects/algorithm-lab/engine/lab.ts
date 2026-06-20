@@ -6,7 +6,7 @@ import { createLoop, type Loop } from "./harness/loop";
 import { buildPanel, type PanelHandle } from "./harness/panel";
 import { exportCurrentPng, exportHiResPng, copyParamsJson, download } from "./harness/export";
 import { loadPresets, savePreset } from "./harness/presets";
-import { recordWebM } from "./harness/video";
+import { recordSequence } from "./harness/video";
 import { SYSTEMS } from "./systems";
 import { Biome, randomConfig } from "@/components/projects/instruments/engine/instruments/biomeEngine";
 import { ensureAudio, suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
@@ -80,6 +80,34 @@ export function mountLab(root: HTMLElement): () => void {
     download(blob, `${active.id}-${seed}-${scale}x.png`);
   }
 
+  // Programmatic video: re-simulate the system on an offscreen surface at the
+  // exact width×height and paint every frame — not a display capture.
+  async function recordVideo(W: number, H: number, fps: number, seconds: number, onP: (p: number) => void): Promise<void> {
+    if (!active) return;
+    const offCanvas = document.createElement("canvas");
+    const sys = resizeSurface(createSurface(offCanvas, active.tier), W, H, 1);
+    const rng = makeRng(seed);
+    let st = active.init(sys, params, rng);
+    const audio = biomeAudioStream();
+    try {
+      const blob = await recordSequence(W, H, fps, seconds, (ctx, _i) => {
+        st = active!.step(st, 1 / fps);
+        active!.render(st, sys);
+        ctx.drawImage(sys.canvas, 0, 0, W, H);
+      }, onP, audio);
+      download(blob, `${active.id}-${seed}-${W}x${H}.webm`);
+    } finally { disposeSurface(sys); offCanvas.remove(); }
+  }
+
+  function previewUrl(): string {
+    const u = new URL(window.location.href);
+    u.searchParams.set("preview", "1");
+    u.searchParams.set("algo", active?.id ?? "");
+    u.searchParams.set("seed", seed);
+    try { u.searchParams.set("p", btoa(JSON.stringify(params))); } catch { /* too big */ }
+    return u.toString();
+  }
+
   // The shared panel footer — added after each system's own settings.
   function addStandardFolders(): void {
     if (!panel) return;
@@ -104,25 +132,25 @@ export function mountLab(root: HTMLElement): () => void {
     fSound.addBinding(soundState, "volume", { min: 0, max: 1, step: 0.01, label: "volume" })
       .on("change", () => biome.setMaster({ volume: soundState.volume }));
 
-    const recState = { seconds: 10 };
+    const recState = { width: 1280, height: 720, fps: 30, seconds: 10 };
     const fVid = pane.addFolder({ title: "Export Video", expanded: false });
+    fVid.addBinding(recState, "width", { min: 256, max: 3840, step: 2, label: "width" });
+    fVid.addBinding(recState, "height", { min: 256, max: 3840, step: 2, label: "height" });
+    fVid.addBinding(recState, "fps", { min: 12, max: 60, step: 1, label: "fps" });
     fVid.addBinding(recState, "seconds", { min: 3, max: 30, step: 1, label: "seconds" });
-    const recBtn = fVid.addButton({ title: "● record video" });
+    const recBtn = fVid.addButton({ title: "● render video" });
     recBtn.on("click", async () => {
-      if (!canvas) return;
       recBtn.disabled = true;
-      try {
-        const blob = await recordWebM(canvas, recState.seconds, 60, (p) => { recBtn.title = `● ${Math.round(p * 100)}%`; }, biomeAudioStream());
-        download(blob, `${active?.id ?? "lab"}-${seed}-${recState.seconds}s.webm`);
-      } catch (err) { console.error("recording failed", err); }
-      recBtn.title = "● record video"; recBtn.disabled = false;
+      try { await recordVideo(recState.width, recState.height, recState.fps, recState.seconds, (p) => { recBtn.title = `● ${Math.round(p * 100)}%`; }); }
+      catch (err) { console.error("recording failed", err); }
+      recBtn.title = "● render video"; recBtn.disabled = false;
     });
 
     const fSnap = pane.addFolder({ title: "Snapshot", expanded: false });
     fSnap.addButton({ title: "PNG" }).on("click", async () => { if (surface && active) download(await exportCurrentPng(surface), `${active.id}-${seed}.png`); });
     fSnap.addButton({ title: "2× hi-res" }).on("click", () => hiRes(2));
     fSnap.addButton({ title: "4× hi-res" }).on("click", () => hiRes(4));
-    fSnap.addButton({ title: "⛶ full-bleed" }).on("click", () => setCine(true));
+    fSnap.addButton({ title: "⛅ Preview in new tab" }).on("click", () => window.open(previewUrl(), "_blank"));
     fSnap.addButton({ title: "copy params JSON" }).on("click", () => { if (active) copyParamsJson(active.id, seed, params); });
   }
 
@@ -217,6 +245,7 @@ export function mountLab(root: HTMLElement): () => void {
     panel?.refresh();
     loop?.setSeed(seed);
     loop?.reset();
+    if (biomeOn) rollBiome(); // a fresh seed gets a fresh soundscape too
   });
   root.querySelector("#alab-cine-exit")!.addEventListener("click", () => setCine(false));
   root.querySelector("#alab-ctrltoggle")?.addEventListener("click", () => panelEl.classList.toggle("studio-hide"));
@@ -240,11 +269,24 @@ export function mountLab(root: HTMLElement): () => void {
     if (e.key === " ") { e.preventDefault(); loop?.toggle(); }
     else if (e.key === "r") loop?.reset();
     else if (e.key === "Escape") setCine(false);
-    else if (e.key === "f") setCine(!root.classList.contains("studio-cinematic"));
   };
   window.addEventListener("keydown", onKey);
 
-  if (SYSTEMS.length) selectSystem(SYSTEMS[0]);
+  // boot — honour a ?preview=1 link (open full-bleed with the given algo/params)
+  function boot() {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("preview")) {
+      const sys = SYSTEMS.find((s) => s.id === sp.get("algo")) || SYSTEMS[0];
+      selectSystem(sys);
+      const sd = sp.get("seed"); if (sd) { seed = sd; loop?.setSeed(seed); }
+      const pp = sp.get("p"); if (pp) { try { Object.assign(params, JSON.parse(atob(pp))); panel?.refresh(); } catch { /* bad payload */ } }
+      loop?.reset();
+      setCine(true);
+    } else if (SYSTEMS.length) {
+      selectSystem(SYSTEMS[0]);
+    }
+  }
+  boot();
 
   return () => {
     window.removeEventListener("keydown", onKey);

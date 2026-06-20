@@ -114,6 +114,7 @@ interface State {
   hueB: number;
   seedMat: THREE.ShaderMaterial; // persistent material for reseed jolts
   seedVecs: THREE.Vector3[];
+  splatMat: THREE.ShaderMaterial; // persistent material for cursor touch splats
 }
 
 // ── Shaders ──────────────────────────────────────────────────────────────────
@@ -235,6 +236,39 @@ const SEED_FRAG = /* glsl */ `
   }
 `;
 
+// Touch splat shader — reads the LIVE field and injects a soft disk of fresh
+// chemical B (with a little A-depletion) centred on the cursor uv, so touching
+// the canvas grows new Turing fronts where you point. U-wrapped like the seeds.
+const SPLAT_FRAG = /* glsl */ `
+  precision highp float;
+  varying vec2 vUv;
+
+  uniform sampler2D uPrev;     // live field
+  uniform vec2  uTouch;        // splat centre uv
+  uniform float uRadius;       // splat radius (uv units)
+  uniform float uStrength;     // 0..1+ deposit amount
+
+  void main() {
+    vec2 ab = texture2D(uPrev, vUv).xy;
+    float A = ab.x;
+    float B = ab.y;
+
+    // distance with U-wrap so splats near the seam still land
+    float dx = abs(vUv.x - uTouch.x);
+    dx = min(dx, 1.0 - dx);
+    float dy = vUv.y - uTouch.y;
+    float d = length(vec2(dx, dy));
+
+    float fall = 1.0 - smoothstep(0.0, uRadius, d);
+    float deposit = fall * clamp(uStrength, 0.0, 2.0);
+
+    B = clamp(B + deposit, 0.0, 1.0);
+    A = clamp(A - deposit * 0.5, 0.0, 1.0);
+
+    gl_FragColor = vec4(A, B, 0.0, 1.0);
+  }
+`;
+
 // Surface material — samples B from the sim RT in UV space, maps through a
 // two-colour gradient with a touch of shading for legibility.
 const SURF_VERT = /* glsl */ `
@@ -334,6 +368,49 @@ function makeSeedMaterial(): { mat: THREE.ShaderMaterial; vecs: THREE.Vector3[] 
     depthWrite: false,
   });
   return { mat, vecs };
+}
+
+// Build the persistent touch-splat material (cursor seeding pass).
+function makeSplatMaterial(): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    vertexShader: SIM_VERT,
+    fragmentShader: SPLAT_FRAG,
+    uniforms: {
+      uPrev: { value: null as THREE.Texture | null },
+      uTouch: { value: new THREE.Vector2(0.5, 0.5) },
+      uRadius: { value: 0.05 },
+      uStrength: { value: 0.0 },
+    },
+    depthTest: false,
+    depthWrite: false,
+  });
+}
+
+// Touch splat: inject a soft disk of B into the LIVE field at the cursor uv.
+function touchSplat(state: State, tx: number, ty: number, strength: number): void {
+  const su = state.splatMat.uniforms;
+  (su.uTouch.value as THREE.Vector2).set(
+    clampNum(tx, 0, 1),
+    clampNum(ty, 0, 1),
+  );
+  su.uRadius.value = 0.04 + 0.04 * clampNum(strength / 1.5, 0, 1);
+  su.uStrength.value = 0.9 * clampNum(strength, 0, 1.5);
+  su.uPrev.value = state.rtA.texture; // read current front buffer
+
+  const renderer = state.renderer;
+  const prevTarget = renderer.getRenderTarget();
+  const prevAutoClear = renderer.autoClear;
+  renderer.autoClear = false;
+  const prevMat = state.simQuad.material as THREE.Material;
+  state.simQuad.material = state.splatMat;
+  renderer.setRenderTarget(state.rtB);
+  renderer.render(state.simScene, state.simCamera);
+  const tmp = state.rtA;
+  state.rtA = state.rtB;
+  state.rtB = tmp;
+  state.simQuad.material = prevMat;
+  renderer.setRenderTarget(prevTarget);
+  renderer.autoClear = prevAutoClear;
 }
 
 // Initial seed: full reseed (A=1 everywhere, B blobs) written into both targets.
@@ -499,6 +576,7 @@ export const rdSurface: GenerativeSystem<State> = {
       hueB: hexToHue(str(params, "colorB", "#e9c46a"), 0.12),
       seedMat: seed.mat,
       seedVecs: seed.vecs,
+      splatMat: makeSplatMaterial(),
     };
 
     // Seed the initial B field into both targets.
@@ -617,6 +695,21 @@ export const rdSurface: GenerativeSystem<State> = {
 
     renderer.setRenderTarget(prevTarget);
     renderer.autoClear = prevAutoClear;
+
+    // ── CURSOR TOUCH ────────────────────────────────────────────────────────
+    // When the pointer is down/moving over the canvas, inject a fresh B splat at
+    // the cursor uv so new Turing fronts erupt where the user points. Read these
+    // defensively (not part of the schema).
+    const ta = !!p.touchActive;
+    const tx = (p.touchX as number) || 0;
+    const ty = (p.touchY as number) || 0;
+    const tsRaw = p.touchStrength as number;
+    const ts = Number.isFinite(tsRaw) ? tsRaw : 0.6;
+    if (ta && ts > 0) {
+      // Direct screen→texture uv mapping (flip V so up on screen reads up on the
+      // RD texture). Doesn't need to match the 3D pick — just respond visibly.
+      touchSplat(state, tx, 1 - ty, ts);
+    }
 
     // The mesh samples the most-recent field (rtA after the final swap).
     state.surfaceMat.uniforms.uField.value = state.rtA.texture;
