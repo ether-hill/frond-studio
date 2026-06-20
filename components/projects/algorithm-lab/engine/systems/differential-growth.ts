@@ -64,12 +64,6 @@ export interface State {
   framesSincePrune: number; // when capped, how long since we last pruned a chunk
   framesSinceJolt: number; // throttles the random impulse injections
   framesSinceSpawn: number; // throttles spawning of extra loops
-
-  // ── cursor "Touch" interaction ──────────────────────────────────────────────
-  // Latest surface aspect (w/h) so step() can map normalised touch coords (0..1
-  // of width/height) into the same centred model space the geometry lives in.
-  surfW: number;
-  surfH: number;
 }
 
 // ── Schema: single source of truth for the control panel + presets ───────────
@@ -146,7 +140,7 @@ function sampleStop(pal: Palette, u: number): Stop {
 }
 
 // ── init ──────────────────────────────────────────────────────────────────────
-function init(surface: RenderSurface, params: Params, rng: RNG): State {
+function init(_surface: RenderSurface, params: Params, rng: RNG): State {
   const closed = bool(params, "closed", true);
   const nodeCap = Math.round(num(params, "nodeCap", 3200));
   const split = num(params, "splitThreshold", 0.022);
@@ -178,8 +172,6 @@ function init(surface: RenderSurface, params: Params, rng: RNG): State {
     framesSincePrune: 0,
     framesSinceJolt: 0,
     framesSinceSpawn: 0,
-    surfW: surface.width || 1,
-    surfH: surface.height || 1,
   };
 }
 
@@ -299,9 +291,6 @@ function step(state: State, _dt: number): State {
   // that makes the coral flow like it is suspended underwater. Eased so it never
   // reads as nervous jitter: graceful, cinematic, large in amplitude.
   breathe(state, T, chaos);
-
-  // ── cursor "Touch": soft radial pull toward the pointer ──
-  applyTouch(state, chaos);
 
   // ── (3) injection: sudden jolts to random node spans ──
   state.framesSinceJolt++;
@@ -555,76 +544,6 @@ function injectJolt(state: State, repulsionRadius: number, chaos: number): void 
   }
 }
 
-// ── cursor "Touch" ────────────────────────────────────────────────────────────
-// The harness writes these onto the shared params object on every pointer move.
-// They are NOT in the schema, so we read them defensively. When active we apply a
-// smooth radial pull: nodes inside an influence radius glide toward the cursor
-// (closer = stronger, eased) so the membrane bulges/flows toward the touch, and we
-// seed a few extra nodes right under the pointer so growth concentrates there.
-function applyTouch(state: State, chaos: number): void {
-  const s = state.params;
-  const ta = !!s.touchActive;
-  if (!ta) return;
-  const tx = (s.touchX as number) || 0;
-  const ty = (s.touchY as number) || 0;
-  const ts = (s.touchStrength as number) ?? 0.6;
-  const strength = clamp(ts, 0, 1.5);
-  if (strength <= 0) return;
-
-  const w = state.surfW || 1;
-  const h = state.surfH || 1;
-  const scaleUnit = Math.min(w, h) || 1;
-  // device px → centred normalised model coords (inverse of TX/TY in render).
-  const mx = (tx * w - w * 0.5) / scaleUnit;
-  const my = (ty * h - h * 0.5) / scaleUnit;
-
-  const nodes = state.nodes;
-  const n = nodes.length;
-  if (n < 2) return;
-
-  // Influence radius in model units; pull magnitude scales with touchStrength.
-  const radius = 0.18 + 0.06 * chaos;
-  const r2 = radius * radius;
-  const pull = 0.16 * strength; // fraction of remaining distance closed per frame
-
-  let near = -1;
-  let nearD2 = Infinity;
-  for (let i = 0; i < n; i++) {
-    const a = nodes[i];
-    const dx = mx - a.x;
-    const dy = my - a.y;
-    const d2 = dx * dx + dy * dy;
-    if (d2 < nearD2) {
-      nearD2 = d2;
-      near = i;
-    }
-    if (d2 >= r2 || d2 <= 1e-12) continue;
-    const d = Math.sqrt(d2);
-    // smooth falloff (smoothstep on 1 - d/radius) so the bulge is soft-edged.
-    const t = 1 - d / radius;
-    const fall = t * t * (3 - 2 * t);
-    a.x += dx * pull * fall;
-    a.y += dy * pull * fall;
-  }
-
-  // Seed extra nodes under a firm touch so the membrane densifies / blooms there.
-  if (near >= 0 && state.nodes.length < state.nodeCap && state.rng.next() < 0.25 + 0.4 * strength) {
-    const a = nodes[near];
-    const jx = state.rng.range(-1, 1) * radius * 0.12;
-    const jy = state.rng.range(-1, 1) * radius * 0.12;
-    const node: Node = {
-      x: (a.x + mx) * 0.5 + jx,
-      y: (a.y + my) * 0.5 + jy,
-      px: 0,
-      py: 0,
-      age: state.step,
-      hot: hotspotWeight((a.x + mx) * 0.5, (a.y + my) * 0.5, state.hotspots),
-    };
-    nodes.splice(near + 1, 0, node);
-    if (nodes.length > state.nodeCap) nodes.length = state.nodeCap;
-  }
-}
-
 // Cut a contiguous chunk out of the strand so it can re-grow and re-buckle.
 function pruneChunk(state: State, chaos: number): void {
   const nodes = state.nodes;
@@ -765,10 +684,6 @@ function render(state: State, surface: RenderSurface): void {
   const scaleUnit = Math.min(w, h);
   const cx = w * 0.5;
   const cy = h * 0.5;
-
-  // remember the live surface so step() can map normalised touch coords.
-  state.surfW = w;
-  state.surfH = h;
 
   const p = state.params;
   const chaos = clamp(num(p, "chaos", 0.85), 0, 1);

@@ -419,45 +419,6 @@ export const strangeAttractors: GenerativeSystem<State> = {
     state.y = ny;
     state.iterationsDone += perFrame;
 
-    // ── 5. TOUCH: paint a luminous smear at the cursor that the filaments flow
-    // around. Read defensively (not in the schema). We deposit extra density in a
-    // soft radial falloff at the cursor in device-pixel coords (same dims as the
-    // density buffer), scaled by touchStrength, with a little rng sparkle so it
-    // reads as living light rather than a flat disc.
-    const ta = !!p.touchActive;
-    if (ta) {
-      const tx = (p.touchX as number) || 0;
-      const ty = (p.touchY as number) || 0;
-      const ts = (p.touchStrength as number) ?? 0.6;
-      const w = state.w;
-      const h = state.h;
-      const cxp = clamp(tx, 0, 1) * (w - 1);
-      const cyp = clamp(ty, 0, 1) * (h - 1);
-      // Radius scales gently with surface size and strength.
-      const radius = Math.max(6, Math.min(w, h) * (0.05 + 0.05 * clamp(ts / 1.5, 0, 1)));
-      const r2 = radius * radius;
-      // Peak deposit relative to the per-cell hit scale so the smear glows above
-      // the surrounding filament density without blowing out tone mapping.
-      const peak = (perFrame / (w * h)) * 90 * (0.4 + ts);
-      const x0 = Math.max(0, Math.floor(cxp - radius));
-      const x1 = Math.min(w - 1, Math.ceil(cxp + radius));
-      const y0 = Math.max(0, Math.floor(cyp - radius));
-      const y1 = Math.min(h - 1, Math.ceil(cyp + radius));
-      for (let yy = y0; yy <= y1; yy++) {
-        const dy = yy - cyp;
-        for (let xx = x0; xx <= x1; xx++) {
-          const dx = xx - cxp;
-          const d2 = dx * dx + dy * dy;
-          if (d2 > r2) continue;
-          // Smooth radial falloff (1 at centre → 0 at edge), squared for a soft core.
-          const fall = 1 - d2 / r2;
-          // A touch of rng sparkle so the smear shimmers like the filaments.
-          const sparkle = 0.85 + 0.3 * state.rng.next();
-          density[xx + yy * w] += peak * fall * fall * sparkle;
-        }
-      }
-    }
-
     return state;
   },
 

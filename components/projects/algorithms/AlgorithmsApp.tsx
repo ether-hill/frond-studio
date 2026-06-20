@@ -33,10 +33,8 @@ const SCAFFOLD = `
   </aside>
 </div>
 <section class="studio-about" aria-label="About this algorithm">
-  <button id="algo-paneltoggle" class="studio-paneltoggle"><span>About · This algorithm</span><span class="caret">▾</span></button>
-  <div id="algo-panelbody" class="studio-panelbody">
-    <div id="algo-about-body" class="studio-about-body"></div>
-  </div>
+  <h3 id="algo-about-title" class="studio-about-title">Algorithm</h3>
+  <div id="algo-about-body" class="studio-about-body"></div>
 </section>
 `;
 

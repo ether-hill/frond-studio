@@ -57,17 +57,6 @@ export function mountLab(root: HTMLElement): () => void {
     return biomeRecDest.stream;
   }
 
-  // ---- Touch — pointer over the canvas, exposed to systems via params.touch* ----
-  const touchState = { strength: 0.6 };
-  function onPointer(e: PointerEvent, down: boolean): void {
-    if (!canvas) return;
-    const r = canvas.getBoundingClientRect();
-    const p = params as Record<string, number | boolean>;
-    p.touchX = (e.clientX - r.left) / Math.max(1, r.width);
-    p.touchY = (e.clientY - r.top) / Math.max(1, r.height);
-    p.touchActive = down;
-    p.touchStrength = touchState.strength;
-  }
 
   function dims() {
     const r = stage.getBoundingClientRect();
@@ -112,10 +101,6 @@ export function mountLab(root: HTMLElement): () => void {
   function addStandardFolders(): void {
     if (!panel) return;
     const pane = panel.pane;
-
-    const fTouch = pane.addFolder({ title: "Touch", expanded: false });
-    fTouch.addBinding(touchState, "strength", { min: 0, max: 1.5, step: 0.05, label: "strength" })
-      .on("change", () => { (params as Record<string, number>).touchStrength = touchState.strength; });
 
     const fSound = pane.addFolder({ title: "Soundscape (biome)", expanded: false });
     const soundBtn = fSound.addButton({ title: biomeOn ? "■ stop sound" : "▶ enable sound" });
@@ -184,6 +169,14 @@ export function mountLab(root: HTMLElement): () => void {
     loop.load(sys, params, seed);
     if (algoSel.value !== sys.id) algoSel.value = sys.id;
 
+    // About — non-collapsible, titled with the system name
+    const at = root.querySelector("#alab-about-title");
+    const ab = root.querySelector("#alab-about-body");
+    if (at) at.textContent = sys.title;
+    if (ab) ab.innerHTML = `<p class="studio-about-lead">${sys.blurb}</p>`;
+
+    if (biomeOn) rollBiome(); // selecting a system restarts the soundscape
+
     ro = new ResizeObserver(() => {
       window.clearTimeout(resizeT);
       resizeT = window.setTimeout(() => {
@@ -251,18 +244,6 @@ export function mountLab(root: HTMLElement): () => void {
   root.querySelector("#alab-ctrltoggle")?.addEventListener("click", () => panelEl.classList.toggle("studio-hide"));
 
   // touch on the canvas
-  stage.addEventListener("pointerdown", (e) => onPointer(e, true));
-  stage.addEventListener("pointermove", (e) => onPointer(e, (e.buttons & 1) === 1));
-  stage.addEventListener("pointerup", (e) => onPointer(e, false));
-
-  // About toggle
-  const aboutBody = root.querySelector("#alab-panelbody") as HTMLElement | null;
-  const aboutToggle = root.querySelector("#alab-paneltoggle") as HTMLElement | null;
-  aboutToggle?.addEventListener("click", () => {
-    const hidden = aboutBody?.classList.toggle("hidden");
-    const caret = aboutToggle.querySelector(".caret");
-    if (caret) caret.textContent = hidden ? "▸" : "▾";
-  });
 
   const onKey = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;

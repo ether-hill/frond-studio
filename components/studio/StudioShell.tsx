@@ -79,6 +79,7 @@ export const STUDIO_CSS = `
 
 /* About — a wide, readable section below the studio */
 .studio-about { margin-top: clamp(40px, 5vw, 72px); border-top: 1px solid var(--line); padding-top: clamp(26px, 3vw, 40px); color: var(--fg-dim); }
+.studio-about-title { margin: 0 0 clamp(18px, 2.4vw, 30px); font-family: var(--font-display), sans-serif; font-weight: 600; font-size: clamp(22px, 2.6vw, 36px); line-height: 1.02; letter-spacing: -0.02em; color: var(--fg); }
 .studio-paneltoggle { width: 100%; max-width: var(--maxw); display: flex; justify-content: space-between; align-items: center; gap: 16px; background: transparent; border: 0; color: var(--fg); cursor: pointer; font: 500 12px var(--font-mono); letter-spacing: 0.18em; text-transform: uppercase; padding: 0; }
 .studio-paneltoggle .caret { color: var(--fg-dim); }
 .studio-panelbody { margin-top: clamp(18px, 2.4vw, 30px); }

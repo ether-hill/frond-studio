@@ -89,10 +89,6 @@ export interface State {
   // cached domain helpers
   inside: (x: number, y: number) => boolean;
   done: boolean; // never true in circus mode, kept for contract symmetry
-  // last-seen render surface dims, so step() can map cursor (0..1 of canvas) into
-  // the same normalised [0,1]² geometry render() uses (a centred `unit` square).
-  surfW: number;
-  surfH: number;
 }
 
 // ── Schema ──────────────────────────────────────────────────────────────────────
@@ -313,8 +309,6 @@ function init(surface: RenderSurface, params: Params, rng: RNG): State {
     maxNodes,
     inside,
     done: false,
-    surfW: 0,
-    surfH: 0,
   };
 
   for (let i = 0; i < COLONY_COUNT; i++) {
@@ -408,10 +402,6 @@ function step(state: State, dt: number): State {
     injectNearTips(state, state.colonies[c]);
   }
 
-  // Cursor "Touch": every touched frame, drop a fresh cluster of attractors right
-  // at the pointer so new veins race toward it — it feels like drawing growth.
-  injectAtTouch(state);
-
   // Reseed any finished colony into a brand-new one so growth is perpetual.
   for (let c = 0; c < state.colonies.length; c++) {
     if (state.colonies[c].finished) {
@@ -459,47 +449,6 @@ function injectNearTips(state: State, colony: Colony): void {
     if (x < 0 || x > 1 || y < 0 || y > 1) continue;
     if (!inside(x, y)) continue;
     colony.attractors.push({ x, y, alive: true });
-  }
-}
-
-// Cursor "Touch": spawn a tight cluster of fresh attractors at the pointer each
-// touched frame. Read the touch fields defensively (not in the schema). The cursor
-// arrives as 0..1 across the canvas; map it back through render's centred `unit`
-// square into the normalised [0,1]² geometry the colonies live in. Attractors land
-// regardless of the domain mask so growth always reaches the pointer, but stay
-// clamped inside [0,1] so the spatial hash and render mapping behave.
-function injectAtTouch(state: State): void {
-  const p = state.params;
-  if (!p.touchActive) return;
-  if (state.colonies.length === 0) return;
-  if (state.surfW <= 0 || state.surfH <= 0) return;
-
-  const tx = (p.touchX as number) || 0;
-  const ty = (p.touchY as number) || 0;
-  const ts = clamp((p.touchStrength as number) ?? 0.6, 0, 1.5);
-
-  const W = state.surfW;
-  const H = state.surfH;
-  const unit = Math.min(W, H);
-  const offX = (W - unit) * 0.5;
-  const offY = (H - unit) * 0.5;
-  // inverse of render's X()/Y(): px → normalised geometry.
-  const nx = (tx * W - offX) / unit;
-  const ny = (ty * H - offY) / unit;
-
-  const count = 6 + Math.round(18 * ts); // denser cluster the harder you press
-  const spread = state.influenceRadius * (0.35 + 0.25 * ts);
-
-  for (let c = 0; c < state.colonies.length; c++) {
-    const colony = state.colonies[c];
-    if (colony.attractors.length > 12000) continue; // honour the safety cap
-    for (let i = 0; i < count; i++) {
-      const ang = state.rng.next() * TAU;
-      const rad = spread * Math.sqrt(state.rng.next());
-      const x = clamp(nx + Math.cos(ang) * rad, 0, 1);
-      const y = clamp(ny + Math.sin(ang) * rad, 0, 1);
-      colony.attractors.push({ x, y, alive: true });
-    }
   }
 }
 
@@ -706,9 +655,6 @@ function render(state: State, surface: RenderSurface): void {
   const ctx = s.ctx;
   const W = s.width;
   const H = s.height;
-
-  state.surfW = W;
-  state.surfH = H;
 
   const unit = Math.min(W, H);
   const offX = (W - unit) * 0.5;

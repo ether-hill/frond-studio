@@ -70,20 +70,8 @@ export const radialResonance: GenerativeSystem<State> = {
     const s = surface as Canvas2DSurface;
     const { ctx } = s;
     const W = s.width, H = s.height;
+    const cx = W / 2, cy = H / 2;
     const p = state.params;
-
-    // Cursor "Touch": lean the whole disc toward the pointer. Read defensively —
-    // these live on the shared params object but are not in the schema.
-    const ta = !!p.touchActive;
-    const tx = (p.touchX as number) || 0;
-    const ty = (p.touchY as number) || 0;
-    const ts = (p.touchStrength as number) ?? 0.6;
-    let cx = W / 2, cy = H / 2;
-    if (ta) {
-      const lean = clamp(ts, 0, 1.5) * 0.42; // how far the centre slides toward the cursor
-      cx += (tx * W - cx) * lean;
-      cy += (ty * H - cy) * lean;
-    }
     const nr = p.rings as number;
     const ns = p.spokes as number;
     if (nr !== state.nr || ns !== state.ns) { state.nr = nr; state.ns = ns; state.phase = buildPhase(state.rng, nr, ns); }
@@ -169,11 +157,8 @@ export const radialResonance: GenerativeSystem<State> = {
       }
     }
 
-    // glowing molten core (a sphere — stays round through the flip). When touched,
-    // the core swells and burns brighter so the ripple reads as originating at the
-    // pointer the disc has leaned toward.
-    const touchBoost = ta ? clamp(ts, 0, 1.5) : 0;
-    const pulse = (1 + Math.sin(t * (1.2 + chaos)) * 0.18) * (1 + 0.6 * touchBoost);
+    // glowing molten core (a sphere — stays round through the flip)
+    const pulse = 1 + Math.sin(t * (1.2 + chaos)) * 0.18;
     const coreR = spacing * 1.5 * pulse;
     const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
     g.addColorStop(0, rgba(coreC, 1));

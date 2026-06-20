@@ -103,20 +103,6 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     return biomeRecDest.stream;
   }
 
-  // ---- Touch ---- the GPU engines want resolution-pixel coords (y bottom-up);
-  // the square engine canvas covers the wide visual, so undo the cover-fit crop.
-  const touchState = { strength: 0.5 };
-  let gpuRes = 0;
-  function onPointer(e: PointerEvent, _down: boolean) {
-    if (!canvas || !engine || !gpuRes) return;
-    const r = canvas.getBoundingClientRect();
-    const D = Math.max(r.width, r.height);
-    const sx = (e.clientX - r.left - (r.width - D) / 2) / D;
-    const sy = (e.clientY - r.top - (r.height - D) / 2) / D;
-    const over = sx >= 0 && sx <= 1 && sy >= 0 && sy <= 1;
-    engine.setMouse(sx * gpuRes, (1 - sy) * gpuRes, over && touchState.strength > 0);
-  }
-
   const curGen = () => DATA[sel].gen;
 
   function teardownArt() {
@@ -157,13 +143,11 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     stage.insertBefore(canvas, stage.firstChild);
     try {
       if (kind === "physmod") {
-        gpuRes = 640;
         gpuBase = { ...M_DEFAULTS, agentTexW: 768, ...values };
-        engine = new PhysMod(canvas, gpuRes, gpuBase as unknown as MParams);
+        engine = new PhysMod(canvas, 640, gpuBase as unknown as MParams);
       } else {
-        gpuRes = 512;
-        gpuBase = { ...DEFAULTS, mouseFood: 0.7, foodRadius: 42, ...values };
-        engine = new Physarum(canvas, gpuRes, gpuBase as unknown as Params);
+        gpuBase = { ...DEFAULTS, ...values };
+        engine = new Physarum(canvas, 512, gpuBase as unknown as Params);
       }
       runGpuLoop();
     } catch { fpsEl.textContent = "WebGL2 unavailable"; }
@@ -198,9 +182,6 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
   }
 
   function addStandardFolders(p: PaneLike) {
-    const fTouch = p.addFolder({ title: "Touch", expanded: false });
-    fTouch.addBinding(touchState, "strength", { min: 0, max: 1, step: 0.05, label: "strength" });
-
     const fSound = p.addFolder({ title: "Soundscape (biome)", expanded: false });
     const sb = fSound.addButton({ title: biomeOn ? "■ stop sound" : "▶ enable sound" });
     sb.on("click", async () => {
@@ -287,6 +268,8 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
 
   function updateAbout() {
     const d = DATA[sel];
+    const at = root.querySelector("#algo-about-title");
+    if (at) at.textContent = d.name;
     const steps = d.steps.map((st) => `<li><b>${esc(st.title)}</b> — ${esc(st.text)}</li>`).join("");
     const facts = d.params.map((pf) => `<li><b>${esc(pf.label)}</b>: ${esc(pf.value)}</li>`).join("");
     aboutBody.innerHTML =
@@ -304,6 +287,7 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     refreshPresets();
     updateAbout();
     if (algoSel.selectedIndex !== i) algoSel.selectedIndex = i;
+    if (biomeOn) rollBiome(); // selecting an algorithm restarts the soundscape
   }
 
   // dropdown
@@ -323,17 +307,6 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
   root.querySelector("#algo-cine-exit")!.addEventListener("click", () => setCine(false));
   root.querySelector("#algo-ctrltoggle")?.addEventListener("click", () => panelHost.classList.toggle("studio-hide"));
 
-  stage.addEventListener("pointerdown", (e) => onPointer(e, true));
-  stage.addEventListener("pointermove", (e) => onPointer(e, (e.buttons & 1) === 1));
-  stage.addEventListener("pointerup", (e) => onPointer(e, false));
-
-  const aboutToggle = root.querySelector("#algo-paneltoggle") as HTMLElement | null;
-  const aboutWrap = root.querySelector("#algo-panelbody") as HTMLElement | null;
-  aboutToggle?.addEventListener("click", () => {
-    const hidden = aboutWrap?.classList.toggle("hidden");
-    const caret = aboutToggle.querySelector(".caret");
-    if (caret) caret.textContent = hidden ? "▸" : "▾";
-  });
 
   const onKey = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;

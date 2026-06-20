@@ -32,31 +32,9 @@ const SCAFFOLD = `
     <div id="alab-panel" class="studio-controls"></div>
   </aside>
 </div>
-<section class="studio-about" aria-label="About the Algorithm Lab">
-  <button id="alab-paneltoggle" class="studio-paneltoggle"><span>About · The systems</span><span class="caret">▾</span></button>
-  <div id="alab-panelbody" class="studio-panelbody">
-    <div class="studio-about-body">
-      <p class="studio-about-lead">The <b>Algorithm Lab</b> is a living collection of nature-inspired generative systems. Each one is a small, self-contained algorithm you can seed, tune live, and capture as a smooth, loopable motion-graphic background.</p>
-      <div class="studio-about-cols">
-        <div>
-          <h4>How it works</h4>
-          <ul>
-            <li><b>Seedable & deterministic</b> — the same seed and parameters reproduce the same piece, so a look you love is repeatable.</li>
-            <li><b>Live parameters</b> — every control updates in real time; a <i>chaos</i> knob sets how energetic each system runs.</li>
-            <li><b>Colour in OKLCH</b> — colour is driven from the simulation field through perceptual gradients, never flat RGB.</li>
-          </ul>
-        </div>
-        <div>
-          <h4>Use as a background</h4>
-          <ul>
-            <li><b>Full-bleed mode</b> — preview any system edge to edge, ready for a banner or page backdrop.</li>
-            <li><b>Record video</b> — capture a clean WebM loop, or a hi-res PNG snapshot, straight from the canvas.</li>
-            <li><b>Built to run light</b> — GPU where it counts and capped resolution so motion stays buttery, not choppy.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
+<section class="studio-about" aria-label="About this system">
+  <h3 id="alab-about-title" class="studio-about-title">System</h3>
+  <div id="alab-about-body" class="studio-about-body"></div>
 </section>
 `;
 
