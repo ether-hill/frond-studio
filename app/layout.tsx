@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Schibsted_Grotesk, Newsreader } from "next/font/google";
+import { Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
 import ScrollToTop from "@/components/ScrollToTop";
 
@@ -7,16 +7,6 @@ const schibsted = Schibsted_Grotesk({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-body",
-  display: "swap",
-});
-
-// Editorial serif used by the case-study pages (large titles, stats, pull-quotes).
-// Exposed as --font-serif; the rest of the site keeps its sans display type.
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-serif",
   display: "swap",
 });
 
@@ -33,7 +23,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" className={`${schibsted.variable} ${newsreader.variable}`} suppressHydrationWarning>
+    <html lang="en" data-theme="dark" className={schibsted.variable} suppressHydrationWarning>
       <head>
         {/* Runs before first paint: (1) applies the saved/system colour theme so
             there's no flash of the wrong theme, and (2) marks JS active so GSAP

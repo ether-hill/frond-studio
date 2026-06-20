@@ -18,9 +18,10 @@ const project: EditorialProject = {
   liveLabel: "embassyofthefreemind.com",
 
   hero: {
-    type: "image",
-    src: `${M}/hero.jpg`,
-    alt: "The Embassy of the Free Mind homepage.",
+    type: "video",
+    src: `${M}/videos/hero-scroll.mp4`,
+    poster: `${M}/videos/hero-scroll.jpg`,
+    alt: "Scrolling through the Embassy of the Free Mind homepage.",
     ratio: "16:9",
     label: "embassyofthefreemind.com",
   },
@@ -66,9 +67,10 @@ const project: EditorialProject = {
   band: {
     text: "A house full of free minds.",
     media: {
-      type: "image",
-      src: `${M}/ticketing.jpg`,
-      alt: "Visitors gathered inside the Embassy of the Free Mind.",
+      type: "video",
+      src: `${M}/videos/montage.mp4`,
+      poster: `${M}/videos/montage.jpg`,
+      alt: "A montage of the building and the collection.",
       ratio: "16:9",
     },
   },
@@ -92,12 +94,12 @@ const project: EditorialProject = {
       {
         caption: "The faces on the façade",
         note: "The carved heads above the front door, filmed and composited into a looping portrait.",
-        media: { type: "image", src: `${M}/device-tablet.jpg`, alt: "Carved heads on the Embassy façade.", ratio: "1:1" },
+        media: { type: "video", src: `${M}/videos/film-heads.mp4`, poster: `${M}/videos/film-heads.jpg`, alt: "A carved head from the Embassy façade.", ratio: "1:1" },
       },
       {
         caption: "Two thousand years of images",
-        note: "Illuminations and engravings from the Bibliotheca Philosophica Hermetica, cut into one flowing reel.",
-        media: { type: "image", src: `${M}/source-library.jpg`, alt: "An illuminated manuscript from the collection.", ratio: "1:1" },
+        note: "Artworks and illuminations from the collection, cut into one flowing reel.",
+        media: { type: "video", src: `${M}/videos/film-activities.mp4`, poster: `${M}/videos/film-activities.jpg`, alt: "An illustrated artwork from the collection.", ratio: "1:1" },
       },
     ],
   },
@@ -106,13 +108,11 @@ const project: EditorialProject = {
     eyebrow: "About page · The seven pillars",
     heading: "Honouring the pillars meant making something special",
     body: "The seven pillars sit at the heart of how the Embassy tells its story, and the team felt they deserved more than a list. We answered with a celestial wheel: the pillars set in slow orbit, turning the About page into a small piece of cosmology.",
-    // Stand-in: the celestial-wheel graphic from Frond's rebuild is not on the
-    // current live (Webflow) site, so this uses an evocative real screengrab from
-    // the collection. Swap for the real /about celestial-wheel capture at launch.
     media: {
-      type: "image",
-      src: `${M}/localisation.jpg`,
-      alt: "A mystical chart from the Bibliotheca Philosophica Hermetica.",
+      type: "video",
+      src: `${M}/videos/pillars.mp4`,
+      poster: `${M}/videos/pillars.jpg`,
+      alt: "The celestial wheel of pillars on the About page.",
       ratio: "16:9",
       label: "embassyofthefreemind.com/about",
     },
