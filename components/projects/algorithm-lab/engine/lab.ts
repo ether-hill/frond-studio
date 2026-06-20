@@ -5,18 +5,15 @@ import { createSurface, resizeSurface, disposeSurface } from "./surfaces";
 import { createLoop, type Loop } from "./harness/loop";
 import { buildPanel, type PanelHandle } from "./harness/panel";
 import { exportCurrentPng, exportHiResPng, copyParamsJson, download } from "./harness/export";
-import { loadPresets, savePreset, deletePreset, downloadPreset, type Preset } from "./harness/presets";
+import { loadPresets, savePreset, deletePreset, downloadPreset } from "./harness/presets";
 import { recordWebM } from "./harness/video";
 import { SYSTEMS } from "./systems";
 
-/**
- * Wire the engine to a scaffold (provided by AlgorithmLab.tsx) read by id:
- * #alab-stage (visual host), #alab-algo (algorithm dropdown), #alab-panel
- * (Tweakpane host), #alab-fps, transport/capture buttons. Returns a teardown.
- */
+/** Wire the engine to the StudioShell scaffold (read by id). Returns teardown. */
 export function mountLab(root: HTMLElement): () => void {
   const stage = root.querySelector("#alab-stage") as HTMLElement;
   const algoSel = root.querySelector("#alab-algo") as HTMLSelectElement;
+  const presetSel = root.querySelector("#alab-preset") as HTMLSelectElement;
   const panelEl = root.querySelector("#alab-panel") as HTMLElement;
   const fpsEl = root.querySelector("#alab-fps") as HTMLElement;
   const presetsEl = root.querySelector("#alab-presets") as HTMLElement;
@@ -45,7 +42,7 @@ export function mountLab(root: HTMLElement): () => void {
     if (surface) disposeSurface(surface);
     canvas?.remove();
     canvas = document.createElement("canvas");
-    stage.appendChild(canvas); // overlay chips keep their z-index above it
+    stage.insertBefore(canvas, stage.firstChild); // behind the overlay chips
 
     surface = createSurface(canvas, sys.tier);
     const { w, h, dpr } = dims();
@@ -53,7 +50,7 @@ export function mountLab(root: HTMLElement): () => void {
 
     loop = createLoop(surface, makeRng, (info) => {
       fpsEl.textContent = `${info.fps} fps · ${sys.tier}`;
-      playBtn.textContent = info.playing ? "❚❚ pause" : "▶ play";
+      playBtn.textContent = info.playing ? "PAUSE" : "PLAY";
     });
 
     panel?.dispose();
@@ -81,11 +78,11 @@ export function mountLab(root: HTMLElement): () => void {
     ro.observe(stage);
   }
 
-  // populate the dropdown (replaces the old left menu)
+  // algorithm dropdown (the preset-style picker, like SMA's)
   for (const sys of SYSTEMS) {
     const o = document.createElement("option");
     o.value = sys.id;
-    o.textContent = `${sys.title} — ${sys.blurb}`;
+    o.textContent = `${sys.title} · ${sys.blurb}`;
     algoSel.appendChild(o);
   }
   algoSel.addEventListener("change", () => {
@@ -93,16 +90,28 @@ export function mountLab(root: HTMLElement): () => void {
     if (sys) selectSystem(sys);
   });
 
-  // transport
+  // transport: RANDOMISE rolls a fresh seed, RESTART reseeds the same look
   playBtn.addEventListener("click", () => loop?.toggle());
+  root.querySelector("#alab-randomise")!.addEventListener("click", () => {
+    seed = randomSeedString();
+    (params as Record<string, string>).seed = seed;
+    panel?.refresh();
+    loop?.setSeed(seed);
+    loop?.reset();
+  });
   root.querySelector("#alab-reset")!.addEventListener("click", () => loop?.reset());
 
-  // cinematic / full-bleed (covers the nav for a true background preview)
-  const setCine = (on: boolean) => root.classList.toggle("alab-cinematic", on);
-  root.querySelector("#alab-cine")!.addEventListener("click", () => setCine(!root.classList.contains("alab-cinematic")));
+  // cinematic / full-bleed
+  const setCine = (on: boolean) => root.classList.toggle("studio-cinematic", on);
+  root.querySelector("#alab-cine")!.addEventListener("click", () => setCine(!root.classList.contains("studio-cinematic")));
   root.querySelector("#alab-cine-exit")!.addEventListener("click", () => setCine(false));
 
-  // record the live canvas to a WebM background loop
+  // mobile controls toggle
+  root.querySelector("#alab-ctrltoggle")?.addEventListener("click", () => {
+    panelEl.classList.toggle("studio-hide");
+  });
+
+  // capture: record video + snapshot PNG (+ hi-res)
   root.querySelector("#alab-rec")!.addEventListener("click", async () => {
     if (!canvas) return;
     const btn = root.querySelector("#alab-rec") as HTMLButtonElement;
@@ -113,11 +122,9 @@ export function mountLab(root: HTMLElement): () => void {
       const blob = await recordWebM(canvas, secs, 60, (p) => { btn.textContent = `● rec ${Math.round(p * 100)}%`; });
       download(blob, `${active?.id ?? "lab"}-${seed}-${secs}s.webm`);
     } catch (err) { console.error("recording failed", err); }
-    btn.textContent = "● record webm";
+    btn.textContent = "● record video";
     btn.disabled = false;
   });
-
-  // export
   root.querySelector("#alab-png")!.addEventListener("click", async () => {
     if (!surface || !active) return;
     download(await exportCurrentPng(surface), `${active.id}-${seed}.png`);
@@ -134,41 +141,67 @@ export function mountLab(root: HTMLElement): () => void {
   });
   root.querySelector("#alab-copy")!.addEventListener("click", () => { if (active) copyParamsJson(active.id, seed, params); });
 
-  // presets
-  function renderPresets(list: Preset[]): void {
+  // presets — a dropdown (like SMA) + a managed list for download/delete
+  function refreshPresetDropdown(): void {
+    presetSel.innerHTML = `<option value="">none</option>`;
+    for (const p of loadPresets()) {
+      const o = document.createElement("option");
+      o.value = String(p.savedAt);
+      o.textContent = `${p.systemId} · ${p.name || p.seed}`;
+      presetSel.appendChild(o);
+    }
+  }
+  function applyPreset(savedAt: string): void {
+    const p = loadPresets().find((x) => String(x.savedAt) === savedAt);
+    if (!p) return;
+    const sys = SYSTEMS.find((s) => s.id === p.systemId);
+    if (!sys) return;
+    selectSystem(sys);
+    seed = p.seed;
+    Object.assign(params, p.params, { seed: p.seed });
+    panel?.refresh();
+    loop?.setSeed(seed);
+    loop?.reset();
+  }
+  presetSel.addEventListener("change", () => { if (presetSel.value) applyPreset(presetSel.value); });
+
+  function renderPresets(): void {
     presetsEl.innerHTML = "";
-    for (const p of list) {
+    for (const p of loadPresets()) {
       const row = document.createElement("div");
-      row.className = "alab-preset";
-      row.innerHTML = `<button class="load">${p.systemId} · ${p.name || p.seed}</button><button class="dl" title="download">⤓</button><button class="del" title="delete">✕</button>`;
-      row.querySelector(".load")!.addEventListener("click", () => {
-        const sys = SYSTEMS.find((s) => s.id === p.systemId);
-        if (!sys) return;
-        selectSystem(sys);
-        seed = p.seed;
-        Object.assign(params, p.params, { seed: p.seed });
-        panel?.refresh();
-        loop?.setSeed(seed);
-        loop?.reset();
-      });
+      row.className = "studio-preset";
+      row.innerHTML = `<button class="studio-btn load">${p.systemId} · ${p.name || p.seed}</button><button class="studio-btn dl" title="download">⤓</button><button class="studio-btn del" title="delete">✕</button>`;
+      row.querySelector(".load")!.addEventListener("click", () => applyPreset(String(p.savedAt)));
       row.querySelector(".dl")!.addEventListener("click", () => downloadPreset(p));
-      row.querySelector(".del")!.addEventListener("click", () => renderPresets(deletePreset(p.savedAt)));
+      row.querySelector(".del")!.addEventListener("click", () => { deletePreset(p.savedAt); renderPresets(); refreshPresetDropdown(); });
       presetsEl.appendChild(row);
     }
   }
   root.querySelector("#alab-save")!.addEventListener("click", () => {
     if (!active) return;
     const name = prompt("Preset name", `${seed}`) || seed;
-    renderPresets(savePreset({ name, systemId: active.id, seed, params: { ...params } }));
+    savePreset({ name, systemId: active.id, seed, params: { ...params } });
+    renderPresets();
+    refreshPresetDropdown();
   });
-  renderPresets(loadPresets());
+  refreshPresetDropdown();
+  renderPresets();
+
+  // About toggle
+  const aboutBody = root.querySelector("#alab-panelbody") as HTMLElement | null;
+  const aboutToggle = root.querySelector("#alab-paneltoggle") as HTMLElement | null;
+  aboutToggle?.addEventListener("click", () => {
+    const hidden = aboutBody?.classList.toggle("hidden");
+    const caret = aboutToggle.querySelector(".caret");
+    if (caret) caret.textContent = hidden ? "▸" : "▾";
+  });
 
   const onKey = (e: KeyboardEvent) => {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
     if (e.key === " ") { e.preventDefault(); loop?.toggle(); }
     else if (e.key === "r") loop?.reset();
     else if (e.key === "Escape") setCine(false);
-    else if (e.key === "f") setCine(!root.classList.contains("alab-cinematic"));
+    else if (e.key === "f") setCine(!root.classList.contains("studio-cinematic"));
   };
   window.addEventListener("keydown", onKey);
 
@@ -182,6 +215,6 @@ export function mountLab(root: HTMLElement): () => void {
     panel?.dispose();
     if (surface) disposeSurface(surface);
     canvas?.remove();
-    root.classList.remove("alab-cinematic");
+    root.classList.remove("studio-cinematic");
   };
 }
