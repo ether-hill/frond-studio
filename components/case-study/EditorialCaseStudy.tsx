@@ -179,7 +179,7 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
       </section>
 
       <div className="page-gutter" style={PAD}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)", paddingBottom: "var(--section-y)" }}>
 
           {/* ── Content model + device mockup ─────────────── */}
           <section data-rvs style={{ paddingTop: "clamp(56px,9vh,120px)" }}>
