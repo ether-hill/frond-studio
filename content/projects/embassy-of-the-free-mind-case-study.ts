@@ -26,6 +26,7 @@ const project: EditorialProject = {
     label: "embassyofthefreemind.com",
   },
   heroBg: `${M}/videos/hero-bg.jpg`,
+  card: { video: `${M}/card.mp4`, poster: `${M}/card.jpg` },
 
   introLead:
     "The Embassy of the Free Mind holds a world-class collection of hermetic texts. Its old site got in the way: hard to navigate, single language, and cut off from ticketing and the library catalogue.",

@@ -40,6 +40,8 @@ export type EditorialProject = {
   hero: EditorialMedia;
   /** Full-bleed blurred image shown behind the hero browser frame. */
   heroBg?: string;
+  /** Thumbnail for the /work index row + "See more work" cards. */
+  card?: { video?: string; poster?: string };
 
   /** Positioning. Lead is the large serif statement, body the supporting line. */
   introLead: string;
