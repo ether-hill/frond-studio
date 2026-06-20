@@ -72,13 +72,27 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
         </p>
       </header>
 
-      {/* ── Hero frame over a full-bleed blurred backdrop ─── */}
-      <section className="ecs-hero-band" data-rvs>
+      {/* ── Hero: floating frosted browser card over a full-bleed image ─── */}
+      <section className="ecs-hero" data-rvs>
         {p.heroBg ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="ecs-hero-bg" src={p.heroBg} alt="" aria-hidden="true" />
+          <img className="ecs-hero-img" src={p.heroBg} alt="" aria-hidden="true" />
         ) : null}
-        <div className="page-gutter ecs-hero-inner" style={PAD}><Frame media={p.hero} url={p.liveLabel} /></div>
+        <div className="ecs-hero-scrim" />
+        <div className="ecs-hero-card">
+          <div className="ecs-hero-bar">
+            <i /><i /><i />
+            {p.liveLabel ? <span className="ecs-hero-url">{p.liveLabel}</span> : null}
+          </div>
+          <div className="ecs-hero-screen">
+            {p.hero.type === "video" ? (
+              <AutoVideo src={p.hero.src} poster={p.hero.poster} objectFit="contain" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={p.hero.src} alt={p.hero.alt} loading="lazy" decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
+            )}
+          </div>
+        </div>
       </section>
 
       <div className="page-gutter" style={PAD}>
@@ -171,12 +185,24 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             </div>
 
             <div className="ecs-plate" style={{ marginTop: "clamp(34px,5vh,60px)" }}>
-              <div className="ecs-dev ecs-dev-tablet"><div className="ecs-screen"><Well media={p.devices.tablet} /></div></div>
-              <div className="ecs-dev ecs-dev-laptop">
-                <div className="ecs-laptop-lid"><div className="ecs-screen"><Well media={p.devices.laptop} /></div></div>
-                <div className="ecs-laptop-base" aria-hidden="true" />
+              <div className="ecs-cluster">
+                <div className="ecs-dev ecs-dev-phone">
+                  <div className="ecs-phone-body">
+                    <span className="ecs-phone-notch" aria-hidden="true" />
+                    <div className="ecs-phone-screen"><Well media={p.devices.phone} /></div>
+                  </div>
+                </div>
+                <div className="ecs-dev ecs-dev-tablet">
+                  <div className="ecs-tablet-body"><div className="ecs-tablet-screen"><Well media={p.devices.tablet} /></div></div>
+                </div>
+                <div className="ecs-dev ecs-dev-laptop">
+                  <div className="ecs-laptop-lid">
+                    <span className="ecs-laptop-cam" aria-hidden="true" />
+                    <div className="ecs-laptop-screen"><Well media={p.devices.laptop} /></div>
+                  </div>
+                  <div className="ecs-laptop-base" aria-hidden="true" />
+                </div>
               </div>
-              <div className="ecs-dev ecs-dev-phone"><span className="ecs-phone-island" aria-hidden="true" /><div className="ecs-screen"><Well media={p.devices.phone} /></div></div>
             </div>
           </section>
 
@@ -216,15 +242,15 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
         </div>
       </div>
 
-      {/* ── Quote over flowing-lines video ────────────────── */}
+      {/* ── Quote over flowing-lines video (dark/light blend) ── */}
       {p.quote ? (
         <section className="ecs-quote" data-rvs>
-          {p.quoteBg ? <div className="ecs-quote-bg"><Well media={p.quoteBg} /></div> : null}
-          <div className="ecs-quote-shade" />
-          <div className="page-gutter ecs-quote-inner" style={{ maxWidth: 1100, margin: "0 auto", padding: "clamp(80px,14vh,170px) var(--gutter)", textAlign: "center" }}>
+          {p.quoteBg ? <AutoVideo src={p.quoteBg.src} poster={p.quoteBg.poster} className="quote-vid" noFade /> : null}
+          <div className="ecs-quote-vignette" />
+          <div className="ecs-quote-inner">
             <blockquote style={{ margin: 0 }}>
-              <p style={{ fontFamily: DISPLAY, fontSize: "clamp(26px,3.6vw,52px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.02em", color: "var(--fg)" }}>&ldquo;{p.quote.body}&rdquo;</p>
-              <footer style={{ marginTop: "clamp(20px,3vh,30px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)" }}>{p.quote.author}</footer>
+              <p style={{ fontFamily: DISPLAY, fontSize: "clamp(26px,3.6vw,52px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.018em", color: "var(--fg)" }}>&ldquo;{p.quote.body}&rdquo;</p>
+              <footer style={{ marginTop: "clamp(30px,4vh,48px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-dim)" }}>{p.quote.author}</footer>
             </blockquote>
           </div>
         </section>
