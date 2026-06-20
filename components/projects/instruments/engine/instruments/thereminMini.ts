@@ -2,12 +2,13 @@
 // instrument" teaser. It mirrors the full theremin's signal path (two slightly
 // detuned oscillators for the heterodyne shimmer, a vibrato LFO, a brightness
 // low-pass, a portamento glide and a reverb) and its autopilot presets, but in a
-// compact frame: a clean control bar (power · voices · randomise), one playable
-// field, and a live readout. Up to four voices stack into a breathing chord;
-// Randomise re-rolls each voice's pattern and lets them play themselves. Kept
-// separate from theremin.ts so the showcased full instrument is never touched.
+// compact frame: a standard control bar (power · voices · randomise) built from
+// the shared instrument design-system components, one playable field, and a live
+// readout. Up to four voices stack into a breathing chord; Randomise re-rolls
+// each voice's pattern. Kept separate from theremin.ts so the showcased full
+// instrument is never touched.
 
-import { mtof, noteName, ensureAudio, suspendAudio, MONO, reduceMotion } from "./shared";
+import { mtof, noteName, ensureAudio, suspendAudio, MONO, reduceMotion, powerButton, segmented, injectCss } from "./shared";
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const rnd = () => Math.random();
@@ -93,7 +94,6 @@ class MiniVoice {
 
   connect(node: AudioNode): void { this.out.connect(node); }
   setPan(pan: number): void { if (this.started) this.panner.pan.setTargetAtTime(clamp(pan, -1, 1), this.ctx.currentTime, 0.05); }
-  setLevel(g: number): void { if (this.started) this.level.gain.setTargetAtTime(clamp(g, 0, 1), this.ctx.currentTime, 0.05); }
 
   private reverbIR(ctx: AudioContext, seconds: number): AudioBuffer {
     const len = Math.floor(ctx.sampleRate * seconds);
@@ -208,35 +208,6 @@ const MODES: Record<AutoMode, AutoCfg> = {
   },
 };
 
-// ---- one-time CSS for the mini control bar (scoped, tm- prefix) --------------
-
-let cssDone = false;
-function injectMiniCss(): void {
-  if (cssDone) return;
-  cssDone = true;
-  const s = document.createElement("style");
-  s.textContent = `
-.tm-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.tm-btn{display:inline-flex;align-items:center;gap:9px;appearance:none;cursor:pointer;background:transparent;color:var(--fg);border:1px solid rgba(var(--lw),0.26);border-radius:999px;padding:10px 18px;font-family:${MONO};font-size:11px;letter-spacing:0.12em;transition:background .18s,border-color .18s,color .18s}
-.tm-btn:hover{border-color:rgba(var(--lw),0.55)}
-.tm-btn:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
-.tm-power[data-on="1"]{background:rgba(var(--lw),0.10);border-color:rgba(var(--lw),0.5)}
-.tm-dot{width:8px;height:8px;border-radius:50%;background:var(--fg4);transition:background .2s}
-.tm-power[data-on="1"] .tm-dot{background:var(--fg);animation:tmPulse 1.6s ease-in-out infinite}
-@keyframes tmPulse{0%,100%{opacity:1}50%{opacity:.3}}
-.tm-seg{display:inline-flex;border:1px solid rgba(var(--lw),0.26);border-radius:999px;overflow:hidden}
-.tm-seg-label{font-family:${MONO};font-size:10px;letter-spacing:0.14em;color:var(--fg4);align-self:center;margin-right:2px}
-.tm-seg button{appearance:none;background:transparent;color:var(--fg3);border:none;border-left:1px solid rgba(var(--lw),0.16);padding:10px 14px;font-family:${MONO};font-size:11px;letter-spacing:0.04em;cursor:pointer;transition:background .15s,color .15s}
-.tm-seg button:first-child{border-left:none}
-.tm-seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
-.tm-seg button:not([aria-pressed="true"]):hover{color:var(--fg)}
-.tm-seg button:focus-visible{outline:2px solid var(--fg);outline-offset:-2px}
-.tm-randomise:active{transform:translateY(1px)}
-@media (prefers-reduced-motion: reduce){.tm-power[data-on="1"] .tm-dot{animation:none}}
-`;
-  document.head.appendChild(s);
-}
-
 // ---- mount -------------------------------------------------------------------
 
 const NVOICES = 4;
@@ -244,13 +215,13 @@ const PANS = [0, -0.55, 0.55, -0.25];
 
 /**
  * Mount the condensed theremin into a host element: a control bar (power, voices
- * 1–4, randomise), one playable field (X = pitch, Y = volume) and a live
- * readout. Power-on starts a gentle drift; add voices to thicken the chord, hit
- * Randomise to re-roll every voice's pattern. Returns a disposer that silences
- * and tears down the audio.
+ * 1–4, randomise) using the shared instrument design-system controls, one
+ * playable field (X = pitch, Y = volume) and a live readout. Power-on starts a
+ * gentle drift; add voices to thicken the chord, hit Randomise to re-roll every
+ * voice's pattern. Returns a disposer that silences and tears down the audio.
  */
 export function mountMini(root: HTMLElement): () => void {
-  injectMiniCss();
+  injectCss(); // shared instrument control styles (.inst-power / .inst-seg / .inst-link …)
 
   const voices = Array.from({ length: NVOICES }, () => new MiniVoice());
   let master: GainNode | null = null;
@@ -258,7 +229,6 @@ export function mountMini(root: HTMLElement): () => void {
   let count = 1;
   const FOCUS = 0; // the field always plays voice A
 
-  // per-voice autopilot driver
   interface Drv { mode: AutoMode | null; cur: { x: number; vol: number }; target: { x: number; vol: number }; nextChange: number; }
   const drv: Drv[] = Array.from({ length: NVOICES }, () => ({ mode: null, cur: { x: 0.5, vol: 0.5 }, target: { x: 0.5, vol: 0.5 }, nextChange: 0 }));
   let timer = 0;
@@ -311,55 +281,37 @@ export function mountMini(root: HTMLElement): () => void {
     maybeStopTimer();
   }
 
-  // --- DOM ---
+  // --- DOM: control bar from the shared design system ---
   const wrap = document.createElement("div");
   wrap.style.cssText = "display:flex;flex-direction:column;gap:16px";
 
   const bar = document.createElement("div");
-  bar.className = "tm-bar";
+  bar.style.cssText = "display:flex;align-items:flex-end;gap:clamp(12px,1.6vw,22px);flex-wrap:wrap";
 
-  // power
-  const power = document.createElement("button");
-  power.type = "button"; power.className = "tm-btn tm-power"; power.dataset.on = "0";
-  power.setAttribute("aria-pressed", "false");
-  const renderPower = () => {
-    power.innerHTML = `<span class="tm-dot"></span>${powered ? "PLAYING" : "POWER ON"}`;
-    power.dataset.on = powered ? "1" : "0";
-    power.setAttribute("aria-pressed", String(powered));
-  };
-  renderPower();
-  let busy = false;
-  power.addEventListener("click", async () => {
-    if (busy) return; busy = true;
-    try { if (powered) await powerOff(); else await powerOn(); }
-    finally { busy = false; }
+  // power (shared .inst-power)
+  const power = powerButton(async (on) => { if (on) await powerOn(); else powerOff(); });
+
+  // voices (shared segmented / .inst-seg)
+  const voicesSeg = segmented<string>({
+    label: "VOICES",
+    value: "1",
+    options: ["1", "2", "3", "4"].map((n) => ({ value: n, label: n })),
+    onChange: (n) => setCount(parseInt(n, 10)),
   });
+  voicesSeg.el.style.flex = "0 0 auto";
 
-  // voices segmented
-  const seg = document.createElement("div");
-  seg.className = "tm-seg"; seg.setAttribute("role", "group"); seg.setAttribute("aria-label", "Voices");
-  const segLabel = document.createElement("span"); segLabel.className = "tm-seg-label"; segLabel.textContent = "VOICES";
-  const segBtns: HTMLButtonElement[] = [];
-  for (let n = 1; n <= NVOICES; n++) {
-    const b = document.createElement("button"); b.type = "button"; b.textContent = String(n);
-    b.setAttribute("aria-pressed", n === count ? "true" : "false");
-    b.addEventListener("click", () => setCount(n));
-    seg.append(b); segBtns.push(b);
-  }
-  function renderSeg(): void { segBtns.forEach((b, i) => b.setAttribute("aria-pressed", i + 1 === count ? "true" : "false")); }
-
-  // randomise
+  // randomise (shared .inst-link button)
   const random = document.createElement("button");
-  random.type = "button"; random.className = "tm-btn tm-randomise";
-  random.innerHTML = "✦ RANDOMISE";
+  random.type = "button"; random.className = "inst-link";
+  random.textContent = "RANDOMISE";
   random.addEventListener("click", () => randomise());
 
   // readout
   const readout = document.createElement("div");
-  readout.style.cssText = `flex:1 1 auto;text-align:right;min-width:160px;font-family:${MONO};font-size:12px;letter-spacing:0.08em;color:var(--fg3);font-variant-numeric:tabular-nums`;
+  readout.style.cssText = `flex:1 1 auto;text-align:right;min-width:150px;font-family:${MONO};font-size:12px;letter-spacing:0.08em;color:var(--fg3);font-variant-numeric:tabular-nums`;
   readout.textContent = "POWER ON OR HIT RANDOMISE";
 
-  bar.append(power, segLabel, seg, random, readout);
+  bar.append(power.el, voicesSeg.el, random, readout);
 
   // the field
   const field = document.createElement("div");
@@ -391,19 +343,18 @@ export function mountMini(root: HTMLElement): () => void {
   // --- power / count / randomise ---
   async function powerOn(): Promise<void> {
     await ensureChain();
-    powered = true; renderPower(); setMaster(0.9);
-    // bring the active voices to life with autopilot
+    powered = true; power.set(true); setMaster(0.9);
     await startAuto(FOCUS, "drift");
     for (let i = 1; i < count; i++) await startAuto(i, AUTO_MODES[Math.floor(rnd() * AUTO_MODES.length)]);
   }
-  async function powerOff(): Promise<void> {
-    powered = false; renderPower(); setMaster(0);
+  function powerOff(): void {
+    powered = false; power.set(false); setMaster(0);
     for (let i = 0; i < NVOICES; i++) stopAuto(i);
     readout.textContent = "POWER ON OR HIT RANDOMISE";
     setTimeout(() => { if (!powered) suspendAudio(); }, 240);
   }
   async function setCount(n: number): Promise<void> {
-    count = clamp(n, 1, NVOICES); renderSeg();
+    count = clamp(n, 1, NVOICES); voicesSeg.set(String(count));
     if (!powered) return;
     for (let i = 0; i < NVOICES; i++) {
       if (i >= count) stopAuto(i);
@@ -411,8 +362,8 @@ export function mountMini(root: HTMLElement): () => void {
     }
   }
   async function randomise(): Promise<void> {
-    if (!powered) { powered = true; renderPower(); await ensureChain(); setMaster(0.9); }
-    count = 2 + Math.floor(rnd() * 3); renderSeg(); // 2..4
+    if (!powered) { await ensureChain(); powered = true; power.set(true); setMaster(0.9); }
+    count = 2 + Math.floor(rnd() * 3); voicesSeg.set(String(count)); // 2..4
     for (let i = 0; i < NVOICES; i++) {
       if (i >= count) { stopAuto(i); continue; }
       await ensureVoice(i);
@@ -429,16 +380,18 @@ export function mountMini(root: HTMLElement): () => void {
     const vol = 1 - clamp((clientY - r.top) / r.height, 0, 1);
     voices[FOCUS].setPitchNorm(x); voices[FOCUS].setVolNorm(vol); paint(x, vol);
   }
+  function powerUpSilent(): void {
+    if (powered) return;
+    powered = true; power.set(true); setMaster(0.9);
+  }
   async function begin(clientX: number, clientY: number): Promise<void> {
-    await ensureVoice(FOCUS);
-    if (!powered) { powered = true; renderPower(); setMaster(0.9); }
+    await ensureVoice(FOCUS); powerUpSilent();
     drv[FOCUS].mode = null; maybeStopTimer(); // manual takes over voice A
     showCrosshair(true); voices[FOCUS].gate(true); update(clientX, clientY);
   }
   function end(): void {
     voices[FOCUS].gate(false); activePointer = null;
-    // resume a gentle drift on voice A so the teaser keeps breathing
-    if (powered) startAuto(FOCUS, "drift"); else showCrosshair(false);
+    if (powered) startAuto(FOCUS, "drift"); else showCrosshair(false); // resume a gentle drift
   }
   const onDown = async (e: PointerEvent) => {
     if (activePointer !== null) return;
@@ -463,8 +416,7 @@ export function mountMini(root: HTMLElement): () => void {
     else if (e.key === " ") { kHeld = !kHeld; if (!kHeld) { end(); return; } }
     else return;
     e.preventDefault();
-    await ensureVoice(FOCUS);
-    if (!powered) { powered = true; renderPower(); setMaster(0.9); }
+    await ensureVoice(FOCUS); powerUpSilent();
     drv[FOCUS].mode = null; maybeStopTimer();
     if (!kHeld) { kHeld = true; voices[FOCUS].gate(true); showCrosshair(true); }
     const r = field.getBoundingClientRect();

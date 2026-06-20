@@ -75,7 +75,7 @@ export default function FeaturedInstrument() {
                 marginBottom: 14,
               }}
             >
-              Theremin · Web Audio
+              Make some noise
             </div>
             <h3
               style={{
@@ -87,7 +87,7 @@ export default function FeaturedInstrument() {
                 letterSpacing: "-0.02em",
               }}
             >
-              Pulled out of the air.
+              Theraminimal.
             </h3>
             <p style={{ margin: "16px 0 0", maxWidth: "42ch", fontSize: 15.5, lineHeight: 1.6, color: "var(--fg-dim)" }}>
               No keys, no contact — power on and sweep the field. X bends pitch, Y swells
