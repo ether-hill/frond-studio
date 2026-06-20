@@ -121,6 +121,19 @@ const project: EditorialProject = {
     note: "A custom rotating composition built for the About page. Each pillar is a body in the same orbit, so the Embassy's founding ideas read as one connected whole.",
   },
 
+  before: [
+    "Dated design that under-served the collection",
+    "Not accessible to all visitors",
+    "Single language only",
+    "Ticketing and the library catalogue lived elsewhere",
+  ],
+  after: [
+    "Editorial, content-rich design",
+    "WCAG AA built in from the foundations",
+    "Full Dutch / English parity",
+    "Ticketing, membership and the Source Library on-site",
+  ],
+
   // Pulled from the design reference. Confirm exact wording and attribution with
   // the EFM team before launch.
   quote: {

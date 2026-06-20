@@ -240,6 +240,25 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
               <Frame media={p.pillars.media} url={p.liveLabel ? `${p.liveLabel}/about` : undefined} flat />
             </div>
           </section>
+
+          {/* ── Before / after (neutral, no colour coding) ── */}
+          {p.before?.length && p.after?.length ? (
+            <section className="ecs-ba" data-rvs>
+              {([["Before", p.before], ["After", p.after]] as const).map(([label, points]) => (
+                <div key={label}>
+                  <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{label}</div>
+                  <ul style={{ marginTop: "clamp(18px,2.6vh,28px)", display: "flex", flexDirection: "column", gap: 16 }}>
+                    {points.map((pt) => (
+                      <li key={pt} style={{ display: "flex", alignItems: "flex-start", gap: 14, fontSize: "clamp(16px,1.4vw,20px)", lineHeight: 1.45, color: "var(--fg)" }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0, marginTop: "0.6em" }} />
+                        <span>{pt}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </section>
+          ) : null}
         </div>
       </div>
 

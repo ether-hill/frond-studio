@@ -1698,11 +1698,17 @@ button {
 .ecs-quote-vignette { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 42%, var(--bg-0) 98%); }
 .ecs-quote-inner { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; text-align: center; padding: clamp(80px, 13vh, 170px) var(--gutter); }
 
+/* Before / after — two neutral columns. */
+.ecs-ba { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 5vw, 84px); }
+
 @media (max-width: 900px) {
   .ecs-intro { grid-template-columns: 1fr; gap: 32px; }
   .ecs-grid { grid-template-columns: repeat(2, 1fr); }
   .ecs-films { grid-template-columns: 1fr; gap: 56px; }
   .ecs-circle { width: min(440px, 86%); }
+}
+@media (max-width: 640px) {
+  .ecs-ba { grid-template-columns: 1fr; gap: 40px; }
 }
 @media (max-width: 760px) {
   /* Cluster: stack devices as separate framed shots so they stay legible. */
