@@ -67,6 +67,10 @@ export type EditorialProject = {
   /** About-page feature: a single media in a browser frame + caption. */
   pillars: EditorialSection & { media: EditorialMedia; caption: string; note: string };
 
+  /** Before / after fragment lists (rendered neutral, no colour coding). */
+  before?: string[];
+  after?: string[];
+
   /** Client testimonial. May be a clearly-marked placeholder. */
   quote?: { body: string; author: string; needsConfirmation?: boolean };
   /** Looping video shown behind the quote (distinct dark/light treatment in CSS). */
