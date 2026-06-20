@@ -10,7 +10,7 @@ const RECENT = PERSONAL_PROJECTS.slice(0, 6);
 
 export default function SelectedProjects() {
   return (
-    <section style={{ borderTop: "1px solid var(--line)" }}>
+    <section>
       <div
         className="page-gutter"
         style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}
@@ -23,12 +23,10 @@ export default function SelectedProjects() {
             alignItems: "center",
             gap: 24,
             flexWrap: "wrap",
-            borderTop: "1px solid var(--line)",
-            paddingTop: 22,
             marginBottom: "clamp(34px,5vh,58px)",
           }}
         >
-          <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
+          <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(26px,3.45vw,50px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
             Recent Projects
           </h2>
           <Link href="/projects" className="pill pill-ghost">

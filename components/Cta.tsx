@@ -246,7 +246,7 @@ export default function Cta() {
               margin: "0 auto",
               maxWidth: "22ch",
               fontFamily: "var(--font-display), sans-serif",
-              fontSize: "clamp(32px,5.2vw,78px)",
+              fontSize: "clamp(24px,3.9vw,58px)",
               fontWeight: 500,
               lineHeight: 1.02,
               letterSpacing: "-0.026em",
