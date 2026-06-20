@@ -1,4 +1,5 @@
 import type { GenerativeSystem } from "../core/types";
+import { radialResonance } from "./radial-resonance";
 import { spaceColonization } from "./space-colonization";
 import { differentialGrowth } from "./differential-growth";
 import { phyllotaxis } from "./phyllotaxis";
@@ -9,6 +10,7 @@ import { rdSurface } from "./rd-surface";
 
 // Build order: Tier-A (Canvas2D) first, then Tier-B (WebGL / three).
 export const SYSTEMS: GenerativeSystem[] = [
+  radialResonance,
   spaceColonization,
   differentialGrowth,
   phyllotaxis,
