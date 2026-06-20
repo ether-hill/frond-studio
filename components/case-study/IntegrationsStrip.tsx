@@ -14,7 +14,7 @@ function Cell({ name }: { name: string }) {
       }}
     >
       {logo ? (
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true" style={{ flex: "0 0 auto", color: "var(--fg)" }}>
+        <svg viewBox={logo.viewBox ?? "0 0 24 24"} width="22" height="22" fill="currentColor" aria-hidden="true" style={{ flex: "0 0 auto", color: "var(--fg)" }}>
           <path d={logo.path} />
         </svg>
       ) : (

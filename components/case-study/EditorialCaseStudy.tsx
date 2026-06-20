@@ -41,9 +41,9 @@ function Heading({ children, style }: { children: React.ReactNode; style?: React
   return <h2 style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "clamp(30px,4vw,56px)", lineHeight: 1.04, letterSpacing: "-0.025em", color: "var(--fg)", ...style }}>{children}</h2>;
 }
 
-function Frame({ media, url }: { media: EditorialMedia; url?: string }) {
+function Frame({ media, url, flat }: { media: EditorialMedia; url?: string; flat?: boolean }) {
   return (
-    <div className="ecs-frame">
+    <div className={flat ? "ecs-frame ecs-frame-flat" : "ecs-frame"}>
       <div className="ecs-frame-bar"><i /><i /><i />{url ? <span className="ecs-url">{url}</span> : null}</div>
       <div className="ecs-frame-screen" style={{ aspectRatio: RATIO[media.ratio] }}><Well media={media} /></div>
     </div>
@@ -96,7 +96,7 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
       </section>
 
       <div className="page-gutter" style={PAD}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)", paddingTop: "var(--section-y)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)", paddingTop: "var(--section-y)", paddingBottom: "var(--section-y)" }}>
 
           {/* ── Intro: text left, meta right ──────────────── */}
           <section className="ecs-intro" data-rvs>
@@ -142,10 +142,15 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
               <div className="ecs-grid ecs-tech" style={{ marginTop: "clamp(20px,3vh,32px)" }}>
                 {p.integrations.map((name) => {
                   const logo = logoFor(name);
+                  const letter = !logo && /^BPH/i.test(name) ? "B" : null;
                   return (
                     <div key={name} className="ecs-cell ecs-techcell">
                       <span className="ecs-techicon" aria-hidden="true">
-                        {logo ? (<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d={logo.path} /></svg>) : null}
+                        {logo ? (
+                          <svg viewBox={logo.viewBox ?? "0 0 24 24"} width="18" height="18" fill="currentColor"><path d={logo.path} /></svg>
+                        ) : letter ? (
+                          <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 17, lineHeight: 1 }}>{letter}</span>
+                        ) : null}
                       </span>
                       <span style={{ fontFamily: MONO, fontSize: 13, letterSpacing: "0.02em", color: "var(--fg)", lineHeight: 1.3 }}>{name}</span>
                     </div>
@@ -232,11 +237,7 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
               {p.pillars.body ? <p style={{ ...bodyStyle, maxWidth: 560, margin: "clamp(16px,2.2vh,26px) auto 0" }}>{p.pillars.body}</p> : null}
             </div>
             <div style={{ maxWidth: 1040, margin: "clamp(34px,5vh,60px) auto 0" }}>
-              <Frame media={p.pillars.media} url={p.liveLabel ? `${p.liveLabel}/about` : undefined} />
-            </div>
-            <div style={{ marginTop: 24 }}>
-              <div style={{ fontFamily: MONO, fontSize: 10, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{p.pillars.caption}</div>
-              <p style={{ marginTop: 12, maxWidth: 480, marginInline: "auto", fontSize: 14, lineHeight: 1.55, color: "var(--fg-dim)" }}>{p.pillars.note}</p>
+              <Frame media={p.pillars.media} url={p.liveLabel ? `${p.liveLabel}/about` : undefined} flat />
             </div>
           </section>
         </div>
@@ -254,14 +255,6 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             </blockquote>
           </div>
         </section>
-      ) : null}
-
-      {p.credits ? (
-        <div className="page-gutter" style={PAD}>
-          <section data-rvs style={{ borderTop: "1px solid var(--line-2)", paddingTop: "clamp(24px,3vh,36px)", marginTop: "var(--section-y)" }}>
-            <p style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.04em", color: "var(--fg-faint)", lineHeight: 1.6 }}>{p.credits}</p>
-          </section>
-        </div>
       ) : null}
 
       <MoreWork items={moreWork} />
