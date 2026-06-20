@@ -1633,6 +1633,7 @@ button {
 
 /* ── Editorial case study (EditorialCaseStudy.tsx) ─────────────────────── */
 .ecs-frame { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--bg-2); box-shadow: 0 50px 130px rgba(0, 0, 0, 0.55); }
+.ecs-frame-flat { box-shadow: none; }
 .ecs-frame-bar { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid var(--line-2); background: color-mix(in srgb, var(--bg-2) 70%, var(--bg-0)); }
 .ecs-frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); display: block; }
 .ecs-url { margin-left: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-faint); background: var(--bg-0); border: 1px solid var(--line-2); border-radius: 7px; padding: 5px 13px; flex: 1 1 auto; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1656,8 +1657,9 @@ button {
 .ecs-livebtn:hover { background: var(--fg); color: var(--bg-0); border-color: var(--fg); }
 
 /* Matching 4-col bordered grids (stats + tech). */
-.ecs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line-2); border: 1px solid var(--line-2); }
-.ecs-cell { background: var(--bg-0); padding: clamp(22px, 2.4vw, 34px); }
+/* Borders on the cells (not a container bg) so empty trailing cells show no grey. */
+.ecs-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line-2); border-left: 1px solid var(--line-2); }
+.ecs-cell { background: var(--bg-0); padding: clamp(22px, 2.4vw, 34px); border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
 .ecs-techcell { display: flex; align-items: center; gap: 14px; min-height: 80px; }
 .ecs-techicon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--bg-2); color: var(--fg); }
 
@@ -1690,10 +1692,10 @@ button {
 
 /* Quote over a flowing-lines video — one clip, theme-aware filter + blend. */
 .ecs-quote { position: relative; overflow: hidden; width: 100vw; margin-left: calc(50% - 50vw); border-top: 1px solid var(--line); }
-.quote-vid { opacity: 0.5; pointer-events: none; z-index: 0; }
-[data-theme="dark"] .quote-vid { filter: invert(1) sepia(1) saturate(4.5) hue-rotate(3deg) brightness(0.95); mix-blend-mode: screen; }
-[data-theme="light"] .quote-vid { filter: saturate(1.15) contrast(1.05); mix-blend-mode: multiply; opacity: 0.85; }
-.ecs-quote-vignette { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 30%, var(--bg-0) 92%); }
+.quote-vid { opacity: 0.8; pointer-events: none; z-index: 0; }
+[data-theme="dark"] .quote-vid { filter: invert(1) sepia(1) saturate(5) hue-rotate(3deg) brightness(1.2); mix-blend-mode: screen; opacity: 0.9; }
+[data-theme="light"] .quote-vid { filter: saturate(1.2) contrast(1.1); mix-blend-mode: multiply; opacity: 0.95; }
+.ecs-quote-vignette { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 42%, var(--bg-0) 98%); }
 .ecs-quote-inner { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; text-align: center; padding: clamp(80px, 13vh, 170px) var(--gutter); }
 
 @media (max-width: 900px) {
