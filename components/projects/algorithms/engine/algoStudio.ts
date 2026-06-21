@@ -163,7 +163,8 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
         // Jones opens on SMA Config's hero scene (v7) rather than the bare defaults.
         const base = gen === "physarum-jones" ? (JONES_DEFAULT_PARAMS as Params) : DEFAULTS;
         gpuBase = { ...base, ...values };
-        engine = new Physarum(canvas, 512, gpuBase as unknown as Params);
+        // Render at SMA Config's 1024² sim resolution (was 512² — visibly pixelated).
+        engine = new Physarum(canvas, 1024, gpuBase as unknown as Params);
       }
       runGpuLoop();
     } catch { fpsEl.textContent = "WebGL2 unavailable"; }
