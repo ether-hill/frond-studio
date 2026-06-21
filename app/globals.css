@@ -1463,9 +1463,9 @@ button {
 }
 
 /* ── Cymatics R&D article (/projects/cymatics-bubbles) ──────────────────────
-   Editorial layout: full-bleed banner video, then a centered article column —
-   wide 16:9 video players (shared .sym-player) interleaved with narrower prose.
-   Reuses the .sym-root dark canvas. */
+   Full-bleed banner video, then a full-width article on the standard site grid:
+   a two-column masthead, a 2-up video grid (lead piece spans both columns), and
+   a two-column body. Reuses the shared .sym-player and the .sym-root dark canvas. */
 .cym-hero {
   position: relative;
   width: 100%;
@@ -1482,15 +1482,31 @@ button {
   background: linear-gradient(180deg, transparent, #000);
 }
 .cym-article {
-  max-width: 1100px;
+  max-width: var(--maxw);
   margin: 0 auto;
   padding: clamp(44px, 7vh, 88px) var(--gutter) clamp(56px, 9vh, 120px);
 }
-.cym-prose {
-  max-width: 760px;
-  margin-left: auto;
-  margin-right: auto;
+
+/* Masthead — title on the left, intro lead on the right, full grid width. */
+.cym-head {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: clamp(28px, 5vw, 96px);
+  align-items: end;
+  padding-bottom: clamp(30px, 4.5vh, 56px);
+  border-bottom: 1px solid var(--line-2);
 }
+.cym-title {
+  margin: clamp(14px, 2.4vh, 24px) 0 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: var(--text-headline);
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  max-width: 16ch;
+}
+.cym-head .sym-lead { margin: 0; }
 .cym-kicker {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1506,14 +1522,52 @@ button {
   letter-spacing: 0.04em;
   color: var(--fg-faint);
 }
-.cym-media { margin: clamp(34px, 5.5vh, 66px) auto; }
+/* Video grid — two equal columns; the lead piece spans both. The 4:3 cells
+   sit between the gobstoppers' 16:9 and the newer square clips, so each crops
+   evenly around its centred bubble. */
+.cym-grid {
+  margin-top: clamp(40px, 6vh, 84px);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(16px, 1.8vw, 30px);
+}
+.cym-cell { margin: 0; }
+.cym-grid .sym-player { aspect-ratio: 4 / 3; }
+.cym-lead { grid-column: 1 / -1; }
+.cym-grid .cym-lead .sym-player { aspect-ratio: 16 / 9; }
+.cym-cap {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+
+/* Body — two readable columns under the grid. */
+.cym-body {
+  margin-top: clamp(40px, 6vh, 84px);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(28px, 5vw, 96px);
+}
+.cym-body .sym-lead { margin: 0; }
+
 .cym-refs {
-  margin-top: clamp(36px, 5.5vh, 64px);
+  margin-top: clamp(40px, 6vh, 72px);
   padding-top: clamp(24px, 3.5vh, 36px);
   border-top: 1px solid var(--line-2);
   display: flex;
   flex-direction: column;
   gap: 11px;
+}
+
+@media (max-width: 860px) {
+  .cym-head,
+  .cym-body,
+  .cym-grid { grid-template-columns: 1fr; }
+  .cym-grid .sym-player,
+  .cym-grid .cym-lead .sym-player { aspect-ratio: 4 / 3; }
 }
 .cym-refs .lbl {
   font-family: var(--font-mono);

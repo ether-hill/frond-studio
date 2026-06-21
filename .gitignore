@@ -32,3 +32,6 @@ next-env.d.ts
 
 # local Playwright capture/QA scratch
 .qa/
+
+# raw video source drops — only the optimised copies in /public are committed
+/video/
