@@ -62,10 +62,7 @@ export default function FurtherCymaticsPage() {
           {/* Body */}
           <div className="cym-body" data-stag>
             <p className="sym-lead" data-rvs>
-              The latest rigs replace fixed studio lighting with RGB LED ring arrays mounted around each vessel. Every ring is
-              wired to an Arduino kit and exposed as DMX-assignable values, so colour, intensity and timing become parameters we
-              can score and automate alongside the audio — lighting the standing waves from angles, and in hues, that the older
-              setups simply couldn&apos;t reach.
+              Recent prototypes incorporate NeoPixel LED ring arrays that are controlled with an Arduino.
             </p>
             <p className="sym-lead" data-rvs>
               One line of tests explores temporal aliasing: we phase the frequency of the light source against the frequency of
