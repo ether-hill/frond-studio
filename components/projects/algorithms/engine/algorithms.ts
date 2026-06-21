@@ -119,15 +119,15 @@ export const DATA: Algo[] = [
     steps: [
       { n: "1", title: "Diffuse", text: "Each chemical spreads across the grid at its own diffusion rate." },
       { n: "2", title: "React", text: "Where they meet, U + 2V → 3V converts feed into product." },
-      { n: "3", title: "Feed", text: "Chemical U is replenished everywhere at the feed rate F." },
+      { n: "3", title: "Feed", text: "Chemical U is replenished at feed rate F — here ramped with radius, so one frame crosses several regimes at once." },
       { n: "4", title: "Kill", text: "Chemical V is removed at rate (F + k), setting the pattern regime." },
     ],
     params: [
-      { label: "feed_rate F", value: "0.034 – 0.058" },
-      { label: "kill_rate k", value: "0.057 – 0.065" },
-      { label: "diffusion_U", value: "0.16" },
-      { label: "diffusion_V", value: "0.08" },
-      { label: "pattern", value: "coral / mitosis" },
+      { label: "engine", value: "WebGL2 · GPU" },
+      { label: "grid", value: "1024² · float" },
+      { label: "feed / kill", value: "radial gradient" },
+      { label: "presets", value: "mitosis … sunburst" },
+      { label: "pattern", value: "coral · labyrinth · spots" },
     ],
   },
   {

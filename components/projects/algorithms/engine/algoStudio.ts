@@ -3,6 +3,7 @@ import { DATA, JONES_PRESETS, JONES_DEFAULT_PARAMS, PHYS_PRESETS } from "./algor
 import { renderArt } from "./artGenerators";
 import { PhysMod, M_DEFAULTS, type MParams } from "./physmod";
 import { Physarum, DEFAULTS, type Params } from "./physarum";
+import { ReactionDiffusion, RD_DEFAULTS, RD_PRESETS, type RDParams } from "./reactionDiffusion";
 import { recordSequence } from "@/components/projects/algorithm-lab/engine/harness/video";
 import { Biome, randomConfig } from "@/components/projects/instruments/engine/instruments/biomeEngine";
 import { ensureAudio, suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
@@ -30,7 +31,19 @@ const s = (key: string, label: string, options: string[], def: string): Def => (
 // The "key algorithm settings" exposed per generator (every generator already
 // reads these via gp(params, …) / setParams).
 const SCHEMA: Record<string, Def[]> = {
-  "gray-scott": [n("speed", "speed", 1, 20, 10, 1), n("feed", "feed F", 0.02, 0.07, 0.037, 0.001), n("kill", "kill k", 0.05, 0.07, 0.06, 0.001)],
+  // GPU Gray–Scott. The radial feed/kill knobs are what carry it across Turing
+  // regimes in one frame (rings → labyrinth → spots → radial stripes).
+  "gray-scott": [
+    n("feed", "feed F", 0.01, 0.08, 0.0367, 0.0005), n("kill", "kill k", 0.04, 0.075, 0.0649, 0.0005),
+    n("feedAmp", "radial feed", -0.03, 0.03, 0.02, 0.001), n("killAmp", "radial kill", -0.02, 0.02, 0.006, 0.0005),
+    n("feedMid", "radial centre", 0, 1.4, 0.62, 0.02), n("dV", "V diffusion", 0.2, 0.7, 0.5, 0.01),
+    n("stepsPerFrame", "sim speed", 1, 40, 16, 1),
+    s("palette", "palette", ["duo", "tri", "rainbow"], "tri"),
+    c("bg", "background", "#04060a"), c("lo", "mid", "#1fbf52"), c("hi", "ink", "#ff3b1f"),
+    n("t0", "edge low", 0, 1, 0.14, 0.01), n("t1", "edge high", 0, 1, 0.34, 0.01),
+    n("hueScale", "rainbow bands", 1, 12, 5, 0.5),
+    s("seedMode", "seed", ["center", "random", "ring"], "center"),
+  ],
   boids: [n("count", "flock size", 100, 900, 380, 10), n("separation", "separation", 0.4, 3, 1.5, 0.1), n("trailFade", "trail fade", 4, 40, 17, 1), n("speed", "speed", 4, 20, 12, 0.5), n("wander", "wander", 0, 1.5, 0.55, 0.05)],
   "l-system": [n("plants", "plants", 2, 12, 5, 1)],
   "voronoi-recursive": [n("seeds", "seeds", 40, 300, 104, 2), n("drift", "drift", 0, 4, 1, 0.1), n("relaxation", "relaxation", 0, 8, 4, 1)],
@@ -61,12 +74,13 @@ const SCHEMA: Record<string, Def[]> = {
 
 type Eng = { render(): void; dispose(): void; reset(): void; setParams(p: unknown): void; setMouse(x: number, y: number, a: boolean): void };
 
-type Kind = "physmod" | "physarum" | "p5";
-const kindOf = (gen: string): Kind => (gen === "physarum" ? "physmod" : gen === "physarum-jones" ? "physarum" : "p5");
+type Kind = "physmod" | "physarum" | "rd" | "p5";
+const kindOf = (gen: string): Kind => (gen === "physarum" ? "physmod" : gen === "physarum-jones" ? "physarum" : gen === "gray-scott" ? "rd" : "p5");
 
 function presetsFor(gen: string): { label: string; params: Record<string, unknown> }[] {
   if (gen === "physarum") return PHYS_PRESETS.map((p) => ({ label: p.name, params: p.p as Record<string, unknown> }));
   if (gen === "physarum-jones") return JONES_PRESETS.map((p) => ({ label: p.label, params: p.params as unknown as Record<string, unknown> }));
+  if (gen === "gray-scott") return RD_PRESETS.map((p) => ({ label: p.name, params: p.params as unknown as Record<string, unknown> }));
   if (gen === "mycelium") return [
     { label: "Wild", params: { preset: "wild", color: 0 } },
     { label: "Filigree", params: { preset: "filigree", color: 1 } },
@@ -159,6 +173,9 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
       if (kind === "physmod") {
         gpuBase = { ...M_DEFAULTS, agentTexW: 768, ...values };
         engine = new PhysMod(canvas, 640, gpuBase as unknown as MParams);
+      } else if (kind === "rd") {
+        gpuBase = { ...RD_DEFAULTS, ...values };
+        engine = new ReactionDiffusion(canvas, 1024, gpuBase as unknown as RDParams);
       } else {
         // Jones opens on SMA Config's hero scene (v7) rather than the bare defaults.
         const base = gen === "physarum-jones" ? (JONES_DEFAULT_PARAMS as Params) : DEFAULTS;
@@ -275,7 +292,8 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
       pane?.refresh();
       buildArt();
     } else {
-      const base = kindOf(gen) === "physmod" ? { ...M_DEFAULTS, agentTexW: 768 } : { ...DEFAULTS };
+      const k = kindOf(gen);
+      const base = k === "physmod" ? { ...M_DEFAULTS, agentTexW: 768 } : k === "rd" ? { ...RD_DEFAULTS } : { ...DEFAULTS };
       gpuBase = { ...base, ...preset.params };
       for (const d of SCHEMA[gen] || []) if (d.key in gpuBase) values[d.key] = gpuBase[d.key] as number | string;
       pane?.refresh();
