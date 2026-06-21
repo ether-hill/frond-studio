@@ -3,6 +3,7 @@ import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import VideoPlayer from "@/components/projects/symcyto/VideoPlayer";
 import ResearchCarousel, { type ResearchSlide } from "@/components/projects/symcyto/ResearchCarousel";
+import InstagramFeed from "@/components/projects/symcyto/InstagramFeed";
 import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
@@ -176,6 +177,9 @@ export default function SymcytoPage() {
             </div>
           </div>
         </section>
+
+        {/* Instagram feed — recent posts + follow */}
+        <InstagramFeed handle="@symcyto" profileUrl="https://www.instagram.com/symcyto/" />
 
       </div>
       <MoreProjects excludeSlug="symcyto" />

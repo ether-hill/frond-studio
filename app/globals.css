@@ -1172,7 +1172,6 @@ button {
 .sym-hero-media {
   position: relative;
   align-self: stretch;
-  overflow: hidden;
   background: #000;
 }
 .sym-eyebrow {
@@ -1228,12 +1227,10 @@ button {
 }
 .sym-feature .sym-text { max-width: 46ch; }
 .sym-feature.rev .sym-media { order: 2; }
+/* Parallax feature media — intentionally un-boxed: no frame, no clip, so the
+   slow-zoom video bleeds past its slot into the section padding. */
 .sym-media {
   position: relative;
-  overflow: hidden;
-  border-radius: 10px;
-  background: #000;
-  border: 1px solid var(--line-2);
 }
 .sym-media.sq { aspect-ratio: 1 / 1; }
 .sym-media.port { aspect-ratio: 3 / 4; }
@@ -1372,12 +1369,66 @@ button {
   color: var(--fg-dim);
 }
 
+/* Instagram feed — 3×5 grid of recent posts + follow CTA */
+.ig-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.ig-head .sym-readbtn {
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.ig-grid {
+  margin-top: clamp(28px, 4.5vh, 56px);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: clamp(6px, 0.7vw, 12px);
+}
+.ig-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+}
+.ig-tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ig-tile:hover img { transform: scale(1.06); }
+.ig-ph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--fg-faint);
+  background: radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%);
+  transition: color 0.3s ease;
+}
+.ig-tile:hover .ig-ph { color: var(--fg); }
+
 @media (max-width: 860px) {
   .sym-feature { grid-template-columns: 1fr; gap: 32px; }
   .sym-feature.rev .sym-media { order: 0; }
   .sym-feature .sym-text { max-width: none; }
   .sym-grid { grid-template-columns: 1fr; }
   .sym-carousel { padding: 0 36px; }
+  .ig-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 520px) {
+  .ig-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* Timelapse Media Production — full-bleed video hero (the opening inkcaps
