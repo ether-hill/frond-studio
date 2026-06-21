@@ -30,9 +30,9 @@ const project: EditorialProject = {
   card: { video: `${M}/card.mp4`, poster: `${M}/card.jpg` },
 
   introLead:
-    "The rediscovery of ancient texts helped spark the Renaissance. Source Library does that work again, at far greater scale.",
+    "The rediscovery of ancient texts helped spark the Renaissance. Source Library does that work again, at far greater scale. Frond Studio consults on its design, development and continued growth.",
   introBody:
-    "Much of humanity's foundational knowledge is still locked in undigitised, untranslated books. Source Library digitises them, reads them with OCR, translates them, and opens them to people and machines alike. Frond Studio consults on its design, development and continued growth.",
+    "Much of humanity's foundational knowledge is still locked in undigitised, untranslated books. Source Library digitises them, reads them with OCR, translates them, and opens them to people and machines alike.",
   client: "Source Library",
   services: ["Website", "Design", "Development", "Video", "Consulting"],
 
@@ -79,10 +79,11 @@ const project: EditorialProject = {
   },
   // Celestial engraving (a star-catalogue headpiece) behind the quote.
   quoteBgImage: `${M}/quote-bg.jpg`,
-  // TEMP chooser: same backdrop, reduced tint vs no tint. Remove once decided.
+  // TEMP chooser: backdrop + tint options. Remove once decided.
   quoteBgVariants: [
-    { src: `${M}/quote-bg.jpg`, label: "Reduced tint", tint: "reduced" },
-    { src: `${M}/quote-bg.jpg`, label: "No tint", tint: "none" },
+    { src: `${M}/quote-bg.jpg`, label: "Stars, reduced tint", tint: "reduced" },
+    { src: `${M}/quote-bg.jpg`, label: "Stars, no tint", tint: "none" },
+    { src: `${M}/quote-bg-2.jpg`, label: "Sun chariot, reduced tint", tint: "reduced" },
   ],
 
   next: { slug: "embassy-of-the-free-mind", title: "Embassy of the Free Mind" },
