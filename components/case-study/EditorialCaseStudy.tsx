@@ -92,12 +92,12 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
       {p.heroBgVariants?.length ? (
         // TEMP chooser: one hero per candidate backdrop, stacked, so a variant
         // can be picked. Remove heroBgVariants from the content to revert.
-        p.heroBgVariants.map((bg, i) => (
-          <section key={bg} className={`ecs-hero${liteClass}`} data-rvs>
+        p.heroBgVariants.map((v) => (
+          <section key={v.src} className={`ecs-hero${liteClass}`} data-rvs>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="ecs-hero-img" src={bg} alt="" aria-hidden="true" />
+            <img className="ecs-hero-img" src={v.src} alt="" aria-hidden="true" />
             <div className="ecs-hero-scrim" />
-            <span className="ecs-hero-vlabel">{`Variant ${i + 1}`}</span>
+            <span className="ecs-hero-vlabel">{v.label}</span>
             {heroCard()}
           </section>
         ))

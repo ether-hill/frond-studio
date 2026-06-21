@@ -43,7 +43,7 @@ export type EditorialProject = {
   /** Lighter scrim over the hero backdrop (less dark tint). */
   heroLite?: boolean;
   /** TEMP chooser: render one hero per backdrop so a variant can be picked. */
-  heroBgVariants?: string[];
+  heroBgVariants?: { src: string; label: string }[];
   /** Thumbnail for the /work index row + "See more work" cards. */
   card?: { video?: string; poster?: string };
 

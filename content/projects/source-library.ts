@@ -25,16 +25,12 @@ const project: EditorialProject = {
     ratio: "16:9",
     label: "sourcelibrary.org",
   },
-  heroBg: `${M}/hero-bg.jpg`,
+  heroBg: `${M}/bg-var-1.jpg`,
   heroLite: true,
-  // TEMP: stacked backdrop variants to choose from (remove once one is picked).
+  // TEMP: two crops of the chosen backdrop to pick between (remove once decided).
   heroBgVariants: [
-    `${M}/bg-var-0.jpg`,
-    `${M}/bg-var-1.jpg`,
-    `${M}/bg-var-2.jpg`,
-    `${M}/bg-var-3.jpg`,
-    `${M}/bg-var-4.jpg`,
-    `${M}/bg-var-5.jpg`,
+    { src: `${M}/bg-var-1.jpg`, label: "Full width" },
+    { src: `${M}/bg-var-1b.jpg`, label: "Sides cropped" },
   ],
   card: { video: `${M}/card.mp4`, poster: `${M}/card.jpg` },
 
@@ -43,7 +39,7 @@ const project: EditorialProject = {
   introBody:
     "Much of humanity's foundational knowledge is still locked in undigitised, untranslated books. Source Library digitises them, reads them with OCR, translates them, and opens them to people and machines alike. It is built on the Embassy of the Free Mind's UNESCO-listed Bibliotheca Philosophica Hermetica, and draws on the Vatican, Bodleian, Cambridge and Bavarian State libraries. In public beta since April 2026.",
   client: "Embassy of the Free Mind",
-  services: ["Consulting"],
+  services: ["Website", "Design", "Development", "Video", "Consulting"],
 
   statsLabel: "The library, in numbers",
   stats: [
