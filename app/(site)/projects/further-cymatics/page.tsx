@@ -14,31 +14,28 @@ export default function FurtherCymaticsPage() {
   return (
     <RevealRoot>
       <div className="sym-root" data-theme="dark">
-        {/* Hero — full-bleed banner timelapse (autoplay, muted). 4K source, kept
-            uncompressed for quality. */}
+        {/* Hero — full-viewport video banner with the title + subtext overlaid
+            bottom-left. 4K source, kept uncompressed for quality. */}
         <section className="cym-hero">
-          <AutoVideo src="/further-cymatics/cymatics-header-loop-8000.mp4" poster="/further-cymatics/cymatics-header-loop-8000-poster.jpg" />
-        </section>
-
-        <article className="cym-article">
-          {/* Masthead — title left, intro right, across the full grid */}
-          <header className="cym-head" data-stag>
-            <div>
-              <div className="cym-kicker">Research &amp; Development</div>
-              <h1 className="cym-title">
-                <span className="mask-line">
-                  <span>Further Cymatics</span>
-                </span>
-              </h1>
-              <div className="cym-meta">2024 – 2025</div>
-            </div>
-            <p className="sym-lead" data-rvs>
+          <div className="cym-hero-media">
+            <AutoVideo src="/further-cymatics/cymatics-header-loop-8000.mp4" poster="/further-cymatics/cymatics-header-loop-8000-poster.jpg" />
+          </div>
+          <div className="cym-hero-inner" data-stag>
+            <div className="cym-kicker">Research &amp; Development</div>
+            <h1 className="cym-hero-title">
+              <span className="mask-line">
+                <span>Further Cymatics</span>
+              </span>
+            </h1>
+            <p className="sym-lead" data-rvs style={{ marginTop: "clamp(20px,3vh,32px)", maxWidth: "56ch" }}>
               An ongoing series of cymatics rigs that pair sound with programmable light. We&apos;re building new instruments with
               far finer control over the light source — RGB LED ring arrays driven by Arduino and DMX — to reveal how tone and
               resonance shape matter.
             </p>
-          </header>
+          </div>
+        </section>
 
+        <article className="cym-article">
           {/* Video grid — 2 columns. Every clip here is square, so each player is
               pinned to 1:1 to show the full frame uncropped. */}
           <div className="cym-grid" data-stag>

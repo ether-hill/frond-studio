@@ -14,29 +14,27 @@ export default function CymaticsBubblesPage() {
   return (
     <RevealRoot>
       <div className="sym-root" data-theme="dark">
-        {/* Hero — full-bleed banner timelapse (autoplay, muted) */}
+        {/* Hero — full-viewport video banner with the title + subtext overlaid
+            bottom-left. */}
         <section className="cym-hero">
-          <AutoVideo src="/cymatics/hero.mp4" poster="/cymatics/gobstopper-003-poster.jpg" />
-        </section>
-
-        <article className="cym-article">
-          {/* Masthead — title left, intro right, across the full grid */}
-          <header className="cym-head" data-stag>
-            <div>
-              <div className="cym-kicker">Research &amp; Development</div>
-              <h1 className="cym-title">
-                <span className="mask-line">
-                  <span>Spherical Cymatics in High Performance Bubbles</span>
-                </span>
-              </h1>
-              <div className="cym-meta">January 8, 2024</div>
-            </div>
-            <p className="sym-lead" data-rvs>
+          <div className="cym-hero-media">
+            <AutoVideo src="/cymatics/hero.mp4" poster="/cymatics/gobstopper-003-poster.jpg" />
+          </div>
+          <div className="cym-hero-inner" data-stag>
+            <div className="cym-kicker">Research &amp; Development</div>
+            <h1 className="cym-hero-title">
+              <span className="mask-line">
+                <span>Spherical Cymatics in High Performance Bubbles</span>
+              </span>
+            </h1>
+            <p className="sym-lead" data-rvs style={{ marginTop: "clamp(20px,3vh,32px)", maxWidth: "56ch" }}>
               Cymatic patterns and forms in hard-to-pop, high-performance bubbles offer a multisensory experience, combining the
               auditory perception of sound with the visual interplay of ever-changing shapes, colours and swirling patterns.
             </p>
-          </header>
+          </div>
+        </section>
 
+        <article className="cym-article">
           {/* Video grid — lead piece spans both columns, then a 2-up grid */}
           <div className="cym-grid" data-stag>
             <figure className="cym-cell cym-lead" data-rvs>

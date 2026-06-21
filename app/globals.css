@@ -1461,48 +1461,53 @@ button {
    Full-bleed banner video, then a full-width article on the standard site grid:
    a two-column masthead, a 2-up video grid (lead piece spans both columns), and
    a two-column body. Reuses the shared .sym-player and the .sym-root dark canvas. */
+/* Hero — full-viewport video banner with the title + subtext overlaid bottom-left
+   (matches the Timelapse hero). The gradient darkens the bottom for the copy and
+   the top for the transparent nav. */
 .cym-hero {
   position: relative;
-  width: 100%;
-  height: clamp(340px, 56vh, 680px);
-  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  min-height: 100svh;
   background: #000;
+  overflow: hidden;
 }
-/* Subtle top scrim so the transparent nav stays legible over the hero video. */
-.cym-hero::after {
+.cym-hero-media { position: absolute; inset: 0; }
+.cym-hero-media::after {
   content: "";
   position: absolute;
-  inset: 0 0 auto 0;
-  height: clamp(96px, 17vh, 190px);
+  inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.86) 0%,
+    rgba(0, 0, 0, 0.4) 34%,
+    rgba(0, 0, 0, 0.12) 64%,
+    rgba(0, 0, 0, 0.42) 100%
+  );
+}
+.cym-hero-inner {
+  position: relative;
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--gutter) clamp(56px, 11vh, 132px);
+}
+.cym-hero-title {
+  margin: clamp(20px, 3.2vh, 38px) 0 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: var(--text-display);
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  max-width: 18ch;
 }
 .cym-article {
   max-width: var(--maxw);
   margin: 0 auto;
   padding: clamp(44px, 7vh, 88px) var(--gutter) clamp(56px, 9vh, 120px);
 }
-
-/* Masthead — title on the left, intro lead on the right, full grid width. */
-.cym-head {
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: clamp(28px, 5vw, 96px);
-  align-items: end;
-  padding-bottom: clamp(30px, 4.5vh, 56px);
-  border-bottom: 1px solid var(--line-2);
-}
-.cym-title {
-  margin: clamp(14px, 2.4vh, 24px) 0 0;
-  font-family: var(--font-display), sans-serif;
-  font-weight: 600;
-  font-size: var(--text-headline);
-  line-height: 1.0;
-  letter-spacing: -0.03em;
-  color: var(--fg);
-  max-width: 16ch;
-}
-.cym-head .sym-lead { margin: 0; }
 .cym-kicker {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1560,7 +1565,7 @@ button {
 }
 
 @media (max-width: 860px) {
-  .cym-head,
+  .cym-hero { min-height: 0; aspect-ratio: 4 / 5; }
   .cym-grid { grid-template-columns: 1fr; }
   .cym-grid .sym-player,
   .cym-grid .cym-lead .sym-player { aspect-ratio: 4 / 3; }
