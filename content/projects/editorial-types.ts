@@ -38,8 +38,12 @@ export type EditorialProject = {
 
   /** Hero media, shown inside a browser frame. */
   hero: EditorialMedia;
-  /** Full-bleed blurred image shown behind the hero browser frame. */
+  /** Full-bleed image shown behind the hero browser frame. */
   heroBg?: string;
+  /** Lighter scrim over the hero backdrop (less dark tint). */
+  heroLite?: boolean;
+  /** TEMP chooser: render one hero per backdrop so a variant can be picked. */
+  heroBgVariants?: string[];
   /** Thumbnail for the /work index row + "See more work" cards. */
   card?: { video?: string; poster?: string };
 

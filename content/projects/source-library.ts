@@ -26,6 +26,16 @@ const project: EditorialProject = {
     label: "sourcelibrary.org",
   },
   heroBg: `${M}/hero-bg.jpg`,
+  heroLite: true,
+  // TEMP: stacked backdrop variants to choose from (remove once one is picked).
+  heroBgVariants: [
+    `${M}/bg-var-0.jpg`,
+    `${M}/bg-var-1.jpg`,
+    `${M}/bg-var-2.jpg`,
+    `${M}/bg-var-3.jpg`,
+    `${M}/bg-var-4.jpg`,
+    `${M}/bg-var-5.jpg`,
+  ],
   card: { video: `${M}/card.mp4`, poster: `${M}/card.jpg` },
 
   introLead:

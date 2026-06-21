@@ -53,6 +53,23 @@ const bodyStyle: React.CSSProperties = { fontFamily: "var(--font-body), sans-ser
 
 export default function EditorialCaseStudy({ project, moreWork = [] }: { project: EditorialProject; moreWork?: MoreWorkItem[] }) {
   const p = project;
+  const liteClass = p.heroLite ? " ecs-hero-lite" : "";
+  const heroCard = () => (
+    <div className="ecs-hero-card">
+      <div className="ecs-hero-bar">
+        <i /><i /><i />
+        {p.liveLabel ? <span className="ecs-hero-url">{p.liveLabel}</span> : null}
+      </div>
+      <div className="ecs-hero-screen">
+        {p.hero.type === "video" ? (
+          <AutoVideo src={p.hero.src} poster={p.hero.poster} objectFit="contain" />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={p.hero.src} alt={p.hero.alt} loading="lazy" decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -72,27 +89,28 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
       </header>
 
       {/* ── Hero: floating frosted browser card over a full-bleed image ─── */}
-      <section className="ecs-hero" data-rvs>
-        {p.heroBg ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="ecs-hero-img" src={p.heroBg} alt="" aria-hidden="true" />
-        ) : null}
-        <div className="ecs-hero-scrim" />
-        <div className="ecs-hero-card">
-          <div className="ecs-hero-bar">
-            <i /><i /><i />
-            {p.liveLabel ? <span className="ecs-hero-url">{p.liveLabel}</span> : null}
-          </div>
-          <div className="ecs-hero-screen">
-            {p.hero.type === "video" ? (
-              <AutoVideo src={p.hero.src} poster={p.hero.poster} objectFit="contain" />
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.hero.src} alt={p.hero.alt} loading="lazy" decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
-            )}
-          </div>
-        </div>
-      </section>
+      {p.heroBgVariants?.length ? (
+        // TEMP chooser: one hero per candidate backdrop, stacked, so a variant
+        // can be picked. Remove heroBgVariants from the content to revert.
+        p.heroBgVariants.map((bg, i) => (
+          <section key={bg} className={`ecs-hero${liteClass}`} data-rvs>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="ecs-hero-img" src={bg} alt="" aria-hidden="true" />
+            <div className="ecs-hero-scrim" />
+            <span className="ecs-hero-vlabel">{`Variant ${i + 1}`}</span>
+            {heroCard()}
+          </section>
+        ))
+      ) : (
+        <section className={`ecs-hero${liteClass}`} data-rvs>
+          {p.heroBg ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="ecs-hero-img" src={p.heroBg} alt="" aria-hidden="true" />
+          ) : null}
+          <div className="ecs-hero-scrim" />
+          {heroCard()}
+        </section>
+      )}
 
       <div className="page-gutter" style={PAD}>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)", paddingTop: "var(--section-y)", paddingBottom: "var(--section-y)" }}>
