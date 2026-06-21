@@ -1544,12 +1544,10 @@ button {
   color: var(--fg-faint);
 }
 
-/* Body — two readable columns under the grid. */
+/* Body — a single readable measure under the grid. */
 .cym-body {
   margin-top: clamp(40px, 6vh, 84px);
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: clamp(28px, 5vw, 96px);
+  max-width: 68ch;
 }
 .cym-body .sym-lead { margin: 0; }
 
@@ -1564,7 +1562,6 @@ button {
 
 @media (max-width: 860px) {
   .cym-head,
-  .cym-body,
   .cym-grid { grid-template-columns: 1fr; }
   .cym-grid .sym-player,
   .cym-grid .cym-lead .sym-player { aspect-ratio: 4 / 3; }

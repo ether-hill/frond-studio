@@ -40,28 +40,28 @@ export default function CymaticsBubblesPage() {
           {/* Video grid — lead piece spans both columns, then a 2-up grid */}
           <div className="cym-grid" data-stag>
             <figure className="cym-cell cym-lead" data-rvs>
-              <VideoPlayer src="/cymatics/gobstopper-003.mp4" poster="/cymatics/gobstopper-003-poster.jpg" title="Spherical cymatics — gobstopper 003" />
-              <figcaption className="cym-cap">Gobstopper 003 — spherical standing waves</figcaption>
+              <VideoPlayer src="/cymatics/gobstopper-003.mp4" poster="/cymatics/gobstopper-003-poster.jpg" title="Double bubble morphology and thin film interference" />
+              <figcaption className="cym-cap">Double bubble morphology and thin film interference</figcaption>
             </figure>
             <figure className="cym-cell" data-rvs>
-              <VideoPlayer src="/cymatics/cymatics-bubble-spin-4000.mp4" poster="/cymatics/cymatics-bubble-spin-4000-poster.jpg" title="Cymatic bubble — spin at 4000 Hz" />
-              <figcaption className="cym-cap">Spin — 4000 Hz</figcaption>
+              <VideoPlayer src="/cymatics/cymatics-bubble-spin-4000.mp4" poster="/cymatics/cymatics-bubble-spin-4000-poster.jpg" title="Thin film interference spin control via 40hz" />
+              <figcaption className="cym-cap">Thin film interference spin control via 40hz</figcaption>
             </figure>
             <figure className="cym-cell" data-rvs>
-              <VideoPlayer src="/cymatics/cymatics-bubble-phase-reversal-3500.mp4" poster="/cymatics/cymatics-bubble-phase-reversal-3500-poster.jpg" title="Cymatic bubble — phase reversal at 3500 Hz" />
-              <figcaption className="cym-cap">Phase reversal — 3500 Hz</figcaption>
+              <VideoPlayer src="/cymatics/cymatics-bubble-phase-reversal-3500.mp4" poster="/cymatics/cymatics-bubble-phase-reversal-3500-poster.jpg" title="Phase reversal" />
+              <figcaption className="cym-cap">Phase reversal</figcaption>
             </figure>
             <figure className="cym-cell" data-rvs>
-              <VideoPlayer src="/cymatics/gobstopper-002.mp4" poster="/cymatics/gobstopper-002-poster.jpg" title="Spherical cymatics — gobstopper 002" />
-              <figcaption className="cym-cap">Gobstopper 002 — thin-film interference</figcaption>
+              <VideoPlayer src="/cymatics/gobstopper-002.mp4" poster="/cymatics/gobstopper-002-poster.jpg" title="Process view platonic solids" />
+              <figcaption className="cym-cap">Process view platonic solids</figcaption>
             </figure>
             <figure className="cym-cell" data-rvs>
-              <VideoPlayer src="/cymatics/gobstopper-001.mp4" poster="/cymatics/gobstopper-001-poster.jpg" title="Spherical cymatics — gobstopper 001" />
-              <figcaption className="cym-cap">Gobstopper 001 — swirling colour fields</figcaption>
+              <VideoPlayer src="/cymatics/gobstopper-001.mp4" poster="/cymatics/gobstopper-001-poster.jpg" title="Process view platonic solids 2" />
+              <figcaption className="cym-cap">Process view platonic solids 2</figcaption>
             </figure>
           </div>
 
-          {/* Body — two readable columns */}
+          {/* Body */}
           <div className="cym-body" data-stag>
             <p className="sym-lead" data-rvs>
               Hard-to-pop, high-performance bubbles provide a unique medium for cymatics experiments in three dimensions. The thin,
@@ -70,12 +70,6 @@ export default function CymaticsBubblesPage() {
               (colour swirls). This behaviour manifests an amazing tool for artistic explorations, educational demonstrations and
               scientific investigations, helping artists, students and researchers alike grasp the profound connection between
               sound, matter and geometric forms.
-            </p>
-            <p className="sym-lead" data-rvs>
-              As we continue to explore the captivating world of cymatics through 3D bubble forms, we unlock new insights into the
-              dynamic interplay between sound, matter, and art. This interdisciplinary journey enriches our understanding of both
-              fields and paves the way for innovative collaborations that redefine the boundaries of scientific research and
-              artistic expression.
             </p>
           </div>
 
