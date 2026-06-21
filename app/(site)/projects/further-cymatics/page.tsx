@@ -16,7 +16,7 @@ export default function FurtherCymaticsPage() {
       <div className="sym-root" data-theme="dark">
         {/* Hero — full-bleed banner timelapse (autoplay, muted) */}
         <section className="cym-hero">
-          <AutoVideo src="/further-cymatics/cymatics-temp-alias-002-3500.mp4" poster="/further-cymatics/cymatics-temp-alias-002-3500-poster.jpg" />
+          <AutoVideo src="/further-cymatics/cymatics-dual-process-01.mp4" poster="/further-cymatics/cymatics-dual-process-01-poster.jpg" />
         </section>
 
         <article className="cym-article">
