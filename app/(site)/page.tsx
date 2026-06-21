@@ -7,13 +7,14 @@ import SelectedProjects from "@/components/SelectedProjects";
 import FeaturedInstrument from "@/components/FeaturedInstrument";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
 import Cta from "@/components/Cta";
-import { getProjects } from "@/sanity/lib/queries";
+import { getWorkCards } from "@/lib/work";
 
 export const revalidate = 60;
 
 export default async function Home() {
-  const projects = await getProjects();
-  const featured = projects.slice(0, 6);
+  // Same ordered lineup as /work (editorial flagships first), so the home
+  // surfaces the most recent / featured work, not just the Sanity slice.
+  const featured = (await getWorkCards()).slice(0, 6);
 
   return (
     <RevealRoot>

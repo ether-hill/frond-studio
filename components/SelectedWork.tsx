@@ -42,7 +42,13 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
         {projects.map((p) => (
           <Link key={p._id} className="vwork" href={`/work/${p.slug}`} style={{ display: "flex", flexDirection: "column", textDecoration: "none", color: "inherit" }}>
             <span className="proj-shot">
-              {p.thumbnailVideo ? <AutoVideo src={p.thumbnailVideo} poster={`/posters/${p.slug}.jpg`} /> : <MediaPlaceholder label={p.title} />}
+              {p.thumbnailVideo ? (
+                <AutoVideo src={p.thumbnailVideo} poster={`/posters/${p.slug}.jpg`} />
+              ) : p.thumbnailImage ? (
+                <img src={p.thumbnailImage} alt={`${p.title} preview`} loading="lazy" decoding="async" width={1600} height={900} />
+              ) : (
+                <MediaPlaceholder label={p.title} />
+              )}
             </span>
             <div
               style={{

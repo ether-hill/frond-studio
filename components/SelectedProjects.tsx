@@ -6,7 +6,9 @@ import { PERSONAL_PROJECTS } from "@/lib/projects";
  * three-up with their 16:9 covers (first six). Mirrors the /projects index but
  * compact.
  */
-const RECENT = PERSONAL_PROJECTS.slice(0, 6);
+// Newest-first: PERSONAL_PROJECTS is maintained oldest→newest, so reverse to
+// surface the most recently added projects (the cymatics work) on the home.
+const RECENT = [...PERSONAL_PROJECTS].reverse().slice(0, 6);
 
 export default function SelectedProjects() {
   return (
