@@ -5,6 +5,7 @@ import { PhysMod, M_DEFAULTS, type MParams } from "./physmod";
 import { Physarum, DEFAULTS, type Params } from "./physarum";
 import { ReactionDiffusion, RD_DEFAULTS, RD_PRESETS, randomRDParams, type RDParams } from "./reactionDiffusion";
 import { VoronoiGpu, V_DEFAULTS, V_PRESETS, randomVoronoiParams, type VParams } from "./voronoiGpu";
+import { DLA, DLA_DEFAULTS, DLA_PRESETS, randomDLAParams, type DLAParams } from "./dlaEngine";
 import { recordSequence } from "@/components/projects/algorithm-lab/engine/harness/video";
 import { Biome, randomConfig } from "@/components/projects/instruments/engine/instruments/biomeEngine";
 import { ensureAudio, suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
@@ -59,7 +60,13 @@ const SCHEMA: Record<string, Def[]> = {
     c("bg", "background", "#04050a"), c("edge", "membrane col", "#05060c"),
     c("cellA", "cell A", "#1b2a6b"), c("cellB", "cell B", "#7df3ff"),
   ],
-  dla: [n("radius", "spread", 0.2, 0.6, 0.43, 0.01), n("shimmer", "shimmer", 0, 0.5, 0.13, 0.01), n("density", "density", 10, 120, 52, 1)],
+  // CPU diffusion-limited aggregation — dendritic frost/coral, coloured core→tip.
+  dla: [
+    n("rate", "growth", 300, 4000, 2200, 50), n("stick", "stickiness", 0.2, 1, 0.75, 0.01),
+    n("dotSize", "grain", 1, 4, 2, 0.1), n("glow", "glow", 0, 1, 0.55, 0.02),
+    s("seedMode", "seed", ["point", "ring", "line"], "point"),
+    c("bg", "background", "#08070a"), c("core", "core", "#4a1402"), c("mid", "mid", "#c4673a"), c("tip", "tip", "#fff1e2"),
+  ],
   "organic-turbulence": [n("noiseScale", "noise scale", 0.0005, 0.005, 0.0018, 0.0001), n("particles", "particles", 200, 1600, 700, 20), n("speed", "speed", 0.5, 8, 3.3, 0.1), n("evolve", "evolve", 0, 0.02, 0.005, 0.001)],
   "quantum-harmonics": [n("symmetry", "symmetry", 3, 14, 8, 1), n("sources", "sources", 3, 14, 8, 1), n("phaseSpeed", "phase speed", 0, 3, 1, 0.05)],
   "recursive-whispers": [n("splitAngle", "split angle", 0.2, 1.2, 0.55, 0.01), n("maxDepth", "max depth", 4, 12, 9, 1)],
@@ -86,15 +93,16 @@ const SCHEMA: Record<string, Def[]> = {
 
 type Eng = { render(): void; dispose(): void; reset(): void; setParams(p: unknown): void; setMouse(x: number, y: number, a: boolean): void };
 
-type Kind = "physmod" | "physarum" | "rd" | "voronoi" | "p5";
+type Kind = "physmod" | "physarum" | "rd" | "voronoi" | "dla" | "p5";
 const kindOf = (gen: string): Kind =>
-  gen === "physarum" ? "physmod" : gen === "physarum-jones" ? "physarum" : gen === "gray-scott" ? "rd" : gen === "voronoi-recursive" ? "voronoi" : "p5";
+  gen === "physarum" ? "physmod" : gen === "physarum-jones" ? "physarum" : gen === "gray-scott" ? "rd" : gen === "voronoi-recursive" ? "voronoi" : gen === "dla" ? "dla" : "p5";
 
 function presetsFor(gen: string): { label: string; params: Record<string, unknown> }[] {
   if (gen === "physarum") return PHYS_PRESETS.map((p) => ({ label: p.name, params: p.p as Record<string, unknown> }));
   if (gen === "physarum-jones") return JONES_PRESETS.map((p) => ({ label: p.label, params: p.params as unknown as Record<string, unknown> }));
   if (gen === "gray-scott") return RD_PRESETS.map((p) => ({ label: p.name, params: p.params as unknown as Record<string, unknown> }));
   if (gen === "voronoi-recursive") return V_PRESETS.map((p) => ({ label: p.name, params: p.params as unknown as Record<string, unknown> }));
+  if (gen === "dla") return DLA_PRESETS.map((p) => ({ label: p.name, params: p.params as unknown as Record<string, unknown> }));
   if (gen === "mycelium") return [
     { label: "Wild", params: { preset: "wild", color: 0 } },
     { label: "Filigree", params: { preset: "filigree", color: 1 } },
@@ -193,6 +201,9 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
       } else if (kind === "voronoi") {
         gpuBase = { ...V_DEFAULTS, ...values };
         engine = new VoronoiGpu(canvas, 1024, gpuBase as unknown as VParams);
+      } else if (kind === "dla") {
+        gpuBase = { ...DLA_DEFAULTS, ...values };
+        engine = new DLA(canvas, 1024, gpuBase as unknown as DLAParams);
       } else {
         // Jones opens on SMA Config's hero scene (v7) rather than the bare defaults.
         const base = gen === "physarum-jones" ? (JONES_DEFAULT_PARAMS as Params) : DEFAULTS;
@@ -310,7 +321,7 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
       buildArt();
     } else {
       const k = kindOf(gen);
-      const base = k === "physmod" ? { ...M_DEFAULTS, agentTexW: 768 } : k === "rd" ? { ...RD_DEFAULTS } : k === "voronoi" ? { ...V_DEFAULTS } : { ...DEFAULTS };
+      const base = k === "physmod" ? { ...M_DEFAULTS, agentTexW: 768 } : k === "rd" ? { ...RD_DEFAULTS } : k === "voronoi" ? { ...V_DEFAULTS } : k === "dla" ? { ...DLA_DEFAULTS } : { ...DEFAULTS };
       gpuBase = { ...base, ...preset.params };
       for (const d of SCHEMA[gen] || []) if (d.key in gpuBase) values[d.key] = gpuBase[d.key] as number | string;
       pane?.refresh();
@@ -365,6 +376,16 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     if (curGen() === "voronoi-recursive" && engine) {
       gpuBase = { ...V_DEFAULTS, ...(randomVoronoiParams() as unknown as Record<string, unknown>) };
       for (const d of SCHEMA["voronoi-recursive"]) if (d.key in gpuBase) values[d.key] = gpuBase[d.key] as number | string;
+      pane?.refresh();
+      engine.setParams(gpuBase);
+      engine.reset();
+      presetSel.value = "";
+      if (biomeOn) rollBiome();
+      return;
+    }
+    if (curGen() === "dla" && engine) {
+      gpuBase = { ...DLA_DEFAULTS, ...(randomDLAParams() as unknown as Record<string, unknown>) };
+      for (const d of SCHEMA["dla"]) if (d.key in gpuBase) values[d.key] = gpuBase[d.key] as number | string;
       pane?.refresh();
       engine.setParams(gpuBase);
       engine.reset();
