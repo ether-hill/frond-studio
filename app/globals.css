@@ -1771,6 +1771,8 @@ button {
 /* ── Editorial case study (EditorialCaseStudy.tsx) ─────────────────────── */
 .ecs-frame { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--bg-2); box-shadow: 0 50px 130px rgba(0, 0, 0, 0.55); }
 .ecs-frame-flat { box-shadow: none; }
+/* Showcase: a full-width rounded media well (feature video + text section). */
+.ecs-showcase-well { position: relative; width: 100%; border-radius: 14px; overflow: hidden; background: var(--media); border: 1px solid var(--line-2); }
 .ecs-frame-bar { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid var(--line-2); background: color-mix(in srgb, var(--bg-2) 70%, var(--bg-0)); }
 .ecs-frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); display: block; }
 .ecs-url { margin-left: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-faint); background: var(--bg-0); border: 1px solid var(--line-2); border-radius: 7px; padding: 5px 13px; flex: 1 1 auto; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

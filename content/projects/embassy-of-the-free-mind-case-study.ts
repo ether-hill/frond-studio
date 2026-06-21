@@ -9,7 +9,7 @@ import type { EditorialProject } from "./editorial-types";
 const M = "/work/embassy-of-the-free-mind"; // shared media folder
 
 const project: EditorialProject = {
-  slug: "embassy-of-the-free-mind-case-study",
+  slug: "embassy-of-the-free-mind",
   title: "Embassy of the Free Mind",
   category: "Museum & library website",
   oneLiner:
@@ -41,6 +41,7 @@ const project: EditorialProject = {
     "Accessibility (WCAG AA)",
   ],
 
+  statsLabel: "The build, at a glance",
   stats: [
     { value: "50", label: "Pages", note: "Custom pages designed across the project." },
     { value: "20", label: "Integrations", note: "Commerce, search and catalogue systems wired together." },
