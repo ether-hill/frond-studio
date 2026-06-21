@@ -234,17 +234,15 @@ button {
   right: 0;
   z-index: 60;
   transform: translateY(0);
-  /* Always-on frosted glass: a light translucent tint + hairline edge + a real
-     backdrop blur. The tint is kept low so the blurred backdrop (hero canvas,
-     headline, sections scrolling under) reads through the glass instead of being
-     masked by an opaque bar. Write ONLY the standard `backdrop-filter` — letting
-     the build's CSS prefixer add `-webkit-` keeps BOTH the prefixed and unprefixed
-     property in the output (hand-writing the -webkit- line made the minifier drop
-     the standard one, so Firefox/non-WebKit lost the blur entirely). Light theme
-     overrides the background below. */
-  border-bottom: 1px solid var(--line);
-  background: rgba(11, 10, 8, 0.4);
-  backdrop-filter: blur(22px) saturate(1.4);
+  /* At the top of the page (and on load, data-nav="top") the dark-theme bar is
+     fully transparent with no blur, so the home hero reads cleanly THROUGH the
+     nav. The frosted-glass tint + backdrop blur are applied only once the page
+     is scrolled (data-nav="solid"). Write ONLY the standard `backdrop-filter` —
+     letting the build's CSS prefixer add `-webkit-` keeps BOTH the prefixed and
+     unprefixed property in the output (hand-writing the -webkit- line made the
+     minifier drop the standard one, so Firefox/non-WebKit lost the blur). */
+  border-bottom: 1px solid transparent;
+  background: transparent;
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
     background-color 0.5s ease, border-color 0.5s ease;
 }
@@ -256,16 +254,13 @@ button {
   border-bottom-color: var(--line);
   backdrop-filter: blur(22px) saturate(1.4);
 }
-/* Light theme: the bar can float over the dark hero (homepage) where a
-   transparent top state would hide the dark nav text, so keep it solid
-   white-90% at every scroll position. Keyed on the theme (set before paint),
-   NOT route detection — usePathname doesn't resolve reliably in the static
-   build. Dark theme keeps its transparent top state. The hide-on-scroll-down
-   transform still applies (it only sets transform, not background). */
+/* Light theme: dark nav text over the dark hero would be unreadable on a
+   transparent bar, so keep a solid background at the top too (still no blur
+   until scrolled). Keyed on the theme (set before paint), NOT route detection.
+   The blur for the scrolled state comes from the [data-nav="solid"] rule above. */
 [data-theme="light"] .nav-bar {
   background: var(--nav);
   border-bottom-color: var(--line);
-  backdrop-filter: blur(18px);
 }
 .seg button[data-on="true"] {
   background: var(--fg);
