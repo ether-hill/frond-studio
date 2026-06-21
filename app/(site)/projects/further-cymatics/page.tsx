@@ -34,26 +34,27 @@ export default function FurtherCymaticsPage() {
             <p className="sym-lead" data-rvs>
               An ongoing series of cymatics rigs that pair sound with programmable light. We&apos;re building new instruments with
               far finer control over the light source — RGB LED ring arrays driven by Arduino and DMX — to reveal how tone and
-              resonance shape matter in three dimensions.
+              resonance shape matter.
             </p>
           </header>
 
-          {/* Video grid — 2 columns */}
+          {/* Video grid — 2 columns. Every clip here is square, so each player is
+              pinned to 1:1 to show the full frame uncropped. */}
           <div className="cym-grid" data-stag>
             <figure className="cym-cell" data-rvs>
-              <VideoPlayer src="/further-cymatics/cymatics-temp-alias-002-3500.mp4" poster="/further-cymatics/cymatics-temp-alias-002-3500-poster.jpg" title="Exploring temporal aliasing" />
+              <VideoPlayer ratio="1 / 1" src="/further-cymatics/cymatics-temp-alias-002-3500.mp4" poster="/further-cymatics/cymatics-temp-alias-002-3500-poster.jpg" title="Exploring temporal aliasing" />
               <figcaption className="cym-cap">Exploring temporal aliasing</figcaption>
             </figure>
             <figure className="cym-cell" data-rvs>
-              <VideoPlayer src="/further-cymatics/cymatics-touch-001.mp4" poster="/further-cymatics/cymatics-touch-001-poster.jpg" title="Process view" />
+              <VideoPlayer ratio="1 / 1" src="/further-cymatics/cymatics-touch-001.mp4" poster="/further-cymatics/cymatics-touch-001-poster.jpg" title="Process view" />
               <figcaption className="cym-cap">Process view</figcaption>
             </figure>
             <figure className="cym-cell" data-rvs>
-              <VideoPlayer src="/further-cymatics/cymatics-double-ring-004-4000.mp4" poster="/further-cymatics/cymatics-double-ring-004-4000-poster.jpg" title="Double ring vessel with RGB LED ring array" />
+              <VideoPlayer ratio="1 / 1" src="/further-cymatics/cymatics-double-ring-004-4000.mp4" poster="/further-cymatics/cymatics-double-ring-004-4000-poster.jpg" title="Double ring vessel with RGB LED ring array" />
               <figcaption className="cym-cap">Double ring vessel with RGB LED ring array</figcaption>
             </figure>
             <figure className="cym-cell" data-rvs>
-              <VideoPlayer src="/further-cymatics/cymatics-budge-loop-011.mp4" poster="/further-cymatics/cymatics-budge-loop-011-poster.jpg" title="Multi frequency and RGB LED ring array, seamless loop" />
+              <VideoPlayer ratio="1 / 1" src="/further-cymatics/cymatics-budge-loop-011.mp4" poster="/further-cymatics/cymatics-budge-loop-011-poster.jpg" title="Multi frequency and RGB LED ring array, seamless loop" />
               <figcaption className="cym-cap">Multi frequency and RGB LED ring array, seamless loop</figcaption>
             </figure>
           </div>
