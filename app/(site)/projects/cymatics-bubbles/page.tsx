@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import VideoPlayer from "@/components/projects/symcyto/VideoPlayer";
-import Cta from "@/components/Cta";
+import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
   title: "Spherical Cymatics in High Performance Bubbles · Frond Studio",
@@ -86,7 +86,7 @@ export default function CymaticsBubblesPage() {
         </article>
 
       </div>
-      <Cta />
+      <MoreProjects excludeSlug="cymatics-bubbles" />
     </RevealRoot>
   );
 }
