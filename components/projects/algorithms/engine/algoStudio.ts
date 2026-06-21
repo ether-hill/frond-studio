@@ -3,7 +3,7 @@ import { DATA, JONES_PRESETS, JONES_DEFAULT_PARAMS, PHYS_PRESETS } from "./algor
 import { renderArt } from "./artGenerators";
 import { PhysMod, M_DEFAULTS, type MParams } from "./physmod";
 import { Physarum, DEFAULTS, type Params } from "./physarum";
-import { ReactionDiffusion, RD_DEFAULTS, RD_PRESETS, type RDParams } from "./reactionDiffusion";
+import { ReactionDiffusion, RD_DEFAULTS, RD_PRESETS, randomRDParams, type RDParams } from "./reactionDiffusion";
 import { recordSequence } from "@/components/projects/algorithm-lab/engine/harness/video";
 import { Biome, randomConfig } from "@/components/projects/instruments/engine/instruments/biomeEngine";
 import { ensureAudio, suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
@@ -35,14 +35,14 @@ const SCHEMA: Record<string, Def[]> = {
   // regimes in one frame (rings → labyrinth → spots → radial stripes).
   "gray-scott": [
     n("feed", "feed F", 0.01, 0.08, 0.0367, 0.0005), n("kill", "kill k", 0.04, 0.075, 0.0649, 0.0005),
-    n("feedAmp", "radial feed", -0.03, 0.03, 0.02, 0.001), n("killAmp", "radial kill", -0.02, 0.02, 0.006, 0.0005),
-    n("feedMid", "radial centre", 0, 1.4, 0.62, 0.02), n("dV", "V diffusion", 0.2, 0.7, 0.5, 0.01),
-    n("stepsPerFrame", "sim speed", 1, 40, 16, 1),
+    n("feedAmp", "radial feed", -0.03, 0.03, 0.008, 0.001), n("killAmp", "radial kill", -0.02, 0.02, -0.002, 0.0005),
+    n("feedMid", "radial centre", 0, 1.4, 0.5, 0.02), n("dV", "V diffusion", 0.2, 0.7, 0.5, 0.01),
+    n("stepsPerFrame", "sim speed", 1, 80, 34, 1),
     s("palette", "palette", ["duo", "tri", "rainbow"], "tri"),
     c("bg", "background", "#04060a"), c("lo", "mid", "#1fbf52"), c("hi", "ink", "#ff3b1f"),
-    n("t0", "edge low", 0, 1, 0.14, 0.01), n("t1", "edge high", 0, 1, 0.34, 0.01),
+    n("t0", "edge low", 0, 1, 0.12, 0.01), n("t1", "edge high", 0, 1, 0.32, 0.01),
     n("hueScale", "rainbow bands", 1, 12, 5, 0.5),
-    s("seedMode", "seed", ["center", "random", "ring"], "center"),
+    s("seedMode", "seed", ["center", "random", "ring"], "random"),
   ],
   boids: [n("count", "flock size", 100, 900, 380, 10), n("separation", "separation", 0.4, 3, 1.5, 0.1), n("trailFade", "trail fade", 4, 40, 17, 1), n("speed", "speed", 4, 20, 12, 0.5), n("wander", "wander", 0, 1.5, 0.55, 0.05)],
   "l-system": [n("plants", "plants", 2, 12, 5, 1)],
@@ -333,6 +333,18 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
   root.querySelector("#algo-reset")!.addEventListener("click", () => { if (engine) engine.reset(); else buildArt(); });
   root.querySelector("#algo-randomise")!.addEventListener("click", () => {
     seed = Math.floor(Math.abs(Math.sin(seed * 99991 + 1.7) * 1e6)) + 1;
+    // Reaction–Diffusion rolls a fully random scene (regime + ramp + palette +
+    // colours), not just one of the fixed presets — far more variety.
+    if (curGen() === "gray-scott" && engine) {
+      gpuBase = { ...RD_DEFAULTS, ...(randomRDParams() as unknown as Record<string, unknown>) };
+      for (const d of SCHEMA["gray-scott"]) if (d.key in gpuBase) values[d.key] = gpuBase[d.key] as number | string;
+      pane?.refresh();
+      engine.setParams(gpuBase);
+      engine.reset();
+      presetSel.value = "";
+      if (biomeOn) rollBiome();
+      return;
+    }
     const list = presetsFor(curGen());
     if (list.length) { const idx = seed % list.length; presetSel.value = String(idx); applyPreset(idx); }
     if (kindOf(curGen()) === "p5") { if (!list.length) buildArt(); }
