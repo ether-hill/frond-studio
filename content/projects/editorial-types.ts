@@ -87,6 +87,10 @@ export type EditorialProject = {
   quote?: { body: string; author: string; needsConfirmation?: boolean };
   /** Looping video shown behind the quote (distinct dark/light treatment in CSS). */
   quoteBg?: EditorialMedia;
+  /** Still image shown behind the quote, with a tint overlay for legibility. */
+  quoteBgImage?: string;
+  /** TEMP chooser: render the quote once per backdrop image so one can be picked. */
+  quoteBgVariants?: { src: string; label: string }[];
   credits?: string;
 
   prev?: { slug: string; title: string };

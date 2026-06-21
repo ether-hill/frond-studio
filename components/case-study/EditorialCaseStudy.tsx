@@ -70,6 +70,14 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
       </div>
     </div>
   );
+  const quoteContent = p.quote ? (
+    <div className="ecs-quote-inner">
+      <blockquote style={{ margin: 0 }}>
+        <p style={{ fontFamily: DISPLAY, fontSize: "clamp(26px,3.6vw,52px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.018em", color: "var(--fg)" }}>&ldquo;{p.quote.body}&rdquo;</p>
+        <footer style={{ marginTop: "clamp(30px,4vh,48px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-dim)" }}>{p.quote.author}</footer>
+      </blockquote>
+    </div>
+  ) : null;
 
   return (
     <>
@@ -299,17 +307,32 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             </section>
           ) : null}
 
-          {/* ── Quote over flowing-lines video ─────────────── */}
-          {p.quote ? (
-            <section className="ecs-quote" data-rvs>
-              {p.quoteBg ? <AutoVideo src={p.quoteBg.src} poster={p.quoteBg.poster} className="quote-vid" noFade /> : null}
+          {/* ── Quote (over a video, a tinted image, or a chooser stack) ── */}
+          {p.quote && p.quoteBgVariants?.length ? (
+            // TEMP chooser: the quote over each candidate image, with a tint.
+            p.quoteBgVariants.map((v) => (
+              <section key={v.src} className="ecs-quote ecs-quote-imgbg" data-rvs>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="ecs-quote-img" src={v.src} alt="" aria-hidden="true" />
+                <div className="ecs-quote-tint" />
+                <div className="ecs-quote-vignette" />
+                <span className="ecs-vlabel">{v.label}</span>
+                {quoteContent}
+              </section>
+            ))
+          ) : p.quote ? (
+            <section className={`ecs-quote${p.quoteBgImage ? " ecs-quote-imgbg" : ""}`} data-rvs>
+              {p.quoteBgImage ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className="ecs-quote-img" src={p.quoteBgImage} alt="" aria-hidden="true" />
+                  <div className="ecs-quote-tint" />
+                </>
+              ) : p.quoteBg ? (
+                <AutoVideo src={p.quoteBg.src} poster={p.quoteBg.poster} className="quote-vid" noFade />
+              ) : null}
               <div className="ecs-quote-vignette" />
-              <div className="ecs-quote-inner">
-                <blockquote style={{ margin: 0 }}>
-                  <p style={{ fontFamily: DISPLAY, fontSize: "clamp(26px,3.6vw,52px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.018em", color: "var(--fg)" }}>&ldquo;{p.quote.body}&rdquo;</p>
-                  <footer style={{ marginTop: "clamp(30px,4vh,48px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-dim)" }}>{p.quote.author}</footer>
-                </blockquote>
-              </div>
+              {quoteContent}
             </section>
           ) : null}
         </div>
