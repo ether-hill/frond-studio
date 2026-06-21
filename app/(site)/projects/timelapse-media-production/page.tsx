@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import VideoPlayer from "@/components/projects/symcyto/VideoPlayer";
-import Cta from "@/components/Cta";
+import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
   title: "Timelapse Media Production · Frond Studio",
@@ -79,7 +79,7 @@ export default function TimelapseMediaProductionPage() {
         </section>
 
       </div>
-      <Cta />
+      <MoreProjects excludeSlug="timelapse-media-production" />
     </RevealRoot>
   );
 }

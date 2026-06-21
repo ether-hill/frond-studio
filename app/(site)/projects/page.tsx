@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
-import Cta from "@/components/Cta";
 import { PERSONAL_PROJECTS } from "@/lib/projects";
 
 export const metadata: Metadata = {
@@ -132,8 +131,6 @@ export default function ProjectsPage() {
           })}
         </div>
       </section>
-
-      <Cta />
     </RevealRoot>
   );
 }

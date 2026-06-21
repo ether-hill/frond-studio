@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import RevealRoot from "@/components/RevealRoot";
 import AlgorithmLab from "@/components/projects/algorithm-lab/AlgorithmLab";
+import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
   title: "Algorithm Lab — Frond Studio",
@@ -12,6 +13,7 @@ export default function AlgorithmLabPage() {
   return (
     <RevealRoot>
       <AlgorithmLab />
+      <MoreProjects excludeSlug="algorithm-lab" />
     </RevealRoot>
   );
 }

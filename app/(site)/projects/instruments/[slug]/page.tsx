@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import RevealRoot from "@/components/RevealRoot";
 import InstrumentMount, { type InstrumentKind } from "@/components/projects/instruments/InstrumentMount";
+import MoreProjects from "@/components/MoreProjects";
 
 const INSTRUMENTS: Record<string, { title: string; desc: string }> = {
   "juno-106": { title: "Juno-106 — Frond Studio", desc: "Roland's 1984 polysynth, rebuilt in Web Audio. Play it in the browser." },
@@ -26,6 +27,7 @@ export default async function InstrumentPage({ params }: { params: Promise<{ slu
   return (
     <RevealRoot>
       <InstrumentMount kind={slug as InstrumentKind} />
+      <MoreProjects excludeSlug="instruments" />
     </RevealRoot>
   );
 }

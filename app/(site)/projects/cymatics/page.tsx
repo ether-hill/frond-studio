@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
-import Cta from "@/components/Cta";
+import MoreProjects from "@/components/MoreProjects";
 import CymaticsSimulator from "@/components/projects/cymatics/CymaticsSimulator";
 
 export const metadata: Metadata = {
@@ -99,9 +99,7 @@ export default function CymaticsPage() {
 
       </div>
 
-      {/* Shared closing banner — the global "Letting things flow" CTA, so edits
-          to it propagate to every page that uses it. */}
-      <Cta />
+      <MoreProjects excludeSlug="cymatics" />
     </RevealRoot>
   );
 }
