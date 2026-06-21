@@ -60,12 +60,12 @@ const SCHEMA: Record<string, Def[]> = {
     c("bg", "background", "#04050a"), c("edge", "membrane col", "#05060c"),
     c("cellA", "cell A", "#1b2a6b"), c("cellB", "cell B", "#7df3ff"),
   ],
-  // CPU diffusion-limited aggregation — dendritic frost/coral, coloured core→tip.
+  // CPU diffusion-limited aggregation — dense dendritic frost/coral, core→tip.
   dla: [
-    n("rate", "growth", 300, 4000, 2200, 50), n("stick", "stickiness", 0.2, 1, 0.75, 0.01),
-    n("dotSize", "grain", 1, 4, 2, 0.1), n("glow", "glow", 0, 1, 0.55, 0.02),
+    n("rate", "growth", 300, 4000, 1700, 50), n("stick", "stickiness", 0.2, 1, 0.55, 0.01),
+    n("dotSize", "grain", 1, 4, 2.4, 0.1), n("glow", "glow", 0, 1, 0.55, 0.02),
     s("seedMode", "seed", ["point", "ring", "line"], "point"),
-    c("bg", "background", "#08070a"), c("core", "core", "#4a1402"), c("mid", "mid", "#c4673a"), c("tip", "tip", "#fff1e2"),
+    c("bg", "background", "#070608"), c("core", "core", "#4a1002"), c("mid", "mid", "#d2693a"), c("tip", "tip", "#fff0df"),
   ],
   "organic-turbulence": [n("noiseScale", "noise scale", 0.0005, 0.005, 0.0018, 0.0001), n("particles", "particles", 200, 1600, 700, 20), n("speed", "speed", 0.5, 8, 3.3, 0.1), n("evolve", "evolve", 0, 0.02, 0.005, 0.001)],
   "quantum-harmonics": [n("symmetry", "symmetry", 3, 14, 8, 1), n("sources", "sources", 3, 14, 8, 1), n("phaseSpeed", "phase speed", 0, 3, 1, 0.05)],
