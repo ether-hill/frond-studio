@@ -4,6 +4,7 @@ import { renderArt } from "./artGenerators";
 import { PhysMod, M_DEFAULTS, type MParams } from "./physmod";
 import { Physarum, DEFAULTS, type Params } from "./physarum";
 import { ReactionDiffusion, RD_DEFAULTS, RD_PRESETS, randomRDParams, type RDParams } from "./reactionDiffusion";
+import { VoronoiGpu, V_DEFAULTS, V_PRESETS, randomVoronoiParams, type VParams } from "./voronoiGpu";
 import { recordSequence } from "@/components/projects/algorithm-lab/engine/harness/video";
 import { Biome, randomConfig } from "@/components/projects/instruments/engine/instruments/biomeEngine";
 import { ensureAudio, suspendAudio } from "@/components/projects/instruments/engine/instruments/shared";
@@ -46,7 +47,18 @@ const SCHEMA: Record<string, Def[]> = {
   ],
   boids: [n("count", "flock size", 100, 900, 380, 10), n("separation", "separation", 0.4, 3, 1.5, 0.1), n("trailFade", "trail fade", 4, 40, 17, 1), n("speed", "speed", 4, 20, 12, 0.5), n("wander", "wander", 0, 1.5, 0.55, 0.05)],
   "l-system": [n("plants", "plants", 2, 12, 5, 1)],
-  "voronoi-recursive": [n("seeds", "seeds", 40, 300, 104, 2), n("drift", "drift", 0, 4, 1, 0.1), n("relaxation", "relaxation", 0, 8, 4, 1)],
+  // GPU jump-flooding Voronoi (Raven-Kwok-inspired cellular tissue): drifting
+  // agent-seeds, organic membranes, nested sub-cells, breathing.
+  "voronoi-recursive": [
+    n("seeds", "cells", 40, 600, 240, 5), n("drift", "drift", 0, 2.5, 1, 0.05), n("relax", "evenness", 0, 1, 0.45, 0.01),
+    n("membrane", "membrane", 0, 8, 2.4, 0.1), n("cellGlow", "nucleus", 0, 1, 0.62, 0.02),
+    n("subdiv", "sub-cells", 0, 1, 0.5, 0.02), n("subScale", "sub-scale", 2, 14, 7, 0.5),
+    n("pulse", "breathe", 0, 1.5, 0.5, 0.05),
+    s("palette", "palette", ["iridescent", "ink", "tissue", "circuit", "plasma"], "iridescent"),
+    n("sat", "saturation", 0, 1, 0.72, 0.02),
+    c("bg", "background", "#04050a"), c("edge", "membrane col", "#05060c"),
+    c("cellA", "cell A", "#1b2a6b"), c("cellB", "cell B", "#7df3ff"),
+  ],
   dla: [n("radius", "spread", 0.2, 0.6, 0.43, 0.01), n("shimmer", "shimmer", 0, 0.5, 0.13, 0.01), n("density", "density", 10, 120, 52, 1)],
   "organic-turbulence": [n("noiseScale", "noise scale", 0.0005, 0.005, 0.0018, 0.0001), n("particles", "particles", 200, 1600, 700, 20), n("speed", "speed", 0.5, 8, 3.3, 0.1), n("evolve", "evolve", 0, 0.02, 0.005, 0.001)],
   "quantum-harmonics": [n("symmetry", "symmetry", 3, 14, 8, 1), n("sources", "sources", 3, 14, 8, 1), n("phaseSpeed", "phase speed", 0, 3, 1, 0.05)],
@@ -74,13 +86,15 @@ const SCHEMA: Record<string, Def[]> = {
 
 type Eng = { render(): void; dispose(): void; reset(): void; setParams(p: unknown): void; setMouse(x: number, y: number, a: boolean): void };
 
-type Kind = "physmod" | "physarum" | "rd" | "p5";
-const kindOf = (gen: string): Kind => (gen === "physarum" ? "physmod" : gen === "physarum-jones" ? "physarum" : gen === "gray-scott" ? "rd" : "p5");
+type Kind = "physmod" | "physarum" | "rd" | "voronoi" | "p5";
+const kindOf = (gen: string): Kind =>
+  gen === "physarum" ? "physmod" : gen === "physarum-jones" ? "physarum" : gen === "gray-scott" ? "rd" : gen === "voronoi-recursive" ? "voronoi" : "p5";
 
 function presetsFor(gen: string): { label: string; params: Record<string, unknown> }[] {
   if (gen === "physarum") return PHYS_PRESETS.map((p) => ({ label: p.name, params: p.p as Record<string, unknown> }));
   if (gen === "physarum-jones") return JONES_PRESETS.map((p) => ({ label: p.label, params: p.params as unknown as Record<string, unknown> }));
   if (gen === "gray-scott") return RD_PRESETS.map((p) => ({ label: p.name, params: p.params as unknown as Record<string, unknown> }));
+  if (gen === "voronoi-recursive") return V_PRESETS.map((p) => ({ label: p.name, params: p.params as unknown as Record<string, unknown> }));
   if (gen === "mycelium") return [
     { label: "Wild", params: { preset: "wild", color: 0 } },
     { label: "Filigree", params: { preset: "filigree", color: 1 } },
@@ -176,6 +190,9 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
       } else if (kind === "rd") {
         gpuBase = { ...RD_DEFAULTS, ...values };
         engine = new ReactionDiffusion(canvas, 1024, gpuBase as unknown as RDParams);
+      } else if (kind === "voronoi") {
+        gpuBase = { ...V_DEFAULTS, ...values };
+        engine = new VoronoiGpu(canvas, 1024, gpuBase as unknown as VParams);
       } else {
         // Jones opens on SMA Config's hero scene (v7) rather than the bare defaults.
         const base = gen === "physarum-jones" ? (JONES_DEFAULT_PARAMS as Params) : DEFAULTS;
@@ -293,7 +310,7 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
       buildArt();
     } else {
       const k = kindOf(gen);
-      const base = k === "physmod" ? { ...M_DEFAULTS, agentTexW: 768 } : k === "rd" ? { ...RD_DEFAULTS } : { ...DEFAULTS };
+      const base = k === "physmod" ? { ...M_DEFAULTS, agentTexW: 768 } : k === "rd" ? { ...RD_DEFAULTS } : k === "voronoi" ? { ...V_DEFAULTS } : { ...DEFAULTS };
       gpuBase = { ...base, ...preset.params };
       for (const d of SCHEMA[gen] || []) if (d.key in gpuBase) values[d.key] = gpuBase[d.key] as number | string;
       pane?.refresh();
@@ -338,6 +355,16 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     if (curGen() === "gray-scott" && engine) {
       gpuBase = { ...RD_DEFAULTS, ...(randomRDParams() as unknown as Record<string, unknown>) };
       for (const d of SCHEMA["gray-scott"]) if (d.key in gpuBase) values[d.key] = gpuBase[d.key] as number | string;
+      pane?.refresh();
+      engine.setParams(gpuBase);
+      engine.reset();
+      presetSel.value = "";
+      if (biomeOn) rollBiome();
+      return;
+    }
+    if (curGen() === "voronoi-recursive" && engine) {
+      gpuBase = { ...V_DEFAULTS, ...(randomVoronoiParams() as unknown as Record<string, unknown>) };
+      for (const d of SCHEMA["voronoi-recursive"]) if (d.key in gpuBase) values[d.key] = gpuBase[d.key] as number | string;
       pane?.refresh();
       engine.setParams(gpuBase);
       engine.reset();
