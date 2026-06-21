@@ -75,7 +75,7 @@ export default function FurtherCymaticsPage() {
             <p className="sym-lead" data-rvs>
               Alongside the light and sound, we&apos;re exploring the vessels themselves — varying their size, depth and geometry,
               and moving to multi-ring forms that hold several concentric fields at once. Each change shifts which frequencies
-              resonate and how the medium behaves, opening up new families of three-dimensional cymatic structure to film.
+              resonate and how the medium behaves.
             </p>
           </div>
 
