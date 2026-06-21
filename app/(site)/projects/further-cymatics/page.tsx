@@ -14,9 +14,10 @@ export default function FurtherCymaticsPage() {
   return (
     <RevealRoot>
       <div className="sym-root" data-theme="dark">
-        {/* Hero — full-bleed banner timelapse (autoplay, muted) */}
+        {/* Hero — full-bleed banner timelapse (autoplay, muted). 4K source, kept
+            uncompressed for quality. */}
         <section className="cym-hero">
-          <AutoVideo src="/further-cymatics/cymatics-dual-process-01.mp4" poster="/further-cymatics/cymatics-dual-process-01-poster.jpg" />
+          <AutoVideo src="/further-cymatics/cymatics-header-loop-8000.mp4" poster="/further-cymatics/cymatics-header-loop-8000-poster.jpg" />
         </section>
 
         <article className="cym-article">
