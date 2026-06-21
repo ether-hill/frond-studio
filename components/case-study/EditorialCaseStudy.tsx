@@ -307,21 +307,9 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             </section>
           ) : null}
 
-          {/* ── Quote (over a video, a tinted image, or a chooser stack) ── */}
-          {p.quote && p.quoteBgVariants?.length ? (
-            // TEMP chooser: the quote over each candidate image, with a tint.
-            p.quoteBgVariants.map((v, i) => (
-              <section key={`${v.src}-${i}`} className={`ecs-quote ecs-quote-imgbg${v.tint === "none" ? " ecs-quote-tint-none" : ""}${v.light && v.light !== "default" ? ` ecs-quote-light-${v.light}` : ""}`} data-rvs>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="ecs-quote-img" src={v.src} alt="" aria-hidden="true" />
-                <div className="ecs-quote-tint" />
-                <div className="ecs-quote-vignette" />
-                <span className="ecs-vlabel">{v.label}</span>
-                {quoteContent}
-              </section>
-            ))
-          ) : p.quote ? (
-            <section className={`ecs-quote${p.quoteBgImage ? " ecs-quote-imgbg" : ""}`} data-rvs>
+          {/* ── Quote (over a looping video or a tinted still image) ── */}
+          {p.quote ? (
+            <section className={`ecs-quote${p.quoteBgImage ? " ecs-quote-imgbg" : ""}${p.quoteBgImageLight ? ` ecs-quote-light-${p.quoteBgImageLight}` : ""}`} data-rvs>
               {p.quoteBgImage ? (
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -78,15 +78,9 @@ const project: EditorialProject = {
     author: "On Marsilio Ficino, 1433 to 1499",
   },
   // Celestial engraving (a star-catalogue headpiece) behind the quote.
+  // Light mode mirrors the dark treatment (a dark band) rather than washing to cream.
   quoteBgImage: `${M}/quote-bg.jpg`,
-  // TEMP chooser: backdrop + tint options. Remove once decided.
-  // All "Stars, reduced tint" — identical in dark mode; only the LIGHT-mode
-  // treatment differs so the light rendering can be picked.
-  quoteBgVariants: [
-    { src: `${M}/quote-bg.jpg`, label: "Light: current", tint: "reduced", light: "default" },
-    { src: `${M}/quote-bg.jpg`, label: "Light: same as dark", tint: "reduced", light: "dark" },
-    { src: `${M}/quote-bg.jpg`, label: "Light: less vignette", tint: "reduced", light: "soft" },
-  ],
+  quoteBgImageLight: "dark",
 
   next: { slug: "embassy-of-the-free-mind", title: "Embassy of the Free Mind" },
 };

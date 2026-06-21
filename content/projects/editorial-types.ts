@@ -89,8 +89,8 @@ export type EditorialProject = {
   quoteBg?: EditorialMedia;
   /** Still image shown behind the quote, with a tint overlay for legibility. */
   quoteBgImage?: string;
-  /** TEMP chooser: render the quote once per backdrop image so one can be picked. */
-  quoteBgVariants?: { src: string; label: string; tint?: "reduced" | "none"; light?: "default" | "dark" | "soft" }[];
+  /** Light-mode treatment for the quote backdrop. "dark" mirrors the dark rendering. */
+  quoteBgImageLight?: "dark" | "soft";
   credits?: string;
 
   prev?: { slug: string; title: string };
