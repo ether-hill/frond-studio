@@ -270,6 +270,16 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     const fSnap = p.addFolder({ title: "Snapshot", expanded: false });
     fSnap.addButton({ title: "PNG" }).on("click", () => snapshot());
     fSnap.addButton({ title: "⛅ Preview in new tab" }).on("click", () => window.open(previewUrl(), "_blank"));
+    const shareBtn = fSnap.addButton({ title: "🔗 Copy share link" });
+    shareBtn.on("click", async () => {
+      const link = shareUrl();
+      try {
+        if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(link);
+        else { const ta = document.createElement("textarea"); ta.value = link; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+        shareBtn.title = "✓ Link copied";
+      } catch { shareBtn.title = "⚠ press ⌘C — link in console"; console.log(link); }
+      setTimeout(() => { shareBtn.title = "🔗 Copy share link"; }, 1700);
+    });
   }
 
   function snapshot() {
@@ -304,6 +314,35 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     return u.toString();
   }
 
+  // ── Shareable deep links: ?algo=<name>[&preset=<name>] ──────────────────────
+  const slugify = (sv: string) => sv.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  function currentPresetSlug(): string | null {
+    if (presetSel.value === "") return null;
+    const pr = presetsFor(curGen())[Number(presetSel.value)];
+    return pr ? slugify(pr.label) : null;
+  }
+  function shareUrl(): string {
+    const u = new URL(window.location.href);
+    for (const k of ["preview", "p", "seed"]) u.searchParams.delete(k);
+    u.searchParams.set("algo", DATA[sel].tag);
+    const ps = currentPresetSlug();
+    if (ps) u.searchParams.set("preset", ps); else u.searchParams.delete("preset");
+    return u.toString();
+  }
+  function syncUrl() {
+    try { history.replaceState(null, "", shareUrl()); } catch { /* ignore */ }
+  }
+  function resolveAlgo(param: string | null): number {
+    if (!param) return -1;
+    if (/^\d+$/.test(param)) return Math.min(DATA.length - 1, Math.max(0, Number(param)));
+    return DATA.findIndex((d) => d.tag === param || d.gen === param);
+  }
+  function applyPresetByName(name: string | null) {
+    if (!name) return;
+    const idx = presetsFor(curGen()).findIndex((p) => slugify(p.label) === name);
+    if (idx >= 0) { presetSel.value = String(idx); applyPreset(idx); }
+  }
+
   function refreshPresets() {
     const list = presetsFor(curGen());
     presetSel.innerHTML = `<option value="">default</option>`;
@@ -327,6 +366,7 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
       pane?.refresh();
       engine?.setParams(gpuBase);
     }
+    syncUrl();
   }
 
   function updateAbout() {
@@ -351,12 +391,13 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
     updateAbout();
     if (algoSel.selectedIndex !== i) algoSel.selectedIndex = i;
     if (biomeOn) rollBiome(); // selecting an algorithm restarts the soundscape
+    syncUrl();
   }
 
   // dropdown
   DATA.forEach((d, i) => { const o = document.createElement("option"); o.value = String(i); o.textContent = `${d.name} · ${d.sub.toLowerCase()}`; algoSel.appendChild(o); });
   algoSel.addEventListener("change", () => selectAlgo(Number(algoSel.value)));
-  presetSel.addEventListener("change", () => { if (presetSel.value) applyPreset(Number(presetSel.value)); });
+  presetSel.addEventListener("change", () => { if (presetSel.value) applyPreset(Number(presetSel.value)); else syncUrl(); });
 
   root.querySelector("#algo-reset")!.addEventListener("click", () => { if (engine) engine.reset(); else buildArt(); });
   root.querySelector("#algo-randomise")!.addEventListener("click", () => {
@@ -370,6 +411,7 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
       engine.setParams(gpuBase);
       engine.reset();
       presetSel.value = "";
+      syncUrl();
       if (biomeOn) rollBiome();
       return;
     }
@@ -380,6 +422,7 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
       engine.setParams(gpuBase);
       engine.reset();
       presetSel.value = "";
+      syncUrl();
       if (biomeOn) rollBiome();
       return;
     }
@@ -390,6 +433,7 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
       engine.setParams(gpuBase);
       engine.reset();
       presetSel.value = "";
+      syncUrl();
       if (biomeOn) rollBiome();
       return;
     }
@@ -409,18 +453,19 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
   };
   window.addEventListener("keydown", onKey);
 
-  // boot — honour a ?preview=1 link (full-bleed with the given algo/params)
+  // boot — honour a deep link: ?algo=<name>[&preset=<name>], and the full-bleed
+  // ?preview=1 variant (with an optional encoded param payload).
   function boot() {
     const sp = new URLSearchParams(window.location.search);
+    const algoIdx = resolveAlgo(sp.get("algo"));
+    selectAlgo(algoIdx >= 0 ? algoIdx : 0);
     if (sp.get("preview")) {
-      selectAlgo(Math.min(DATA.length - 1, Math.max(0, Number(sp.get("algo")) || 0)));
       const sd = sp.get("seed"); if (sd) seed = Number(sd) || seed;
       const pp = sp.get("p"); if (pp) { try { Object.assign(values, JSON.parse(atob(pp))); pane?.refresh(); } catch { /* bad payload */ } }
       buildArt();
       setCine(true);
-    } else {
-      selectAlgo(0);
     }
+    applyPresetByName(sp.get("preset"));
   }
   boot();
 
