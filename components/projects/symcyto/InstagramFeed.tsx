@@ -47,11 +47,16 @@ export default async function InstagramFeed({
   profileUrl: string;
 }) {
   const COUNT = 15;
-  const posts = await fetchPosts(COUNT);
-  // Pad/fallback to a full grid; empties link to the profile.
-  const tiles: IgPost[] = Array.from({ length: COUNT }, (_, i) =>
-    posts[i] ?? { id: `ph-${i}`, permalink: profileUrl, image: null },
-  );
+  // Stand-in tiles: square frames lifted from the Symcyto timelapses (in
+  // /public/symcyto/ig). Used until the Graph API is wired with a token; live
+  // posts, when available, take precedence per slot.
+  const FALLBACK: IgPost[] = Array.from({ length: COUNT }, (_, i) => ({
+    id: `local-${i + 1}`,
+    permalink: profileUrl,
+    image: `/symcyto/ig/${String(i + 1).padStart(2, "0")}.jpg`,
+  }));
+  const live = await fetchPosts(COUNT);
+  const tiles: IgPost[] = Array.from({ length: COUNT }, (_, i) => live[i] ?? FALLBACK[i]);
 
   return (
     <section className="sym-section ig-feed" style={{ borderTop: "1px solid var(--line-2)" }}>
