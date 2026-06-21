@@ -90,7 +90,7 @@ export type EditorialProject = {
   /** Still image shown behind the quote, with a tint overlay for legibility. */
   quoteBgImage?: string;
   /** TEMP chooser: render the quote once per backdrop image so one can be picked. */
-  quoteBgVariants?: { src: string; label: string }[];
+  quoteBgVariants?: { src: string; label: string; tint?: "reduced" | "none" }[];
   credits?: string;
 
   prev?: { slug: string; title: string };

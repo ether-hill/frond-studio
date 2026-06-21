@@ -310,8 +310,8 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
           {/* ── Quote (over a video, a tinted image, or a chooser stack) ── */}
           {p.quote && p.quoteBgVariants?.length ? (
             // TEMP chooser: the quote over each candidate image, with a tint.
-            p.quoteBgVariants.map((v) => (
-              <section key={v.src} className="ecs-quote ecs-quote-imgbg" data-rvs>
+            p.quoteBgVariants.map((v, i) => (
+              <section key={`${v.src}-${i}`} className={`ecs-quote ecs-quote-imgbg${v.tint === "none" ? " ecs-quote-tint-none" : ""}`} data-rvs>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="ecs-quote-img" src={v.src} alt="" aria-hidden="true" />
                 <div className="ecs-quote-tint" />

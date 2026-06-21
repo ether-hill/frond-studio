@@ -77,8 +77,13 @@ const project: EditorialProject = {
     body: "Ficino translated Plato, Plotinus and the Hermetica into Latin, making them readable across Europe for the first time. It helped start the Renaissance. Source Library continues that work.",
     author: "On Marsilio Ficino, 1433 to 1499",
   },
-  // Tinted celestial engraving (a star-catalogue headpiece) behind the quote.
+  // Celestial engraving (a star-catalogue headpiece) behind the quote.
   quoteBgImage: `${M}/quote-bg.jpg`,
+  // TEMP chooser: same backdrop, reduced tint vs no tint. Remove once decided.
+  quoteBgVariants: [
+    { src: `${M}/quote-bg.jpg`, label: "Reduced tint", tint: "reduced" },
+    { src: `${M}/quote-bg.jpg`, label: "No tint", tint: "none" },
+  ],
 
   next: { slug: "embassy-of-the-free-mind", title: "Embassy of the Free Mind" },
 };
