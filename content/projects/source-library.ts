@@ -80,10 +80,12 @@ const project: EditorialProject = {
   // Celestial engraving (a star-catalogue headpiece) behind the quote.
   quoteBgImage: `${M}/quote-bg.jpg`,
   // TEMP chooser: backdrop + tint options. Remove once decided.
+  // All "Stars, reduced tint" — identical in dark mode; only the LIGHT-mode
+  // treatment differs so the light rendering can be picked.
   quoteBgVariants: [
-    { src: `${M}/quote-bg.jpg`, label: "Stars, reduced tint", tint: "reduced" },
-    { src: `${M}/quote-bg.jpg`, label: "Stars, no tint", tint: "none" },
-    { src: `${M}/quote-bg-2.jpg`, label: "Sun chariot, reduced tint", tint: "reduced" },
+    { src: `${M}/quote-bg.jpg`, label: "Light: current", tint: "reduced", light: "default" },
+    { src: `${M}/quote-bg.jpg`, label: "Light: same as dark", tint: "reduced", light: "dark" },
+    { src: `${M}/quote-bg.jpg`, label: "Light: less vignette", tint: "reduced", light: "soft" },
   ],
 
   next: { slug: "embassy-of-the-free-mind", title: "Embassy of the Free Mind" },

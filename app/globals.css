@@ -1900,6 +1900,12 @@ button {
 .ecs-quote-tint { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: rgba(8, 7, 5, 0.38); }
 [data-theme="light"] .ecs-quote-tint { background: rgba(243, 239, 230, 0.42); }
 .ecs-quote-tint-none .ecs-quote-tint { display: none; }
+/* Light-mode quote treatments (chooser). "dark" makes light mode match the dark
+   rendering by locally overriding the theme vars; "soft" pulls the cream vignette
+   way in so the edges stay legible. Dark mode is untouched. */
+[data-theme="light"] .ecs-quote-light-dark { --bg-0: #0b0a08; --fg: #f1ede5; --fg-dim: #a39d92; }
+[data-theme="light"] .ecs-quote-light-dark .ecs-quote-tint { background: rgba(8, 7, 5, 0.38); }
+[data-theme="light"] .ecs-quote-light-soft .ecs-quote-vignette { background: radial-gradient(ellipse at center, transparent 84%, var(--bg-0) 100%); }
 /* Reusable chooser label (top-left chip). */
 .ecs-vlabel { position: absolute; top: 16px; left: var(--gutter); z-index: 2; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg); background: color-mix(in srgb, var(--bg-0) 55%, transparent); border: 1px solid var(--line); border-radius: 999px; padding: 7px 15px; }
 
