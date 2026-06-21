@@ -19,7 +19,7 @@ import { getEditorialProject, editorialSlugs, EDITORIAL_PROJECTS } from "@/conte
 async function moreWorkItems(): Promise<MoreWorkItem[]> {
   const sanity = await getProjects();
   return [
-    ...EDITORIAL_PROJECTS.map((p) => ({ slug: p.slug, title: p.title, label: p.category, image: p.hero?.src || undefined })),
+    ...EDITORIAL_PROJECTS.map((p) => ({ slug: p.slug, title: p.title, label: p.category, video: p.card?.video, poster: p.card?.poster, image: p.card?.poster || undefined })),
     ...CONTENT_PROJECTS.map((p) => ({ slug: p.slug, title: p.title, label: p.category, image: p.homepageGrab?.src || undefined })),
     ...sanity.map((p) => ({ slug: p.slug, title: p.title, label: p.subtitle ?? undefined, image: p.thumbnailImage || `/posters/${p.slug}.jpg` })),
   ];

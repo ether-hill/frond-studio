@@ -26,6 +26,7 @@ const project: EditorialProject = {
     label: "embassyofthefreemind.com",
   },
   heroBg: `${M}/videos/hero-bg.jpg`,
+  card: { video: `${M}/card.mp4`, poster: `${M}/card.jpg` },
 
   introLead:
     "The Embassy of the Free Mind holds a world-class collection of hermetic texts. Its old site got in the way: hard to navigate, single language, and cut off from ticketing and the library catalogue.",
@@ -120,6 +121,19 @@ const project: EditorialProject = {
     caption: "The celestial wheel of pillars",
     note: "A custom rotating composition built for the About page. Each pillar is a body in the same orbit, so the Embassy's founding ideas read as one connected whole.",
   },
+
+  before: [
+    "Dated design that under-served the collection",
+    "Not accessible to all visitors",
+    "Single language only",
+    "Ticketing and the library catalogue lived elsewhere",
+  ],
+  after: [
+    "Editorial, content-rich design",
+    "WCAG AA built in from the foundations",
+    "Full Dutch / English parity",
+    "Ticketing, membership and the Source Library on-site",
+  ],
 
   // Pulled from the design reference. Confirm exact wording and attribution with
   // the EFM team before launch.

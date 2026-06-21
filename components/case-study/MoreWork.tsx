@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import AutoVideo from "@/components/AutoVideo";
 
-export type MoreWorkItem = { slug: string; title: string; label?: string; image?: string };
+export type MoreWorkItem = { slug: string; title: string; label?: string; image?: string; video?: string; poster?: string };
 
 /**
  * "See more work" — a horizontal slider showing 3 projects per page on desktop
@@ -69,7 +70,9 @@ export default function MoreWork({ items }: { items: MoreWorkItem[] }) {
         {items.map((p) => (
           <Link key={p.slug} href={`/work/${p.slug}`} className="vwork mw-card" style={{ textDecoration: "none", color: "inherit" }}>
             <span className="proj-shot mw-shot">
-              {p.image ? (
+              {p.video ? (
+                <AutoVideo src={p.video} poster={p.poster ?? p.image} />
+              ) : p.image ? (
                 <img src={p.image} alt={`${p.title} preview`} loading="lazy" decoding="async" />
               ) : (
                 <span className="mw-ph">{p.title}</span>

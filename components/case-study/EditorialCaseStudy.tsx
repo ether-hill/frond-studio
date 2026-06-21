@@ -38,19 +38,19 @@ function Eyebrow({ children, color = "var(--accent)" }: { children: React.ReactN
 }
 
 function Heading({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return <h2 style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "var(--text-title)", lineHeight: 1.04, letterSpacing: "-0.025em", color: "var(--fg)", ...style }}>{children}</h2>;
+  return <h2 style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "clamp(30px,4vw,56px)", lineHeight: 1.04, letterSpacing: "-0.025em", color: "var(--fg)", ...style }}>{children}</h2>;
 }
 
-function Frame({ media, url }: { media: EditorialMedia; url?: string }) {
+function Frame({ media, url, flat }: { media: EditorialMedia; url?: string; flat?: boolean }) {
   return (
-    <div className="ecs-frame">
+    <div className={flat ? "ecs-frame ecs-frame-flat" : "ecs-frame"}>
       <div className="ecs-frame-bar"><i /><i /><i />{url ? <span className="ecs-url">{url}</span> : null}</div>
       <div className="ecs-frame-screen" style={{ aspectRatio: RATIO[media.ratio] }}><Well media={media} /></div>
     </div>
   );
 }
 
-const bodyStyle: React.CSSProperties = { fontFamily: "var(--font-body), sans-serif", fontSize: "var(--text-lead)", lineHeight: 1.55, color: "var(--fg-dim)", maxWidth: "54ch" };
+const bodyStyle: React.CSSProperties = { fontFamily: "var(--font-body), sans-serif", fontSize: "clamp(17px,1.5vw,21px)", lineHeight: 1.55, color: "var(--fg-dim)", maxWidth: "54ch" };
 
 export default function EditorialCaseStudy({ project, moreWork = [] }: { project: EditorialProject; moreWork?: MoreWorkItem[] }) {
   const p = project;
@@ -64,41 +64,55 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
           <span style={{ color: "var(--fg-faint)" }}>/</span>
           <span>{p.title}</span>
         </div>
-        <h1 style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 0.94, letterSpacing: "-0.035em", maxWidth: "18ch" }}>
+        <h1 style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: "clamp(44px,7.4vw,120px)", lineHeight: 0.94, letterSpacing: "-0.035em", maxWidth: "18ch" }}>
           <span className="mask-line"><span>{p.title}</span></span>
         </h1>
-        <p data-rv style={{ transitionDelay: "0.2s", maxWidth: 720, marginTop: "clamp(24px,3.5vh,42px)", fontFamily: DISPLAY, fontSize: "var(--text-subtitle)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.012em", color: "var(--fg)" }}>
+        <p data-rv style={{ transitionDelay: "0.2s", maxWidth: 720, marginTop: "clamp(24px,3.5vh,42px)", fontFamily: DISPLAY, fontSize: "clamp(22px,2.4vw,34px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.012em", color: "var(--fg)" }}>
           {p.oneLiner}
         </p>
       </header>
 
-      {/* ── Hero frame over a full-bleed blurred backdrop ─── */}
-      <section className="ecs-hero-band" data-rvs>
+      {/* ── Hero: floating frosted browser card over a full-bleed image ─── */}
+      <section className="ecs-hero" data-rvs>
         {p.heroBg ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="ecs-hero-bg" src={p.heroBg} alt="" aria-hidden="true" />
+          <img className="ecs-hero-img" src={p.heroBg} alt="" aria-hidden="true" />
         ) : null}
-        <div className="page-gutter ecs-hero-inner" style={PAD}><Frame media={p.hero} url={p.liveLabel} /></div>
+        <div className="ecs-hero-scrim" />
+        <div className="ecs-hero-card">
+          <div className="ecs-hero-bar">
+            <i /><i /><i />
+            {p.liveLabel ? <span className="ecs-hero-url">{p.liveLabel}</span> : null}
+          </div>
+          <div className="ecs-hero-screen">
+            {p.hero.type === "video" ? (
+              <AutoVideo src={p.hero.src} poster={p.hero.poster} objectFit="contain" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={p.hero.src} alt={p.hero.alt} loading="lazy" decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
+            )}
+          </div>
+        </div>
       </section>
 
       <div className="page-gutter" style={PAD}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)", paddingTop: "var(--section-y)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)", paddingTop: "var(--section-y)", paddingBottom: "var(--section-y)" }}>
 
           {/* ── Intro: text left, meta right ──────────────── */}
           <section className="ecs-intro" data-rvs>
             <div style={{ display: "flex", flexDirection: "column", gap: "clamp(24px,3.5vh,40px)" }}>
-              <p style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "var(--text-title)", lineHeight: 1.18, letterSpacing: "-0.022em", color: "var(--fg)" }}>{p.introLead}</p>
+              <p style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "clamp(26px,3.1vw,46px)", lineHeight: 1.18, letterSpacing: "-0.022em", color: "var(--fg)" }}>{p.introLead}</p>
               <p style={bodyStyle}>{p.introBody}</p>
             </div>
             <div className="ecs-meta">
               <div>
                 <Eyebrow color="var(--fg-faint)">Client</Eyebrow>
-                <div style={{ marginTop: 12, fontSize: "var(--text-body)", color: "var(--fg)" }}>{p.client}</div>
+                <div style={{ marginTop: 12, fontSize: 17, color: "var(--fg)" }}>{p.client}</div>
               </div>
               <div>
                 <Eyebrow color="var(--fg-faint)">Services</Eyebrow>
                 <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 9 }}>
-                  {p.services.map((s) => (<div key={s} style={{ fontSize: "var(--text-body)", color: "var(--fg)" }}>{s}</div>))}
+                  {p.services.map((s) => (<div key={s} style={{ fontSize: 17, color: "var(--fg)" }}>{s}</div>))}
                 </div>
               </div>
               {p.liveUrl ? (
@@ -116,9 +130,9 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             <div className="ecs-grid ecs-stats" style={{ marginTop: "clamp(24px,3.5vh,40px)" }}>
               {p.stats.map((s) => (
                 <div key={s.label} className="ecs-cell">
-                  <div style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "var(--text-display)", lineHeight: 0.9, letterSpacing: "-0.04em", color: "var(--fg)" }}>{s.value}</div>
+                  <div style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "clamp(46px,5vw,80px)", lineHeight: 0.9, letterSpacing: "-0.04em", color: "var(--fg)" }}>{s.value}</div>
                   <div style={{ marginTop: 16, fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{s.label}</div>
-                  <div style={{ marginTop: 12, fontSize: "var(--text-caption)", lineHeight: 1.5, color: "var(--fg-dim)" }}>{s.note}</div>
+                  <div style={{ marginTop: 12, fontSize: 14, lineHeight: 1.5, color: "var(--fg-dim)" }}>{s.note}</div>
                 </div>
               ))}
             </div>
@@ -128,10 +142,15 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
               <div className="ecs-grid ecs-tech" style={{ marginTop: "clamp(20px,3vh,32px)" }}>
                 {p.integrations.map((name) => {
                   const logo = logoFor(name);
+                  const letter = !logo && /^BPH/i.test(name) ? "B" : null;
                   return (
                     <div key={name} className="ecs-cell ecs-techcell">
                       <span className="ecs-techicon" aria-hidden="true">
-                        {logo ? (<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d={logo.path} /></svg>) : null}
+                        {logo ? (
+                          <svg viewBox={logo.viewBox ?? "0 0 24 24"} width="18" height="18" fill="currentColor"><path d={logo.path} /></svg>
+                        ) : letter ? (
+                          <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 17, lineHeight: 1 }}>{letter}</span>
+                        ) : null}
                       </span>
                       <span style={{ fontFamily: MONO, fontSize: 13, letterSpacing: "0.02em", color: "var(--fg)", lineHeight: 1.3 }}>{name}</span>
                     </div>
@@ -140,6 +159,25 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
               </div>
             </div>
           </section>
+
+          {/* ── Before / after (neutral, no colour coding) ── */}
+          {p.before?.length && p.after?.length ? (
+            <section className="ecs-ba" data-rvs>
+              {([["Before", p.before], ["After", p.after]] as const).map(([label, points]) => (
+                <div key={label}>
+                  <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{label}</div>
+                  <ul style={{ marginTop: "clamp(18px,2.6vh,28px)", display: "flex", flexDirection: "column", gap: 16 }}>
+                    {points.map((pt) => (
+                      <li key={pt} style={{ display: "flex", alignItems: "flex-start", gap: 14, fontSize: "clamp(16px,1.4vw,20px)", lineHeight: 1.45, color: "var(--fg)" }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0, marginTop: "0.6em" }} />
+                        <span>{pt}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </section>
+          ) : null}
 
           {/* ── Front door ────────────────────────────────── */}
           <section data-rvs>
@@ -155,12 +193,12 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
         <Well media={p.band.media} />
         <div className="ecs-band-shade" />
         <div className="ecs-band-inner page-gutter" style={PAD}>
-          <p style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "var(--text-display)", lineHeight: 1.02, letterSpacing: "-0.025em", color: "#f4efe6" }}>{p.band.text}</p>
+          <p style={{ fontFamily: DISPLAY, fontWeight: 500, fontSize: "clamp(32px,5vw,72px)", lineHeight: 1.02, letterSpacing: "-0.025em", color: "#f4efe6" }}>{p.band.text}</p>
         </div>
       </section>
 
       <div className="page-gutter" style={PAD}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)", paddingBottom: "var(--section-y)" }}>
 
           {/* ── Content model + device mockup ─────────────── */}
           <section data-rvs style={{ paddingTop: "clamp(56px,9vh,120px)" }}>
@@ -171,12 +209,24 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             </div>
 
             <div className="ecs-plate" style={{ marginTop: "clamp(34px,5vh,60px)" }}>
-              <div className="ecs-dev ecs-dev-tablet"><div className="ecs-screen"><Well media={p.devices.tablet} /></div></div>
-              <div className="ecs-dev ecs-dev-laptop">
-                <div className="ecs-laptop-lid"><div className="ecs-screen"><Well media={p.devices.laptop} /></div></div>
-                <div className="ecs-laptop-base" aria-hidden="true" />
+              <div className="ecs-cluster">
+                <div className="ecs-dev ecs-dev-phone">
+                  <div className="ecs-phone-body">
+                    <span className="ecs-phone-notch" aria-hidden="true" />
+                    <div className="ecs-phone-screen"><Well media={p.devices.phone} /></div>
+                  </div>
+                </div>
+                <div className="ecs-dev ecs-dev-tablet">
+                  <div className="ecs-tablet-body"><div className="ecs-tablet-screen"><Well media={p.devices.tablet} /></div></div>
+                </div>
+                <div className="ecs-dev ecs-dev-laptop">
+                  <div className="ecs-laptop-lid">
+                    <span className="ecs-laptop-cam" aria-hidden="true" />
+                    <div className="ecs-laptop-screen"><Well media={p.devices.laptop} /></div>
+                  </div>
+                  <div className="ecs-laptop-base" aria-hidden="true" />
+                </div>
               </div>
-              <div className="ecs-dev ecs-dev-phone"><span className="ecs-phone-island" aria-hidden="true" /><div className="ecs-screen"><Well media={p.devices.phone} /></div></div>
             </div>
           </section>
 
@@ -192,7 +242,7 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
                 <div key={c.caption}>
                   <div className="ecs-circle"><Well media={c.media} /></div>
                   <div style={{ marginTop: 26, textAlign: "center", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{c.caption}</div>
-                  <p style={{ marginTop: 12, maxWidth: 420, marginInline: "auto", textAlign: "center", fontSize: "var(--text-body)", lineHeight: 1.55, color: "var(--fg-dim)" }}>{c.note}</p>
+                  <p style={{ marginTop: 12, maxWidth: 420, marginInline: "auto", textAlign: "center", fontSize: 15, lineHeight: 1.55, color: "var(--fg-dim)" }}>{c.note}</p>
                 </div>
               ))}
             </div>
@@ -202,40 +252,28 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
           <section data-rvs style={{ textAlign: "center" }}>
             <div style={{ maxWidth: 760, margin: "0 auto" }}>
               <Eyebrow>{p.pillars.eyebrow}</Eyebrow>
-              <Heading style={{ marginTop: 18, fontSize: "var(--text-title)" }}>{p.pillars.heading}</Heading>
+              <Heading style={{ marginTop: 18, fontSize: "clamp(28px,3.6vw,50px)" }}>{p.pillars.heading}</Heading>
               {p.pillars.body ? <p style={{ ...bodyStyle, maxWidth: 560, margin: "clamp(16px,2.2vh,26px) auto 0" }}>{p.pillars.body}</p> : null}
             </div>
             <div style={{ maxWidth: 1040, margin: "clamp(34px,5vh,60px) auto 0" }}>
-              <Frame media={p.pillars.media} url={p.liveLabel ? `${p.liveLabel}/about` : undefined} />
-            </div>
-            <div style={{ marginTop: 24 }}>
-              <div style={{ fontFamily: MONO, fontSize: 10, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{p.pillars.caption}</div>
-              <p style={{ marginTop: 12, maxWidth: 480, marginInline: "auto", fontSize: "var(--text-caption)", lineHeight: 1.55, color: "var(--fg-dim)" }}>{p.pillars.note}</p>
+              <Frame media={p.pillars.media} url={p.liveLabel ? `${p.liveLabel}/about` : undefined} flat />
             </div>
           </section>
         </div>
       </div>
 
-      {/* ── Quote over flowing-lines video ────────────────── */}
+      {/* ── Quote over flowing-lines video (dark/light blend) ── */}
       {p.quote ? (
         <section className="ecs-quote" data-rvs>
-          {p.quoteBg ? <div className="ecs-quote-bg"><Well media={p.quoteBg} /></div> : null}
-          <div className="ecs-quote-shade" />
-          <div className="page-gutter ecs-quote-inner" style={{ maxWidth: 1100, margin: "0 auto", padding: "clamp(80px,14vh,170px) var(--gutter)", textAlign: "center" }}>
+          {p.quoteBg ? <AutoVideo src={p.quoteBg.src} poster={p.quoteBg.poster} className="quote-vid" noFade /> : null}
+          <div className="ecs-quote-vignette" />
+          <div className="ecs-quote-inner">
             <blockquote style={{ margin: 0 }}>
-              <p style={{ fontFamily: DISPLAY, fontSize: "var(--text-title)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.02em", color: "var(--fg)" }}>&ldquo;{p.quote.body}&rdquo;</p>
-              <footer style={{ marginTop: "clamp(20px,3vh,30px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)" }}>{p.quote.author}</footer>
+              <p style={{ fontFamily: DISPLAY, fontSize: "clamp(26px,3.6vw,52px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.018em", color: "var(--fg)" }}>&ldquo;{p.quote.body}&rdquo;</p>
+              <footer style={{ marginTop: "clamp(30px,4vh,48px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-dim)" }}>{p.quote.author}</footer>
             </blockquote>
           </div>
         </section>
-      ) : null}
-
-      {p.credits ? (
-        <div className="page-gutter" style={PAD}>
-          <section data-rvs style={{ borderTop: "1px solid var(--line-2)", paddingTop: "clamp(24px,3vh,36px)", marginTop: "var(--section-y)" }}>
-            <p style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.04em", color: "var(--fg-faint)", lineHeight: 1.6 }}>{p.credits}</p>
-          </section>
-        </div>
       ) : null}
 
       <MoreWork items={moreWork} />

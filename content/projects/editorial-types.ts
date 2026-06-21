@@ -40,6 +40,8 @@ export type EditorialProject = {
   hero: EditorialMedia;
   /** Full-bleed blurred image shown behind the hero browser frame. */
   heroBg?: string;
+  /** Thumbnail for the /work index row + "See more work" cards. */
+  card?: { video?: string; poster?: string };
 
   /** Positioning. Lead is the large serif statement, body the supporting line. */
   introLead: string;
@@ -66,6 +68,10 @@ export type EditorialProject = {
 
   /** About-page feature: a single media in a browser frame + caption. */
   pillars: EditorialSection & { media: EditorialMedia; caption: string; note: string };
+
+  /** Before / after fragment lists (rendered neutral, no colour coding). */
+  before?: string[];
+  after?: string[];
 
   /** Client testimonial. May be a clearly-marked placeholder. */
   quote?: { body: string; author: string; needsConfirmation?: boolean };
