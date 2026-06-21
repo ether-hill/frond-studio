@@ -89,28 +89,14 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
       </header>
 
       {/* ── Hero: floating frosted browser card over a full-bleed image ─── */}
-      {p.heroBgVariants?.length ? (
-        // TEMP chooser: one hero per candidate backdrop, stacked, so a variant
-        // can be picked. Remove heroBgVariants from the content to revert.
-        p.heroBgVariants.map((v) => (
-          <section key={v.src} className={`ecs-hero${liteClass}`} data-rvs>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="ecs-hero-img" src={v.src} alt="" aria-hidden="true" />
-            <div className="ecs-hero-scrim" />
-            <span className="ecs-hero-vlabel">{v.label}</span>
-            {heroCard()}
-          </section>
-        ))
-      ) : (
-        <section className={`ecs-hero${liteClass}`} data-rvs>
-          {p.heroBg ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="ecs-hero-img" src={p.heroBg} alt="" aria-hidden="true" />
-          ) : null}
-          <div className="ecs-hero-scrim" />
-          {heroCard()}
-        </section>
-      )}
+      <section className={`ecs-hero${liteClass}`} data-rvs>
+        {p.heroBg ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="ecs-hero-img" src={p.heroBg} alt="" aria-hidden="true" />
+        ) : null}
+        <div className="ecs-hero-scrim" />
+        {heroCard()}
+      </section>
 
       <div className="page-gutter" style={PAD}>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--section-y)", paddingTop: "var(--section-y)", paddingBottom: "var(--section-y)" }}>

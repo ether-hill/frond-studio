@@ -52,7 +52,6 @@ export default function CaseStudyRow({
           }}
         >
           <span>{project.subtitle}</span>
-          {project.year ? <span style={{ color: "var(--fg-faint)" }}>— {project.year}</span> : null}
         </div>
 
         <h2 style={{ marginBottom: "clamp(14px,2vh,20px)" }}>
