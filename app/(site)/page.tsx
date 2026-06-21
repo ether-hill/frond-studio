@@ -1,4 +1,5 @@
 import RevealRoot from "@/components/RevealRoot";
+import Divider from "@/components/Divider";
 import HeroPhysarum from "@/components/HeroPhysarum";
 import HeroControls from "@/components/HeroControls";
 import SelectedWork from "@/components/SelectedWork";
@@ -88,6 +89,8 @@ export default async function Home() {
         </div>
       </section>
 
+      <Divider />
+
       <SelectedWork projects={featured} />
 
       {/* Capabilities — interactive 3D node cloud, full-bleed behind the copy */}
@@ -129,7 +132,11 @@ export default async function Home() {
         </div>
       </section>
 
+      <Divider />
+
       <SelectedProjects />
+
+      <Divider />
 
       <FeaturedInstrument />
 

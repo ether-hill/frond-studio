@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import RevealRoot from "@/components/RevealRoot";
+import Divider from "@/components/Divider";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
 import MyceliumBg from "@/components/MyceliumBg";
 import AboutMyceliumControls from "@/components/AboutMyceliumControls";
@@ -105,6 +106,8 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      <Divider />
 
       {/* Full-bleed node cloud behind the copy — same convention, size and layering
           as the homepage Focus-areas section (cloud z0 · scrim z1 · copy z2). The

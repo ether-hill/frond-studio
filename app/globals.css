@@ -71,6 +71,14 @@
   }
 }
 
+/* Site-standard section divider — a full-bleed hairline between stacked
+   top-level components. See components/Divider.tsx. */
+.section-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--line);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
