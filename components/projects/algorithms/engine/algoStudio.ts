@@ -1,5 +1,5 @@
 import { Pane } from "tweakpane";
-import { DATA, JONES_PRESETS, PHYS_PRESETS } from "./algorithms";
+import { DATA, JONES_PRESETS, JONES_DEFAULT_PARAMS, PHYS_PRESETS } from "./algorithms";
 import { renderArt } from "./artGenerators";
 import { PhysMod, M_DEFAULTS, type MParams } from "./physmod";
 import { Physarum, DEFAULTS, type Params } from "./physarum";
@@ -42,7 +42,21 @@ const SCHEMA: Record<string, Def[]> = {
   "stochastic-crystallization": [n("breathe", "breathe", 0, 0.2, 0.05, 0.005), n("churn", "churn", 0, 2, 0.5, 0.05), n("count", "count", 300, 1600, 950, 10)],
   mycelium: [s("preset", "habit", ["wild", "filigree", "cords", "bloom"], "bloom"), n("tips", "tips", 10, 400, 120, 5)],
   physarum: [n("SensorDistance0", "sensor dist", 0, 15, 0, 0.5), n("SD_exponent", "SD power", 1, 10, 4, 0.1), n("SD_amplitude", "SD amp", 0, 0.6, 0.3, 0.01), n("SensorAngle0", "sensor angle", 0.1, 1.2, 0.4, 0.01), n("RotationAngle0", "turn angle", 0.1, 1, 0.45, 0.01), n("MoveDistance0", "move dist", 0.2, 1.5, 0.4, 0.01), n("MD_exponent", "MD power", 1, 12, 3, 0.1), n("MD_amplitude", "MD amp", 0, 0.3, 0.1, 0.01), n("defaultScalingFactor", "scaling", 10, 40, 22, 1), n("depositFactor", "deposit", 0.001, 0.02, 0.0075, 0.0005), n("decayFactor", "decay", 0.6, 0.95, 0.78, 0.01), n("exposure", "exposure", 0.4, 2.5, 1, 0.05)],
-  "physarum-jones": [n("sensorAngle", "sensor angle", 5, 45, 22, 1), n("sensorDist", "sensor dist", 2, 20, 9, 0.5), n("turnSpeed", "turn speed", 5, 60, 28, 1), n("stepSize", "step size", 0.4, 2, 1, 0.05), n("deposit", "deposit", 0.02, 0.4, 0.18, 0.01), n("decay", "decay", 0.85, 0.99, 0.93, 0.005), n("diffuse", "diffuse", 0, 1, 0.45, 0.01), n("intensity", "intensity", 0.5, 4, 1.4, 0.05), n("gamma", "gamma", 0.3, 1.2, 0.8, 0.01), c("bg", "background", "#07060c"), c("lo", "low", "#3a1d6e"), c("hi", "high", "#f7d774")],
+  // Jones agent model — same control set + ranges as the SMA Config studio, with the
+  // hero scene (v7 · Monochrome Drift) as the defaults so it opens identically.
+  "physarum-jones": [
+    n("sensorAngle", "sensor angle°", 1, 90, 20, 1), n("sensorDist", "sensor dist", 1, 40, 14, 0.5),
+    n("turnSpeed", "turn speed°", 1, 90, 32, 1), n("stepSize", "step size", 0.2, 4, 1.7, 0.1),
+    n("avoid", "species avoid", 0, 1, 0, 0.01),
+    n("deposit", "deposit", 0.01, 1, 0.09, 0.01), n("decay", "decay", 0.7, 0.999, 0.89, 0.001),
+    n("diffuse", "diffuse", 0, 1, 0, 0.01), n("stepsPerFrame", "sim speed", 1, 6, 3, 1),
+    n("intensity", "intensity", 0.2, 4, 3, 0.05), n("gamma", "gamma", 0.3, 2.5, 0.3, 0.05),
+    s("displayMode", "color mode", ["palette", "rgb"], "palette"),
+    c("bg", "background", "#000000"), c("lo", "low / far", "#3a3a3a"), c("hi", "high / near", "#ffffff"),
+    c("colR", "species 1", "#ff2d6b"), c("colG", "species 2", "#22e0c8"), c("colB", "species 3", "#ffd23d"),
+    s("spawn", "spawn", ["center", "ring", "random"], "random"),
+    n("mouseFood", "touch strength", 0, 1.5, 0, 0.05), n("foodRadius", "touch radius", 8, 120, 36, 1),
+  ],
 };
 
 type Eng = { render(): void; dispose(): void; reset(): void; setParams(p: unknown): void; setMouse(x: number, y: number, a: boolean): void };
@@ -146,7 +160,9 @@ export function mountAlgoStudio(root: HTMLElement): () => void {
         gpuBase = { ...M_DEFAULTS, agentTexW: 768, ...values };
         engine = new PhysMod(canvas, 640, gpuBase as unknown as MParams);
       } else {
-        gpuBase = { ...DEFAULTS, ...values };
+        // Jones opens on SMA Config's hero scene (v7) rather than the bare defaults.
+        const base = gen === "physarum-jones" ? (JONES_DEFAULT_PARAMS as Params) : DEFAULTS;
+        gpuBase = { ...base, ...values };
         engine = new Physarum(canvas, 512, gpuBase as unknown as Params);
       }
       runGpuLoop();
