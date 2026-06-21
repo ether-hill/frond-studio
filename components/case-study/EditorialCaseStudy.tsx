@@ -132,7 +132,12 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             <section data-rvs>
               {p.stats && p.stats.length ? (
                 <>
-                  <Eyebrow>{p.statsLabel ?? "By the numbers"}</Eyebrow>
+                  <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: "8px 16px" }}>
+                    <Eyebrow>{p.statsLabel ?? "By the numbers"}</Eyebrow>
+                    {p.statsAsOf ? (
+                      <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-faint)" }}>As of {p.statsAsOf}</span>
+                    ) : null}
+                  </div>
                   <div className="ecs-grid ecs-stats" style={{ marginTop: "clamp(24px,3.5vh,40px)" }}>
                     {p.stats.map((s) => (
                       <div key={s.label} className="ecs-cell">

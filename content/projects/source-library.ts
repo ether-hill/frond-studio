@@ -13,7 +13,7 @@ const project: EditorialProject = {
   title: "Source Library",
   category: "Open-access digital library",
   oneLiner:
-    "The world's largest open-access library of AI-translated ancient sources, for scholars, seekers, and AI alike, with Frond Studio consulting.",
+    "The world's largest open-access library of translated ancient sources, for scholars, seekers, and AI alike.",
   liveUrl: "https://sourcelibrary.org",
   liveLabel: "sourcelibrary.org",
 
@@ -32,11 +32,12 @@ const project: EditorialProject = {
   introLead:
     "The rediscovery of ancient texts helped spark the Renaissance. Source Library does that work again, at far greater scale.",
   introBody:
-    "Much of humanity's foundational knowledge is still locked in undigitised, untranslated books. Source Library digitises them, reads them with OCR, translates them, and opens them to people and machines alike. It is built on the Embassy of the Free Mind's UNESCO-listed Bibliotheca Philosophica Hermetica, and draws on the Vatican, Bodleian, Cambridge and Bavarian State libraries. In public beta since April 2026.",
+    "Much of humanity's foundational knowledge is still locked in undigitised, untranslated books. Source Library digitises them, reads them with OCR, translates them, and opens them to people and machines alike. Frond Studio consults on its design, development and continued growth.",
   client: "Source Library",
   services: ["Website", "Design", "Development", "Video", "Consulting"],
 
   statsLabel: "The library, in numbers",
+  statsAsOf: "June 2026",
   stats: [
     { value: "16,079", label: "Books", note: "Rare and foundational works, digitised and OCR'd." },
     { value: "5,669", label: "First-ever translations", note: "Texts put into English for the first time." },

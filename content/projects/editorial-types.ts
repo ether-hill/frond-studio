@@ -55,6 +55,8 @@ export type EditorialProject = {
   stats?: EditorialStat[];
   /** Eyebrow above the stats grid (default "By the numbers"). */
   statsLabel?: string;
+  /** Optional "as of <date>" note shown next to the stats eyebrow. */
+  statsAsOf?: string;
   /** Tech + integrations, rendered as a logo grid. Omit to skip. */
   integrations?: string[];
 
