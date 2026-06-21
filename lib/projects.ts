@@ -105,4 +105,15 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     href: "/projects/cymatics-bubbles",
     image: "/cards/cymatics.jpg",
   },
+  {
+    slug: "further-cymatics",
+    title: "Further Cymatics",
+    kicker: "R&D · SOUND & PROGRAMMABLE LIGHT",
+    summary:
+      "New cymatics rigs that pair sound with programmable light — RGB LED ring arrays driven by Arduino and DMX, temporal-aliasing tests that phase light against sound for smooth linear motion, and new vessel geometries in size, depth and multi-ring form.",
+    year: "2025",
+    tags: ["Cymatics", "R&D", "RGB LED", "DMX"],
+    href: "/projects/further-cymatics",
+    image: "/cards/further-cymatics.jpg",
+  },
 ];

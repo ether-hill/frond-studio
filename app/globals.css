@@ -1539,10 +1539,13 @@ button {
   color: var(--fg-faint);
 }
 
-/* Body — a single readable measure under the grid. */
+/* Body — a single readable measure under the grid; stacks multiple paragraphs. */
 .cym-body {
   margin-top: clamp(40px, 6vh, 84px);
   max-width: 68ch;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 2.4vh, 28px);
 }
 .cym-body .sym-lead { margin: 0; }
 
