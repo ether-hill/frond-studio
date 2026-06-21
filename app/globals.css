@@ -1468,6 +1468,15 @@ button {
   overflow: hidden;
   background: #000;
 }
+/* Subtle top scrim so the transparent nav stays legible over the hero video. */
+.cym-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: clamp(96px, 17vh, 190px);
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+}
 .cym-article {
   max-width: var(--maxw);
   margin: 0 auto;
