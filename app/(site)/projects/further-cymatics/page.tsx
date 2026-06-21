@@ -27,10 +27,10 @@ export default function FurtherCymaticsPage() {
                 <span>Further Cymatics</span>
               </span>
             </h1>
-            <p className="sym-lead" data-rvs style={{ marginTop: "clamp(20px,3vh,32px)", maxWidth: "56ch" }}>
-              An ongoing series of cymatics rigs that pair sound with programmable light. We&apos;re building new instruments with
-              far finer control over the light source — RGB LED ring arrays driven by Arduino and DMX — to reveal how tone and
-              resonance shape matter.
+            <p className="sym-lead" data-rvs style={{ marginTop: "clamp(20px,3vh,32px)", maxWidth: "62ch" }}>
+              A series of cymatics experiments and prototype assemblies — from Arduino- and DMX-driven RGB LED ring arrays to
+              vessel variants in different materials, concentric ring geometries, and liquids of varying viscosity. Each
+              combination reveals something different about how sound shapes matter.
             </p>
           </div>
         </section>
