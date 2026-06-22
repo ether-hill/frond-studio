@@ -76,7 +76,6 @@ export default function FungiSourcePage() {
           </div>
           <figure className="fs-hero-mock" data-rv style={{ transitionDelay: "0.12s" }}>
             <img src="/fungi-source/sourcelibrary-fungi.png" alt="Mockup of the Source Library — Fungi Collection page that this research is ported into" />
-            <figcaption>The handoff — a glimpse of the Source&nbsp;Library · Fungi&nbsp;Collection interface this research ports into: faceted, searchable, open via API.</figcaption>
           </figure>
         </div>
       </section>
