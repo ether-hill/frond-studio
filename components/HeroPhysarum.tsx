@@ -9,13 +9,12 @@ import { fetchHeroLearning } from "@/app/hero-vote-actions";
  * First paint is the studio default, "Monochrome Drift" (stark white veins on
  * black; it stays dark regardless of site theme — the inverse reads poorly).
  *
- * RANDOMISE (the `hero-physarum-reseed` event) is now *learned*: visitors' 👍/👎
- * (from <HeroVote>, relayed via the `hero-feedback` event) weight which curated
- * preset is drawn AND bank the exact config of liked renders. Each randomise then
- * either explores fresh (weighted preset + jitter) or, up to half the time but
- * never more (a hard exploration floor), exploits — mutating from a banked
- * favourite. It emits `hero-render` {id, params} so <HeroVote> always knows
- * what's on screen. WebGL2-only; falls back to an empty bg.
+ * RANDOMISE (the `hero-physarum-reseed` event) is *learned* from the stored
+ * aggregate of past preferences (loaded once via fetchHeroLearning): it weights
+ * which curated preset is drawn AND banks the configs of well-liked renders. Each
+ * randomise then either explores fresh (weighted preset + jitter) or, up to half
+ * the time but never more (a hard exploration floor), exploits — mutating from a
+ * banked favourite. WebGL2-only; falls back to an empty bg.
  */
 type P = Record<string, unknown>;
 type Vote = { up: number; down: number };
@@ -307,17 +306,6 @@ export default function HeroPhysarum() {
         maybeStart();
       });
 
-    // Relay from <HeroVote>: update the in-memory weighting so this session's
-    // randomises feel the vote immediately (the server is the durable record).
-    const onFeedback = (ev: Event) => {
-      const d = (ev as CustomEvent).detail as { id?: string; dir?: "up" | "down"; params?: P } | undefined;
-      if (!d?.id || (d.dir !== "up" && d.dir !== "down")) return;
-      const v = sceneVotes[d.id] || { up: 0, down: 0 };
-      sceneVotes = { ...sceneVotes, [d.id]: { ...v, [d.dir]: v[d.dir] + 1 } };
-      if (d.dir === "up" && d.params) liked = [{ id: d.id, params: d.params }, ...liked].slice(0, 60);
-    };
-    window.addEventListener("hero-feedback", onFeedback);
-
     Promise.all([import("./projects/algorithms/engine/physarum"), import("./projects/algorithms/engine/versions")])
       .then(([{ Physarum, DEFAULTS }, { VERSIONS, HERO_VERSION_ID }]) => {
         if (disposed) return;
@@ -385,7 +373,6 @@ export default function HeroPhysarum() {
       window.clearTimeout(resizeT);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("hero-physarum-reseed", onReseed);
-      window.removeEventListener("hero-feedback", onFeedback);
       try {
         eng?.dispose();
       } catch {
