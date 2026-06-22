@@ -121,7 +121,7 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     title: "Fungi Source",
     kicker: "RESEARCH · OPEN FUNGI LIBRARY",
     summary:
-      "A far-and-wide search for the literature of fungi — ancient herbals to modern field guides, public-domain first — gathered, translated and catalogued into one centralised open database. Free and open-sourced, reachable via API for AI-driven research, insights and visualisation, and handed off to Source Library.",
+      "A far-and-wide search for the literature of fungi — early treatises to modern field guides, public-domain first — gathered, OCR'd, translated and catalogued into one centralised open database. Free and open-sourced, shared via an API to power AI tools and research, and handed off to Source Library.",
     year: "2026",
     tags: ["Research", "Open Data", "Translation", "Mycology"],
     href: "/projects/fungi-source",

@@ -25,7 +25,12 @@ const BOOK_ITEMS: GalleryItem[] = FUNGI_BOOKS.map((b) => ({
   image: b.image,
   title: b.title,
   meta: `${b.author} · ${b.year}`,
-  caption: `${b.language} · ${b.note}`,
+  body: b.note,
+  details: [
+    { label: "Language", value: b.language },
+    { label: "Rights", value: b.rights },
+    { label: "Source", value: b.source },
+  ],
   href: b.url,
   hrefLabel: "Read the full book — Internet Archive →",
 }));
@@ -43,7 +48,7 @@ export default function FungiSourcePage() {
       <section className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}>
         <PageHeader
           title="Fungi Source"
-          intro="A far-and-wide search for the literature of fungi — ancient herbals, golden-age plate books and modern field guides, public-domain first. Gathered, translated and catalogued into one open database: free to all, reachable via an API for AI-driven research, insight and visualisation — and handed off to Source Library."
+          intro="A far-and-wide search for the literature of fungi — early mycological treatises, golden-age plate books and modern field guides, public-domain first. Gathered, OCR'd, translated and catalogued into one open database: free to all and shared via an API to power AI tools, research and visualisation — and handed off to Source Library."
         />
 
         {/* The hunt & the open angle */}
@@ -57,13 +62,24 @@ export default function FungiSourcePage() {
             read, sourced, and its rights status established before it earns a place.
           </p>
           <p style={{ fontSize: "var(--text-body)", lineHeight: 1.75, color: "var(--fg-dim)" }}>
-            Much of the canon is locked in Latin, French, German, Italian and Swedish. Part of the work is translation — making
-            centuries of mycological knowledge readable — then structuring it into a single open database. Free and
-            open-sourced to the public and reachable through an API, the collection becomes raw material for AI-driven research,
-            cross-text insight and visualisation. A caveat travels with the old volumes: treat their edibility guidance as
-            history, not a foraging manual.
+            Much of the canon is locked in Latin, French, German, Italian and Swedish. Part of the work is OCR and translation —
+            turning page scans into searchable, readable text — then structuring it into a single open database. Free and
+            open-sourced and shared through an API, the collection becomes raw material to power AI tools, research and
+            visualisation. A caveat travels with the old volumes: treat their edibility guidance as history, not a foraging
+            manual.
           </p>
         </div>
+
+        {/* The collection — cover grid, lightbox */}
+        <section className="fs-section" data-rv>
+          <h2 style={sectionHeading}>The collection</h2>
+          <p className="fs-sub">
+            {FUNGI_BOOKS.length} titles across {LANGS} languages and three centuries — every one public domain, with the full
+            book a click away on the Internet Archive. A working seed of the database; it grows continuously. Tap a cover for the
+            summary, details and the download.
+          </p>
+          <FungiGallery items={BOOK_ITEMS} variant="covers" />
+        </section>
 
         {/* Plates — image-driven, lightbox */}
         <section className="fs-section" data-rv>
@@ -75,26 +91,15 @@ export default function FungiSourcePage() {
           <FungiGallery items={PLATE_ITEMS} variant="masonry" />
         </section>
 
-        {/* The collection — cover grid, lightbox */}
-        <section className="fs-section" data-rv>
-          <h2 style={sectionHeading}>The collection</h2>
-          <p className="fs-sub">
-            {FUNGI_BOOKS.length} titles across {LANGS} languages and three centuries — every one public domain, with the full
-            book a click away on the Internet Archive. A working seed of the database; it grows continuously. Tap a cover for the
-            details and the download.
-          </p>
-          <FungiGallery items={BOOK_ITEMS} variant="covers" />
-        </section>
-
         {/* Handoff + open database / API / AI */}
         <section className="fs-section" data-rv>
           <h2 style={sectionHeading}>One open database, handed to Source Library</h2>
           <p className="fs-sub">
-            Each title is catalogued — author, year, language, subject, provenance, rights and a link to the scan — and
-            translated where it&apos;s needed, into one centralised, open dataset. Published free and open-sourced, served through
-            an API, so anyone can build on it: research tools, cross-text insight, and AI-driven visualisations. The collection
-            is ported into sourcelibrary.org, where it&apos;s published, browsed and grown — this page is the record of the effort
-            behind it.
+            Each title is OCR&apos;d, translated where it&apos;s needed, and catalogued — author, year, language, subject,
+            provenance, rights and a link to the scan — into one centralised, open dataset. Published free and open-sourced and
+            shared through an API, so anyone can build on it: AI tools, research, cross-text insight and visualisation. The
+            collection is ported into sourcelibrary.org, where it&apos;s published, browsed and grown — this page is the record of
+            the effort behind it.
           </p>
           <Link href="/work/source-library" className="linku link-cta" style={{ marginTop: "clamp(22px,3vh,30px)", display: "inline-block" }}>
             View the Source Library project →
