@@ -303,7 +303,18 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
               ) : null}
 
               {p.devices ? (
-                <div className="ecs-plate" style={{ marginTop: "clamp(34px,5vh,60px)" }}>
+                <div
+                  className="ecs-plate"
+                  style={{
+                    marginTop: "clamp(34px,5vh,60px)",
+                    ...(p.devicesBg
+                      ? {
+                          background: `linear-gradient(rgba(18,14,10,0.40), rgba(18,14,10,0.40)), url(${p.devicesBg}) center / cover`,
+                          borderColor: "rgba(241,237,229,0.12)",
+                        }
+                      : {}),
+                  }}
+                >
                   <div className="ecs-cluster">
                     <div className="ecs-dev ecs-dev-phone">
                       <div className="ecs-phone-body">

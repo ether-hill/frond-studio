@@ -75,6 +75,8 @@ export type EditorialProject = {
   /** Content model block + the overlapping device cluster. Omit to skip. */
   contentModel?: EditorialSection;
   devices?: { phone: EditorialMedia; tablet: EditorialMedia; laptop: EditorialMedia };
+  /** Optional background image behind the device cluster (replaces the neutral plate). */
+  devicesBg?: string;
 
   /** Film & motion block + two circular looping clips. Omit to skip. */
   film?: EditorialSection & { clips: EditorialFilmClip[] };

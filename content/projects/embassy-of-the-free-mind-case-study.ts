@@ -73,7 +73,7 @@ const project: EditorialProject = {
   frontDoor: {
     eyebrow: "The front door",
     heading: "Entering the world of the Embassy",
-    body: "The homepage sets the tone. A calm, editorial way in that introduces the museum, shows what is on, and points visitors toward tickets, exhibitions and the library. It never feels like a database.",
+    body: "The first thing the site had to do was set a tone. Calm, editorial, and unmistakably the Embassy, so that arriving online feels like stepping into the house itself. It introduces who they are and what is on, and points people toward tickets, exhibitions and the library, without ever feeling like a database.",
   },
 
   band: {
@@ -92,8 +92,9 @@ const project: EditorialProject = {
     heading: "A space for knowledge, reading and visiting",
     body: "Exhibitions, news, editorial pieces, partners and FAQs all run on one system, editable in-house in both Dutch and English. Every template was built to make a complex institution easy to browse.",
   },
+  devicesBg: `${M}/devices-bg-rarebookroom.avif`,
   devices: {
-    phone: { type: "image", src: `${M}/mock-tickets.jpg`, alt: "Booking a museum visit on a phone.", ratio: "4:5", label: "Tickets" },
+    phone: { type: "image", src: `${M}/mobile-plan-visit.jpg`, alt: "The Plan Your Visit page on a phone.", ratio: "4:5", label: "Plan your visit" },
     tablet: { type: "image", src: `${M}/mock-tours.jpg`, alt: "Guided tours page on a tablet.", ratio: "3:4", label: "Tours" },
     laptop: { type: "image", src: `${M}/mock-catalogue.jpg`, alt: "The library catalogue on a laptop.", ratio: "16:9", label: "Collection search" },
   },
