@@ -76,6 +76,9 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
             >
               {p.title}
             </h3>
+            {p.summary && (
+              <p style={{ margin: "12px 0 0", fontSize: 14.5, lineHeight: 1.55, color: "var(--fg-dim)" }}>{p.summary}</p>
+            )}
             <span className="linku link-cta" style={{ marginTop: 20 }}>
               Open →
             </span>
