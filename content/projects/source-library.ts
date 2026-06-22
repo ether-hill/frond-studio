@@ -34,7 +34,7 @@ const project: EditorialProject = {
   introBody:
     "Much of humanity's foundational knowledge is still locked in undigitised, untranslated books. Source Library digitises them, reads them with OCR, translates them, and opens them to people and machines alike.",
   client: "Source Library",
-  services: ["Website", "Design", "Development", "Video", "Consulting"],
+  services: ["Consulting", "Strategy", "Design", "UX", "Dev", "AI"],
 
   statsLabel: "The library, in numbers",
   statsAsOf: "June 2026",
