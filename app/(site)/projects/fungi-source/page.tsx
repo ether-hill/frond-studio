@@ -3,15 +3,39 @@ import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
 import MoreProjects from "@/components/MoreProjects";
+import FungiGallery, { type GalleryItem } from "@/components/projects/fungi-source/FungiGallery";
 import { FUNGI_BOOKS, FUNGI_PLATES } from "@/content/fungi-source";
 
 export const metadata: Metadata = {
   title: "Fungi Source · Frond Studio",
   description:
-    "An open-ended search for the literature of fungi — gathering ancient, antiquarian and modern books, with a bias toward the public domain, catalogued through a custom interface and handed off to Source Library.",
+    "A far-and-wide search for the literature of fungi — gathered, translated and catalogued into one open, free, API-accessible database for AI-driven research, and handed off to Source Library.",
 };
 
-const PD = FUNGI_BOOKS.filter((b) => b.rights === "Public domain").length;
+const LANGS = new Set(FUNGI_BOOKS.map((b) => b.language)).size;
+
+const PLATE_ITEMS: GalleryItem[] = FUNGI_PLATES.map((p) => ({
+  image: p.src,
+  caption: p.caption,
+  href: p.link,
+  hrefLabel: "View on Wikimedia Commons →",
+}));
+
+const BOOK_ITEMS: GalleryItem[] = FUNGI_BOOKS.map((b) => ({
+  image: b.image,
+  title: b.title,
+  meta: `${b.author} · ${b.year}`,
+  caption: `${b.language} · ${b.note}`,
+  href: b.url,
+  hrefLabel: "Read the full book — Internet Archive →",
+}));
+
+const sectionHeading: React.CSSProperties = {
+  fontFamily: "var(--font-display), sans-serif",
+  fontSize: "var(--text-title)",
+  fontWeight: 500,
+  letterSpacing: "-0.018em",
+};
 
 export default function FungiSourcePage() {
   return (
@@ -19,78 +43,58 @@ export default function FungiSourcePage() {
       <section className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}>
         <PageHeader
           title="Fungi Source"
-          intro="An open-ended search for the literature of fungi — ancient herbals, golden-age plate books and modern field guides — with a bias toward the public domain. Each find is catalogued and handed off to Source Library, where the collection is published and grown."
+          intro="A far-and-wide search for the literature of fungi — ancient herbals, golden-age plate books and modern field guides, public-domain first. Gathered, translated and catalogued into one open database: free to all, reachable via an API for AI-driven research, insight and visualisation — and handed off to Source Library."
         />
 
-        {/* Context — the effort & scope */}
+        {/* The hunt & the open angle */}
         <div
           data-rv
-          style={{ marginTop: "clamp(40px,6vh,80px)", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,300px),1fr))", gap: "clamp(28px,4vw,64px)", maxWidth: "var(--maxw)" }}
+          style={{ marginTop: "clamp(40px,6vh,80px)", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,300px),1fr))", gap: "clamp(28px,4vw,64px)" }}
         >
           <p style={{ fontSize: "var(--text-body)", lineHeight: 1.75, color: "var(--fg-dim)" }}>
-            Fungi Source begins as a hunt. We comb the Biodiversity Heritage Library, Internet Archive and Project Gutenberg —
-            and antiquarian catalogues beyond them — for anything written about, or useful to the study of, fungi. Every
-            promising lead is read, sourced, and assessed for its rights status before it earns a place in the index.
+            Fungi Source begins as a hunt. We comb the Biodiversity Heritage Library, the Internet Archive and Project Gutenberg —
+            and antiquarian catalogues beyond them — for anything written about, or useful to the study of, fungi. Every lead is
+            read, sourced, and its rights status established before it earns a place.
           </p>
           <p style={{ fontSize: "var(--text-body)", lineHeight: 1.75, color: "var(--fg-dim)" }}>
-            The net is cast wide: seventeenth-century treatises sit beside Victorian plate books and contemporary monographs. We
-            prioritise the public domain — works whose copyright has lapsed and can be freely shared — but don&apos;t stop there.
-            A standing caveat travels with the old volumes: treat their edibility and toxicity guidance as history, not a
-            foraging manual.
+            Much of the canon is locked in Latin, French, German, Italian and Swedish. Part of the work is translation — making
+            centuries of mycological knowledge readable — then structuring it into a single open database. Free and
+            open-sourced to the public and reachable through an API, the collection becomes raw material for AI-driven research,
+            cross-text insight and visualisation. A caveat travels with the old volumes: treat their edibility guidance as
+            history, not a foraging manual.
           </p>
         </div>
 
-        {/* Plates — image-driven section */}
+        {/* Plates — image-driven, lightbox */}
         <section className="fs-section" data-rv>
-          <h2 className="fs-h2">Plates</h2>
+          <h2 style={sectionHeading}>Plates</h2>
           <p className="fs-sub">
             A wall of the finest public-domain illustrations in the collection — hand-coloured engravings and lithographs from
-            Schäffer, Sowerby, Hussey, Krombholz, Bulliard, Barla and Cooke. Each links to its source on Wikimedia Commons.
+            Schäffer, Sowerby, Hussey, Krombholz, Bulliard, Barla and Cooke. Tap any plate to enlarge.
           </p>
-          <div className="fs-plates" data-stag>
-            {FUNGI_PLATES.map((pl) => (
-              <a key={pl.src} className="fs-plate" href={pl.link} target="_blank" rel="noopener noreferrer" data-rvs>
-                <img src={pl.src} alt={pl.caption} loading="lazy" decoding="async" />
-                <figcaption>{pl.caption}</figcaption>
-              </a>
-            ))}
-          </div>
+          <FungiGallery items={PLATE_ITEMS} variant="masonry" />
         </section>
 
-        {/* The collection — bibliography */}
+        {/* The collection — cover grid, lightbox */}
         <section className="fs-section" data-rv>
-          <h2 className="fs-h2">The collection</h2>
+          <h2 style={sectionHeading}>The collection</h2>
           <p className="fs-sub">
-            {FUNGI_BOOKS.length} titles so far — {PD} of them public domain and freely readable right now. A working seed of the
-            bibliography; it grows continuously. Each entry links straight to a scan or reader.
+            {FUNGI_BOOKS.length} titles across {LANGS} languages and three centuries — every one public domain, with the full
+            book a click away on the Internet Archive. A working seed of the database; it grows continuously. Tap a cover for the
+            details and the download.
           </p>
-          <ul className="fs-books" data-stag>
-            {FUNGI_BOOKS.map((b) => (
-              <li key={b.url} className="fs-book" data-rvs>
-                <a href={b.url} target="_blank" rel="noopener noreferrer">
-                  <span className="fs-book-year">{b.year}</span>
-                  <span>
-                    <span className="fs-book-title">{b.title}</span>
-                    <span className="fs-book-by">
-                      {b.author} — {b.note}
-                    </span>
-                  </span>
-                  <span className="fs-book-src">
-                    {b.rights === "Public domain" ? "PD" : "©"} · {b.source} →
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          <FungiGallery items={BOOK_ITEMS} variant="covers" />
         </section>
 
-        {/* Handoff */}
+        {/* Handoff + open database / API / AI */}
         <section className="fs-section" data-rv>
-          <h2 className="fs-h2">Handoff to Source Library</h2>
+          <h2 style={sectionHeading}>One open database, handed to Source Library</h2>
           <p className="fs-sub">
-            Fungi Source is research in service of Source Library. Once catalogued — title, author, year, language, subject,
-            provenance, rights status and a link to the scan — the collection is ported into sourcelibrary.org, where it&apos;s
-            published, browsed and grown. This page is the record of the effort behind it.
+            Each title is catalogued — author, year, language, subject, provenance, rights and a link to the scan — and
+            translated where it&apos;s needed, into one centralised, open dataset. Published free and open-sourced, served through
+            an API, so anyone can build on it: research tools, cross-text insight, and AI-driven visualisations. The collection
+            is ported into sourcelibrary.org, where it&apos;s published, browsed and grown — this page is the record of the effort
+            behind it.
           </p>
           <Link href="/work/source-library" className="linku link-cta" style={{ marginTop: "clamp(22px,3vh,30px)", display: "inline-block" }}>
             View the Source Library project →

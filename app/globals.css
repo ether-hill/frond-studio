@@ -1940,27 +1940,39 @@ button {
 .fs-h2 { font-family: var(--font-display), sans-serif; font-size: var(--text-title); font-weight: 500; letter-spacing: -0.018em; }
 .fs-sub { margin: clamp(16px, 2.4vh, 28px) 0 0; max-width: 64ch; font-size: var(--text-body); line-height: 1.7; color: var(--fg-dim); }
 
-/* plate gallery — a masonry wall of public-domain illustrations */
+/* plate gallery — a masonry wall of public-domain illustrations (opens a lightbox) */
 .fs-plates { margin-top: clamp(28px, 4vh, 52px); column-count: 4; column-gap: clamp(12px, 1.4vw, 22px); }
-.fs-plate { display: inline-block; width: 100%; margin: 0 0 clamp(12px, 1.4vw, 22px); break-inside: avoid; text-decoration: none; color: inherit; }
+.fs-plate { display: inline-block; width: 100%; margin: 0 0 clamp(12px, 1.4vw, 22px); break-inside: avoid; padding: 0; border: 0; background: none; text-align: left; cursor: zoom-in; color: inherit; font: inherit; }
 .fs-plate img { width: 100%; display: block; border-radius: 6px; border: 1px solid var(--line); background: var(--bg-2); transition: filter 0.4s ease; }
-.fs-plate:hover img { filter: brightness(1.07); }
-.fs-plate figcaption { margin-top: 9px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; line-height: 1.5; color: var(--fg-faint); }
-.fs-plate:hover figcaption { color: var(--fg-dim); }
+.fs-plate:hover img { filter: brightness(1.08); }
+.fs-plate-cap { display: block; margin-top: 9px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; line-height: 1.5; color: var(--fg-faint); }
+.fs-plate:hover .fs-plate-cap { color: var(--fg-dim); }
 @media (max-width: 1100px) { .fs-plates { column-count: 3; } }
 @media (max-width: 720px) { .fs-plates { column-count: 2; } }
 @media (max-width: 440px) { .fs-plates { column-count: 1; } }
 
-/* the collection — bibliography list */
-.fs-books { list-style: none; margin: clamp(28px, 4vh, 52px) 0 0; padding: 0; border-top: 1px solid var(--line-2); }
-.fs-book a { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; align-items: baseline; gap: clamp(14px, 2vw, 32px); padding: clamp(16px, 2vh, 22px) 0; border-bottom: 1px solid var(--line-2); text-decoration: none; color: inherit; transition: background-color 0.25s ease; }
-.fs-book a:hover { background: rgba(var(--algo-lw), 0.025); }
-.fs-book-year { font-family: var(--font-mono); font-size: 12px; color: var(--fg-faint); font-variant-numeric: tabular-nums; }
-.fs-book-title { font-family: var(--font-display), sans-serif; font-size: var(--text-body); font-weight: 500; color: var(--fg); }
-.fs-book-by { display: block; margin-top: 4px; max-width: 72ch; font-size: 13.5px; line-height: 1.5; color: var(--fg-dim); }
-.fs-book-src { display: inline-flex; align-items: baseline; gap: 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-faint); white-space: nowrap; text-align: right; }
-.fs-book a:hover .fs-book-src { color: var(--accent); }
-@media (max-width: 680px) {
-  .fs-book a { grid-template-columns: 1fr; gap: 5px; }
-  .fs-book-src { text-align: left; margin-top: 6px; }
-}
+/* the collection — a grid of book covers (opens a lightbox) */
+.fs-covers { margin-top: clamp(28px, 4vh, 52px); display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: clamp(16px, 2vw, 30px); }
+.fs-cover { display: flex; flex-direction: column; padding: 0; border: 0; background: none; text-align: left; cursor: zoom-in; color: inherit; font: inherit; }
+.fs-cover-shot { display: block; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 6px; border: 1px solid var(--line); background: var(--bg-2); }
+.fs-cover-shot img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease; }
+.fs-cover:hover .fs-cover-shot img { transform: scale(1.04); filter: brightness(1.06); }
+.fs-cover-title { margin-top: 12px; font-family: var(--font-display), sans-serif; font-size: 14px; font-weight: 500; line-height: 1.25; color: var(--fg); }
+.fs-cover-meta { margin-top: 4px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em; color: var(--fg-faint); }
+
+/* lightbox */
+.fs-lb { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: clamp(20px, 5vw, 72px); background: rgba(4, 4, 6, 0.92); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: fs-fade 0.25s ease; }
+@keyframes fs-fade { from { opacity: 0; } to { opacity: 1; } }
+.fs-lb-fig { margin: 0; max-width: min(1100px, 92vw); display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.fs-lb-fig img { max-width: 100%; max-height: 76vh; object-fit: contain; border-radius: 6px; border: 1px solid var(--line); background: var(--bg-2); box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6); }
+.fs-lb-fig figcaption { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; max-width: 70ch; }
+.fs-lb-fig figcaption strong { font-family: var(--font-display), sans-serif; font-size: var(--text-subtitle); font-weight: 500; color: var(--fg); }
+.fs-lb-fig figcaption span { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; color: var(--fg-dim); }
+.fs-lb-fig figcaption a { margin-top: 6px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.fs-lb-x, .fs-lb-arrow { position: fixed; z-index: 1; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 999px; background: rgba(10, 10, 12, 0.6); color: var(--fg); cursor: pointer; transition: background-color 0.25s ease, border-color 0.25s ease; }
+.fs-lb-x { top: clamp(16px, 3vw, 28px); right: clamp(16px, 3vw, 28px); width: 44px; height: 44px; font-size: 14px; }
+.fs-lb-arrow { top: 50%; transform: translateY(-50%); width: 52px; height: 52px; font-size: 30px; line-height: 1; }
+.fs-lb-arrow.prev { left: clamp(12px, 2vw, 28px); }
+.fs-lb-arrow.next { right: clamp(12px, 2vw, 28px); }
+.fs-lb-x:hover, .fs-lb-arrow:hover { background: var(--fg); color: var(--bg-0); border-color: var(--fg); }
+@media (max-width: 600px) { .fs-lb-arrow { width: 42px; height: 42px; font-size: 24px; } }
