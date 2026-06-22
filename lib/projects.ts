@@ -60,6 +60,7 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     year: "2026",
     tags: ["Generative", "WebGL", "TypeScript"],
     href: "/projects/algorithm-lab",
+    image: "/cards/algorithm-lab.jpg",
   },
   {
     slug: "symcyto",

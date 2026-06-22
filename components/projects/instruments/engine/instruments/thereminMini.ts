@@ -442,8 +442,15 @@ export function mountMini(root: HTMLElement): () => void {
   }
   const onDown = async (e: PointerEvent) => {
     if (activePointer !== null) return;
+    // Unlock audio SYNCHRONOUSLY, first thing in the gesture. On mobile (iOS) a
+    // resume() buried behind awaits loses the user-gesture context, so the first
+    // pad touch was silent until the power button (a direct gesture) resumed it.
+    if (!ctx) ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    if (ctx.state !== "running") ctx.resume().catch(() => {});
     touchLabel.style.opacity = "0"; // they touched — drop the invitation
-    activePointer = e.pointerId; field.setPointerCapture(e.pointerId); e.preventDefault();
+    activePointer = e.pointerId;
+    try { field.setPointerCapture(e.pointerId); } catch { /* capture unsupported */ }
+    e.preventDefault();
     await begin(e.clientX, e.clientY);
   };
   const onMove = (e: PointerEvent) => { if (e.pointerId === activePointer) update(e.clientX, e.clientY); };
