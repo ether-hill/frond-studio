@@ -13,7 +13,7 @@ const project: EditorialProject = {
   title: "Embassy of the Free Mind",
   category: "Museum & library website",
   oneLiner:
-    "A new home for one of Europe's oldest collections of hermetic and freethinking texts. Built to welcome visitors, sell tickets, and open up a rare library.",
+    "A new home for the largest collection of hermetic and freethinking texts in the world. Built to welcome visitors, sell tickets, open a rare library, and support the mission.",
   liveUrl: "https://embassyofthefreemind.com",
   liveLabel: "embassyofthefreemind.com",
 
@@ -34,19 +34,19 @@ const project: EditorialProject = {
     "Frond rebuilt the museum's site as a modern web app. The content structure matches how the museum actually publishes: exhibitions, news, the Codex Hermeticus newsletter, partners and FAQs. The result honours the material and runs the daily work of the place.",
   client: "Embassy of the Free Mind",
   services: [
-    "Brand & Art Direction",
+    "Art Direction",
     "UX / UI Design",
     "Web Development",
     "Bilingual CMS",
     "Accessibility (WCAG AA)",
   ],
 
-  statsLabel: "The build, at a glance",
+  statsLabel: "What changed",
   stats: [
-    { value: "50", label: "Pages", note: "Custom pages designed across the project." },
-    { value: "20", label: "Integrations", note: "Commerce, search and catalogue systems wired together." },
-    { value: "2", label: "Languages", note: "Fully bilingual. Dutch and English, end to end." },
-    { value: "16", label: "Video assets", note: "Background and editorial films, lazy-loaded with play and pause handling." },
+    { value: "2,000 years", label: "Of ideas, one home", note: "Two millennia of hermetic and freethinking texts, finally welcoming and easy to explore." },
+    { value: "One site", label: "Visit · read · belong", note: "Tickets, the library catalogue and membership, united where they were once scattered across systems." },
+    { value: "EN + NL", label: "Fully bilingual", note: "Complete parity in Dutch and English, end to end, so the collection reaches further." },
+    { value: "WCAG AA", label: "Open to everyone", note: "Accessibility built into the foundations, with a CMS the museum runs in-house." },
   ],
 
   integrations: [
