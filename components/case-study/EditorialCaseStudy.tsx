@@ -206,51 +206,45 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             </section>
           ) : null}
 
-          {/* ── Client testimonial (longer-form, calm) ──────── */}
-          {p.testimonial ? (
+          {/* ── Client testimonial + phone film, side by side ── */}
+          {p.testimonial || p.phoneFilm ? (
             <section data-rvs>
-              <Eyebrow>In their words</Eyebrow>
-              <blockquote style={{ margin: "clamp(20px,3vh,32px) 0 0", maxWidth: "62ch" }}>
-                <p style={{ fontFamily: DISPLAY, fontWeight: 400, fontSize: "clamp(21px,2.4vw,33px)", lineHeight: 1.36, letterSpacing: "-0.012em", color: "var(--fg)" }}>
-                  &ldquo;{p.testimonial.body}&rdquo;
-                </p>
-                <footer style={{ marginTop: "clamp(24px,3.2vh,40px)" }}>
-                  <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg)" }}>{p.testimonial.author}</div>
-                  {p.testimonial.role ? (
-                    <div style={{ marginTop: 6, fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{p.testimonial.role}</div>
-                  ) : null}
-                </footer>
-              </blockquote>
-            </section>
-          ) : null}
-
-          {/* ── Phone film: a screen-recording in an iPhone mockup ── */}
-          {p.phoneFilm ? (
-            <section data-rvs>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(32px,6vw,80px)", alignItems: "center", justifyContent: "center" }}>
-                <div style={{ flex: "1 1 320px", maxWidth: 460 }}>
-                  {p.phoneFilm.eyebrow ? <Eyebrow>{p.phoneFilm.eyebrow}</Eyebrow> : null}
-                  {p.phoneFilm.heading ? <Heading style={{ marginTop: 18, maxWidth: "15ch" }}>{p.phoneFilm.heading}</Heading> : null}
-                  {p.phoneFilm.body ? <p style={{ ...bodyStyle, marginTop: "clamp(18px,2.4vh,28px)" }}>{p.phoneFilm.body}</p> : null}
-                </div>
-                <div style={{ flex: "0 0 auto" }}>
-                  <div
-                    style={{
-                      position: "relative",
-                      width: "clamp(238px, 70vw, 296px)",
-                      aspectRatio: "393 / 852",
-                      background: "linear-gradient(145deg,#1c1c20,#08080a)",
-                      borderRadius: "13.5% / 6.2%",
-                      padding: "2.7%",
-                      boxShadow: "0 34px 80px rgba(0,0,0,0.55), inset 0 0 0 1.5px rgba(255,255,255,0.08)",
-                    }}
-                  >
-                    <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: "11.4% / 5.2%", overflow: "hidden", background: "#000" }}>
-                      <span aria-hidden style={{ position: "absolute", top: "1.7%", left: "50%", transform: "translateX(-50%)", width: "30%", height: "22px", background: "#000", borderRadius: 14, zIndex: 3 }} />
-                      <AutoVideo src={p.phoneFilm.src} poster={p.phoneFilm.poster} objectFit="cover" />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(36px,6vw,88px)", alignItems: "center", justifyContent: "center" }}>
+                {p.testimonial ? (
+                  <div style={{ flex: "1 1 360px", maxWidth: 600 }}>
+                    <Eyebrow>In their words</Eyebrow>
+                    <blockquote style={{ margin: "clamp(18px,2.6vh,28px) 0 0" }}>
+                      <p style={{ fontFamily: DISPLAY, fontWeight: 400, fontSize: "clamp(20px,2.1vw,30px)", lineHeight: 1.38, letterSpacing: "-0.012em", color: "var(--fg)" }}>
+                        &ldquo;{p.testimonial.body}&rdquo;
+                      </p>
+                      <footer style={{ marginTop: "clamp(22px,3vh,36px)" }}>
+                        <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg)" }}>{p.testimonial.author}</div>
+                        {p.testimonial.role ? (
+                          <div style={{ marginTop: 6, fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{p.testimonial.role}</div>
+                        ) : null}
+                      </footer>
+                    </blockquote>
+                  </div>
+                ) : null}
+                {p.phoneFilm ? (
+                  <div style={{ flex: "0 0 auto" }}>
+                    <div
+                      style={{
+                        width: "clamp(228px, 62vw, 282px)",
+                        background: "linear-gradient(145deg,#1c1c20,#08080a)",
+                        borderRadius: "14% / 6.4%",
+                        padding: "2.7%",
+                        boxShadow: "0 34px 80px rgba(0,0,0,0.55), inset 0 0 0 1.5px rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      {/* aspect-ratio lives on THIS box so the absolutely-positioned video has a real height to fill */}
+                      <div style={{ position: "relative", aspectRatio: "393 / 852", borderRadius: "11.6% / 5.4%", overflow: "hidden", background: "#000" }}>
+                        <span aria-hidden style={{ position: "absolute", top: "1.7%", left: "50%", transform: "translateX(-50%)", width: "30%", height: "8.4%", maxHeight: 26, background: "#000", borderRadius: 16, zIndex: 3 }} />
+                        <AutoVideo src={p.phoneFilm.src} poster={p.phoneFilm.poster} objectFit="cover" />
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : null}
               </div>
             </section>
           ) : null}

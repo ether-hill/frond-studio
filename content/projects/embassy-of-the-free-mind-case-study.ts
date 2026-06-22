@@ -139,11 +139,9 @@ const project: EditorialProject = {
     role: "Program & Digital Strategy",
   },
 
-  // iPhone mockup with a real screen-recording of the events → ticketing flow.
+  // iPhone mockup (shown beside the testimonial) with a real screen-recording
+  // of the events → ticketing flow.
   phoneFilm: {
-    eyebrow: "On the phone",
-    heading: "From browsing to booked",
-    body: "Visitors find an event, open it, and buy a ticket without leaving the site. Here: the agenda, the Forum for Process, and checkout for the first available date, in a handful of taps.",
     src: `${M}/videos/iphone-tickets.mp4`,
     poster: `${M}/videos/iphone-tickets.jpg`,
     alt: "Screen recording of browsing the Embassy events on a phone and buying a ticket for the Forum for Process.",
