@@ -74,7 +74,10 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
     <div className="ecs-quote-inner">
       <blockquote style={{ margin: 0 }}>
         <p style={{ fontFamily: DISPLAY, fontSize: "clamp(26px,3.6vw,52px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.018em", color: "var(--fg)" }}>&ldquo;{p.quote.body}&rdquo;</p>
-        <footer style={{ marginTop: "clamp(30px,4vh,48px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-dim)" }}>{p.quote.author}</footer>
+        <footer style={{ marginTop: "clamp(30px,4vh,48px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-dim)" }}>
+          {p.quote.author}
+          {p.quote.role ? <span style={{ display: "block", marginTop: 6, color: "var(--fg-faint)" }}>{p.quote.role}</span> : null}
+        </footer>
       </blockquote>
     </div>
   ) : null;
@@ -203,6 +206,57 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             </section>
           ) : null}
 
+          {/* ── Client testimonial + phone film, side by side ── */}
+          {p.testimonial || p.phoneFilm ? (
+            <section data-rvs>
+              {/* Reuse the intro grid (1.35fr / 0.65fr) so the quote is the same
+                  ~2/3 width as the intro lead; the phone sits in the narrow column. */}
+              <div className="ecs-intro" style={{ alignItems: "stretch" }}>
+                {p.testimonial ? (
+                  <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                    <Eyebrow>In their words</Eyebrow>
+                    <blockquote style={{ margin: "clamp(18px,2.6vh,28px) 0 0" }}>
+                      <p style={{ fontFamily: DISPLAY, fontWeight: 400, fontSize: "clamp(21px,2.3vw,32px)", lineHeight: 1.4, letterSpacing: "-0.012em", color: "var(--fg)" }}>
+                        &ldquo;{p.testimonial.body}&rdquo;
+                      </p>
+                      <footer style={{ marginTop: "clamp(22px,3vh,36px)" }}>
+                        <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg)" }}>{p.testimonial.author}</div>
+                        {p.testimonial.role ? (
+                          <div style={{ marginTop: 6, fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{p.testimonial.role}</div>
+                        ) : null}
+                      </footer>
+                    </blockquote>
+                  </div>
+                ) : null}
+                {p.phoneFilm ? (
+                  // The grid stretches both columns to the quote's height; the phone is
+                  // sized off that height (aspect-ratio derives its width), so it's as
+                  // tall as the quote on desktop.
+                  <div style={{ position: "relative", minHeight: 470 }}>
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div
+                        style={{
+                          height: "100%",
+                          maxWidth: "100%",
+                          aspectRatio: "393 / 852",
+                          boxSizing: "border-box",
+                          background: "linear-gradient(145deg,#1c1c20,#08080a)",
+                          borderRadius: "12% / 5.4%",
+                          padding: "1.7%",
+                          boxShadow: "0 34px 80px rgba(0,0,0,0.55), inset 0 0 0 1.5px rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: "10.4% / 4.8%", overflow: "hidden", background: "#000" }}>
+                          <AutoVideo src={p.phoneFilm.src} poster={p.phoneFilm.poster} objectFit="cover" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
+
           {/* ── Front door ────────────────────────────────── */}
           {p.frontDoor ? (
             <section data-rvs>
@@ -249,7 +303,18 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
               ) : null}
 
               {p.devices ? (
-                <div className="ecs-plate" style={{ marginTop: "clamp(34px,5vh,60px)" }}>
+                <div
+                  className="ecs-plate"
+                  style={{
+                    marginTop: "clamp(34px,5vh,60px)",
+                    ...(p.devicesBg
+                      ? {
+                          background: `linear-gradient(rgba(18,14,10,0.40), rgba(18,14,10,0.40)), url(${p.devicesBg}) center / cover`,
+                          borderColor: "rgba(241,237,229,0.12)",
+                        }
+                      : {}),
+                  }}
+                >
                   <div className="ecs-cluster">
                     <div className="ecs-dev ecs-dev-phone">
                       <div className="ecs-phone-body">

@@ -1838,13 +1838,15 @@ button {
 }
 
 /* ── Editorial case study (EditorialCaseStudy.tsx) ─────────────────────── */
-.ecs-frame { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--bg-2); box-shadow: 0 50px 130px rgba(0, 0, 0, 0.55); }
+/* Browser-frame chrome is pinned to a charcoal (a touch lighter than near-black)
+   in BOTH themes, so it always reads as a dark browser around the client site. */
+.ecs-frame { border: 1px solid rgba(241, 237, 229, 0.14); border-radius: 14px; overflow: hidden; background: #201e24; box-shadow: 0 50px 130px rgba(0, 0, 0, 0.55); }
 .ecs-frame-flat { box-shadow: none; }
 /* Showcase: a full-width rounded media well (feature video + text section). */
 .ecs-showcase-well { position: relative; width: 100%; border-radius: 14px; overflow: hidden; background: var(--media); border: 1px solid var(--line-2); }
-.ecs-frame-bar { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid var(--line-2); background: color-mix(in srgb, var(--bg-2) 70%, var(--bg-0)); }
-.ecs-frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); display: block; }
-.ecs-url { margin-left: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-faint); background: var(--bg-0); border: 1px solid var(--line-2); border-radius: 7px; padding: 5px 13px; flex: 1 1 auto; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecs-frame-bar { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid rgba(241, 237, 229, 0.08); background: #29262e; }
+.ecs-frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: rgba(241, 237, 229, 0.22); display: block; }
+.ecs-url { margin-left: 10px; font-family: var(--font-mono); font-size: 11px; color: #b6b0a6; background: #19171c; border: 1px solid rgba(241, 237, 229, 0.10); border-radius: 7px; padding: 5px 13px; flex: 1 1 auto; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ecs-frame-screen { position: relative; background: var(--media); }
 
 /* Hero: floating frosted browser card over a full-bleed atmospheric image. */
