@@ -3,6 +3,8 @@ import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
 import MoreProjects from "@/components/MoreProjects";
+import MyceliumBg from "@/components/MyceliumBg";
+import MyceliumTimer from "@/components/projects/fungi-source/MyceliumTimer";
 import FungiGallery, { type GalleryItem } from "@/components/projects/fungi-source/FungiGallery";
 import { FUNGI_BOOKS, FUNGI_PLATES } from "@/content/fungi-source";
 
@@ -45,12 +47,35 @@ const sectionHeading: React.CSSProperties = {
 export default function FungiSourcePage() {
   return (
     <RevealRoot>
-      <section className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}>
-        <PageHeader
-          title="Fungi Source"
-          intro="A far-and-wide search for the literature of fungi — early mycological treatises, golden-age plate books and modern field guides, public-domain first. Gathered, OCR'd, translated and catalogued into one open database: free to all and shared via an API to power AI tools, research and visualisation — and handed off to Source Library."
+      {/* Hero — a living mycelium network grows behind the title */}
+      <section
+        data-theme="dark"
+        style={{ position: "relative", overflow: "hidden", minHeight: "clamp(460px,66vh,820px)", display: "flex", alignItems: "flex-end", background: "var(--bg-0)" }}
+      >
+        <div style={{ position: "absolute", inset: 0, zIndex: 0, opacity: 0.9 }}>
+          <MyceliumBg />
+        </div>
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 1,
+            pointerEvents: "none",
+            background:
+              "linear-gradient(100deg, var(--bg-0) 0%, color-mix(in srgb, var(--bg-0) 66%, transparent) 46%, color-mix(in srgb, var(--bg-0) 18%, transparent) 74%, transparent 100%), linear-gradient(to top, var(--bg-0) 1%, transparent 38%)",
+          }}
         />
+        <MyceliumTimer autoMs={15000} />
+        <div style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter) clamp(48px,8vh,104px)" }}>
+          <PageHeader
+            title="Fungi Source"
+            intro="A far-and-wide search for the literature of fungi — early mycological treatises, golden-age plate books and modern field guides, public-domain first. Gathered, OCR'd, translated and catalogued into one open database: free to all and shared via an API to power AI tools, research and visualisation — and handed off to Source Library."
+          />
+        </div>
+      </section>
 
+      <section className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "clamp(48px,8vh,96px) var(--gutter) var(--pad-bottom)" }}>
         {/* The hunt & the open angle */}
         <div
           data-rv
@@ -86,9 +111,9 @@ export default function FungiSourcePage() {
           <h2 style={sectionHeading}>Plates</h2>
           <p className="fs-sub">
             A wall of the finest public-domain illustrations in the collection — hand-coloured engravings and lithographs from
-            Schäffer, Sowerby, Hussey, Krombholz, Bulliard, Barla and Cooke. Tap any plate to enlarge.
+            Schäffer, Sowerby, Hussey, Krombholz, Bulliard, Boudier, Cooke and more. Tap any plate to enlarge.
           </p>
-          <FungiGallery items={PLATE_ITEMS} variant="masonry" />
+          <FungiGallery items={PLATE_ITEMS} variant="masonry" initialCount={12} step={12} maxCount={48} moreLabel="Load more plates" />
         </section>
 
         {/* Handoff + open database / API / AI */}
