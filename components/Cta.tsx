@@ -5,8 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import CtaCanvas from "./CtaCanvas";
 import RandomiseButton from "./RandomiseButton";
 import { BLURBS } from "@/lib/blurbs";
-import { loadVotes, recordVote, pickWeighted, keyFor, type VoteMap } from "@/lib/blurbVotes";
-import { fetchBlurbVotes, submitBlurbVote } from "@/app/blurb-vote-actions";
+import { pickWeighted, type VoteMap } from "@/lib/blurbVotes";
 
 const RESEED_EVENT = "cta-mycelium-reseed";
 const CYCLE_MS = 11000;
@@ -23,31 +22,18 @@ export default function Cta() {
   const [idx, setIdx] = useState(0);
   const [vis, setVis] = useState(true);
   const [cycle, setCycle] = useState(0); // re-keys the countdown ring so it restarts each round
-  const [flash, setFlash] = useState<"up" | "down" | null>(null); // brief vote confirmation
   const idxRef = useRef(0);
   const votesRef = useRef<VoteMap>({});
-  const reduceRef = useRef(false);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const reduce =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    reduceRef.current = reduce;
 
-    // Weight on the local fallback first (instant), then swap to the live global
-    // aggregate once it arrives — the studio-wide store is the source of truth.
-    votesRef.current = loadVotes();
     const start = pickWeighted(BLURBS, votesRef.current);
     idxRef.current = start;
     setIdx(start);
-
-    let cancelled = false;
-    fetchBlurbVotes()
-      .then((server) => {
-        if (!cancelled && server && Object.keys(server).length) votesRef.current = server;
-      })
-      .catch(() => {});
 
     if (reduce) return; // hold a single line + a static field
 
@@ -99,35 +85,12 @@ export default function Cta() {
     }
 
     return () => {
-      cancelled = true;
       clearTimeout(fadeT);
       clearTimeout(nextT);
       io?.disconnect();
       window.removeEventListener(RESEED_EVENT, onReseed);
     };
   }, []);
-
-  // Thumbs feedback on the line currently on screen — writes to the global
-  // store (and a local fallback), nudges the in-memory weight so the change is
-  // felt immediately, then moves on to the next statement.
-  const onVote = (dir: "up" | "down") => {
-    const text = BLURBS[idxRef.current];
-    recordVote(text, dir); // per-browser fallback when the store is offline
-    const k = keyFor(text);
-    const cur = votesRef.current[k] || { up: 0, down: 0 };
-    votesRef.current = { ...votesRef.current, [k]: { ...cur, [dir]: cur[dir] + 1 } };
-    submitBlurbVote(k, dir).catch(() => {}); // fire-and-forget to the aggregate
-    setFlash(dir);
-    window.setTimeout(() => setFlash(null), 520);
-    if (reduceRef.current) {
-      // No auto-cycle in reduced motion — advance the line directly.
-      const n = pickWeighted(BLURBS, votesRef.current, idxRef.current);
-      idxRef.current = n;
-      setIdx(n);
-    } else {
-      window.setTimeout(() => window.dispatchEvent(new CustomEvent(RESEED_EVENT)), 360);
-    }
-  };
 
   return (
     <section ref={sectionRef} data-theme="dark" style={{ position: "relative", overflow: "hidden", borderTop: "1px solid var(--line)", background: "var(--bg-0)", color: "var(--fg)", minHeight: "100svh", display: "flex", flexDirection: "column", justifyContent: "center" }}>
@@ -146,37 +109,6 @@ export default function Cta() {
             "radial-gradient(60% 70% at 50% 50%, color-mix(in srgb, var(--bg-0) 78%, transparent) 0%, color-mix(in srgb, var(--bg-0) 38%, transparent) 55%, transparent 100%)",
         }}
       />
-      {/* Teach the rotation: thumbs sit just left of RANDOMISE and vote on the
-          statement on screen. Down-voted lines gradually surface less. */}
-      <div className="cta-votes" role="group" aria-label="Rate this statement">
-        <button
-          type="button"
-          className={`ui-btn ui-btn-icon${flash === "down" ? " voted" : ""}`}
-          onClick={() => onVote("down")}
-          aria-label="This statement isn't working"
-          title="Show this one less"
-        >
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <g transform="rotate(180 12 12)">
-              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-              <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-            </g>
-          </svg>
-        </button>
-        <button
-          type="button"
-          className={`ui-btn ui-btn-icon${flash === "up" ? " voted" : ""}`}
-          onClick={() => onVote("up")}
-          aria-label="This statement is working"
-          title="Show this one more"
-        >
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-            <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
-
       <RandomiseButton event={RESEED_EVENT} title="Randomise the field + statement" />
       <div
         className="hero-glow"
