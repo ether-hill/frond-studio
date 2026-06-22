@@ -262,6 +262,18 @@ button {
   background: var(--nav);
   border-bottom-color: var(--line);
 }
+/* A very light scrim at the very top of the page (data-nav="top"): darkest at the
+   very top, fading to nothing below, so the transparent nav's text stays legible
+   over the hero. Dark theme only — the light theme keeps its solid bar. */
+[data-theme="dark"] .nav-bar[data-nav="top"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 150px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.22), transparent);
+  pointer-events: none;
+  z-index: -1;
+}
 .seg button[data-on="true"] {
   background: var(--fg);
   color: var(--bg-0);
