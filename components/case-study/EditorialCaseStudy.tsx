@@ -209,12 +209,12 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
           {/* ── Client testimonial + phone film, side by side ── */}
           {p.testimonial || p.phoneFilm ? (
             <section data-rvs>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(36px,6vw,88px)", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(32px,5vw,72px)", alignItems: "stretch", justifyContent: "space-between" }}>
                 {p.testimonial ? (
-                  <div style={{ flex: "1 1 360px", maxWidth: 600 }}>
+                  <div style={{ flex: "1 1 440px", minWidth: 0, display: "flex", flexDirection: "column", justifyContent: "center" }}>
                     <Eyebrow>In their words</Eyebrow>
                     <blockquote style={{ margin: "clamp(18px,2.6vh,28px) 0 0" }}>
-                      <p style={{ fontFamily: DISPLAY, fontWeight: 400, fontSize: "clamp(20px,2.1vw,30px)", lineHeight: 1.38, letterSpacing: "-0.012em", color: "var(--fg)" }}>
+                      <p style={{ fontFamily: DISPLAY, fontWeight: 400, fontSize: "clamp(21px,2.3vw,32px)", lineHeight: 1.4, letterSpacing: "-0.012em", color: "var(--fg)" }}>
                         &ldquo;{p.testimonial.body}&rdquo;
                       </p>
                       <footer style={{ marginTop: "clamp(22px,3vh,36px)" }}>
@@ -227,20 +227,26 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
                   </div>
                 ) : null}
                 {p.phoneFilm ? (
-                  <div style={{ flex: "0 0 auto" }}>
-                    <div
-                      style={{
-                        width: "clamp(228px, 62vw, 282px)",
-                        background: "linear-gradient(145deg,#1c1c20,#08080a)",
-                        borderRadius: "14% / 6.4%",
-                        padding: "2.7%",
-                        boxShadow: "0 34px 80px rgba(0,0,0,0.55), inset 0 0 0 1.5px rgba(255,255,255,0.08)",
-                      }}
-                    >
-                      {/* aspect-ratio lives on THIS box so the absolutely-positioned video has a real height to fill */}
-                      <div style={{ position: "relative", aspectRatio: "393 / 852", borderRadius: "11.6% / 5.4%", overflow: "hidden", background: "#000" }}>
-                        <span aria-hidden style={{ position: "absolute", top: "1.7%", left: "50%", transform: "translateX(-50%)", width: "30%", height: "8.4%", maxHeight: 26, background: "#000", borderRadius: 16, zIndex: 3 }} />
-                        <AutoVideo src={p.phoneFilm.src} poster={p.phoneFilm.poster} objectFit="cover" />
+                  // The column stretches to the quote's height; the phone is sized off that
+                  // height (aspect-ratio derives its width), so on desktop it's as tall as the quote.
+                  <div style={{ flex: "0 0 auto", alignSelf: "stretch", position: "relative", width: "clamp(216px, 26vw, 312px)", minHeight: 470 }}>
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div
+                        style={{
+                          height: "100%",
+                          maxWidth: "100%",
+                          aspectRatio: "393 / 852",
+                          boxSizing: "border-box",
+                          background: "linear-gradient(145deg,#1c1c20,#08080a)",
+                          borderRadius: "14% / 6.4%",
+                          padding: "2.7%",
+                          boxShadow: "0 34px 80px rgba(0,0,0,0.55), inset 0 0 0 1.5px rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: "11.6% / 5.4%", overflow: "hidden", background: "#000" }}>
+                          <span aria-hidden style={{ position: "absolute", top: "1.7%", left: "50%", transform: "translateX(-50%)", width: "30%", height: "8.4%", maxHeight: 26, background: "#000", borderRadius: 16, zIndex: 3 }} />
+                          <AutoVideo src={p.phoneFilm.src} poster={p.phoneFilm.poster} objectFit="cover" />
+                        </div>
                       </div>
                     </div>
                   </div>
