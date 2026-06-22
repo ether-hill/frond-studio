@@ -1834,6 +1834,13 @@ button {
 .ecs-frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); display: block; }
 .ecs-url { margin-left: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-faint); background: var(--bg-0); border: 1px solid var(--line-2); border-radius: 7px; padding: 5px 13px; flex: 1 1 auto; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ecs-frame-screen { position: relative; background: var(--media); }
+/* Keep the browser-frame chrome dark even in light mode — a dark browser framing
+   the (light) client site reads better than light-on-light chrome. Values mirror
+   the dark theme so it matches the dark-mode rendering exactly. */
+[data-theme="light"] .ecs-frame { background: #16130f; border-color: rgba(241, 237, 229, 0.13); }
+[data-theme="light"] .ecs-frame-bar { background: color-mix(in srgb, #16130f 70%, #0b0a08); border-bottom-color: rgba(241, 237, 229, 0.06); }
+[data-theme="light"] .ecs-frame-bar i { background: rgba(241, 237, 229, 0.13); }
+[data-theme="light"] .ecs-url { color: #8a8479; background: #0b0a08; border-color: rgba(241, 237, 229, 0.06); }
 
 /* Hero: floating frosted browser card over a full-bleed atmospheric image. */
 .ecs-hero { position: relative; overflow: hidden; width: 100vw; margin-left: calc(50% - 50vw); padding: clamp(58px, 9vh, 120px) var(--gutter) clamp(66px, 10vh, 140px); }

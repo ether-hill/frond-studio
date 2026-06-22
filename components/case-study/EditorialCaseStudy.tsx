@@ -209,9 +209,11 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
           {/* ── Client testimonial + phone film, side by side ── */}
           {p.testimonial || p.phoneFilm ? (
             <section data-rvs>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(32px,5vw,72px)", alignItems: "stretch", justifyContent: "space-between" }}>
+              {/* Reuse the intro grid (1.35fr / 0.65fr) so the quote is the same
+                  ~2/3 width as the intro lead; the phone sits in the narrow column. */}
+              <div className="ecs-intro" style={{ alignItems: "stretch" }}>
                 {p.testimonial ? (
-                  <div style={{ flex: "1 1 440px", minWidth: 0, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                  <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
                     <Eyebrow>In their words</Eyebrow>
                     <blockquote style={{ margin: "clamp(18px,2.6vh,28px) 0 0" }}>
                       <p style={{ fontFamily: DISPLAY, fontWeight: 400, fontSize: "clamp(21px,2.3vw,32px)", lineHeight: 1.4, letterSpacing: "-0.012em", color: "var(--fg)" }}>
@@ -227,9 +229,10 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
                   </div>
                 ) : null}
                 {p.phoneFilm ? (
-                  // The column stretches to the quote's height; the phone is sized off that
-                  // height (aspect-ratio derives its width), so on desktop it's as tall as the quote.
-                  <div style={{ flex: "0 0 auto", alignSelf: "stretch", position: "relative", width: "clamp(216px, 26vw, 312px)", minHeight: 470 }}>
+                  // The grid stretches both columns to the quote's height; the phone is
+                  // sized off that height (aspect-ratio derives its width), so it's as
+                  // tall as the quote on desktop.
+                  <div style={{ position: "relative", minHeight: 470 }}>
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <div
                         style={{
