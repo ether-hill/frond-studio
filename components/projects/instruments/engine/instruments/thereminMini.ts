@@ -345,7 +345,14 @@ export function mountMini(root: HTMLElement): () => void {
   const hint = document.createElement("div");
   hint.style.cssText = `position:absolute;right:14px;bottom:12px;font-family:${MONO};font-size:10px;letter-spacing:0.16em;color:var(--fg4);pointer-events:none`;
   hint.textContent = "X PITCH · Y VOLUME";
-  field.append(vline, hline, hint);
+  // Huge faded "TOUCH ME" invitation over the pad; fades out on first interaction.
+  const touchLabel = document.createElement("div");
+  touchLabel.textContent = "TOUCH ME";
+  touchLabel.style.cssText =
+    "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;" +
+    "font-family:var(--font-display),sans-serif;font-weight:700;font-size:clamp(44px,13vw,128px);" +
+    "letter-spacing:0.03em;line-height:1;color:rgba(var(--lw),0.085);white-space:nowrap;user-select:none;transition:opacity .5s ease";
+  field.append(vline, hline, hint, touchLabel);
 
   function showCrosshair(on: boolean): void {
     if (reduceMotion()) return;
@@ -414,6 +421,7 @@ export function mountMini(root: HTMLElement): () => void {
   }
   const onDown = async (e: PointerEvent) => {
     if (activePointer !== null) return;
+    touchLabel.style.opacity = "0"; // they touched — drop the invitation
     activePointer = e.pointerId; field.setPointerCapture(e.pointerId); e.preventDefault();
     await begin(e.clientX, e.clientY);
   };
