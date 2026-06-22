@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
  * engine (client-only), pauses while off-screen or in a hidden tab, and holds a
  * single still frame under reduced motion. A scrim over it keeps copy legible.
  */
-export default function MyceliumBg() {
+export default function MyceliumBg({ tips = 560, maxSize = 920 }: { tips?: number; maxSize?: number } = {}) {
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,7 +36,9 @@ export default function MyceliumBg() {
     // square sim buffer sized to the larger edge, CSS-stretched to cover the hero
     const simSize = () => {
       const r = host.getBoundingClientRect();
-      return Math.max(440, Math.min(Math.round(Math.max(r.width, r.height)), 1100));
+      // Cap the sim buffer modestly — it's a soft, scrimmed backdrop, so a smaller
+      // canvas keeps per-frame stroke cost low (CSS-stretched to cover the hero).
+      return Math.max(420, Math.min(Math.round(Math.max(r.width, r.height)), maxSize));
     };
 
     const mount = (s: number) => {
@@ -51,7 +53,10 @@ export default function MyceliumBg() {
       host.replaceChildren();
       // colour "bloom" colony (the full-palette blooms, not the default grey
       // "wild" preset); a calm 30fps — it's a backdrop, not the hero.
-      inst = render(host, "mycelium", seed, simSize(), 30, { color: 1, preset: "bloom" });
+      // Cap the active-tip count: per-frame cost scales with it, and the default
+      // (~880–1200) is what makes a growing colony chug. Far fewer reads as a smooth,
+      // calm backdrop while holding a steady frame rate.
+      inst = render(host, "mycelium", seed, simSize(), 30, { color: 1, preset: "bloom", tips });
       if (reduce && inst?.noLoop) stillT = window.setTimeout(() => inst?.noLoop?.(), 2200);
       else applyVisibility();
     };
@@ -108,7 +113,7 @@ export default function MyceliumBg() {
         /* noop */
       }
     };
-  }, []);
+  }, [tips, maxSize]);
 
   return (
     <div

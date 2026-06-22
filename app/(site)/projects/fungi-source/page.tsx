@@ -50,10 +50,10 @@ export default function FungiSourcePage() {
       {/* Hero — a living mycelium network grows behind the title */}
       <section
         data-theme="dark"
-        style={{ position: "relative", overflow: "hidden", minHeight: "clamp(460px,66vh,820px)", display: "flex", alignItems: "flex-end", background: "var(--bg-0)" }}
+        style={{ position: "relative", overflow: "hidden", minHeight: "clamp(560px,84vh,960px)", display: "flex", background: "var(--bg-0)" }}
       >
         <div style={{ position: "absolute", inset: 0, zIndex: 0, opacity: 0.9 }}>
-          <MyceliumBg />
+          <MyceliumBg tips={430} maxSize={820} />
         </div>
         <div
           aria-hidden
@@ -63,15 +63,21 @@ export default function FungiSourcePage() {
             zIndex: 1,
             pointerEvents: "none",
             background:
-              "linear-gradient(100deg, var(--bg-0) 0%, color-mix(in srgb, var(--bg-0) 66%, transparent) 46%, color-mix(in srgb, var(--bg-0) 18%, transparent) 74%, transparent 100%), linear-gradient(to top, var(--bg-0) 1%, transparent 38%)",
+              "linear-gradient(100deg, var(--bg-0) 0%, color-mix(in srgb, var(--bg-0) 72%, transparent) 38%, color-mix(in srgb, var(--bg-0) 14%, transparent) 70%, transparent 100%), linear-gradient(to top, var(--bg-0) 1%, transparent 36%)",
           }}
         />
         <MyceliumTimer autoMs={15000} />
-        <div style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutter) clamp(48px,8vh,104px)" }}>
-          <PageHeader
-            title="Fungi Source"
-            intro="A far-and-wide search for the literature of fungi — early mycological treatises, golden-age plate books and modern field guides, public-domain first. Gathered, OCR'd, translated and catalogued into one open database: free to all and shared via an API to power AI tools, research and visualisation — and handed off to Source Library."
-          />
+        <div className="fs-hero-inner">
+          <div>
+            <PageHeader
+              title="Fungi Source"
+              intro="A far-and-wide search for the literature of fungi — early mycological treatises, golden-age plate books and modern field guides, public-domain first. Gathered, OCR'd, translated and catalogued into one open database: free to all and shared via an API to power AI tools, research and visualisation — and handed off to Source Library."
+            />
+          </div>
+          <figure className="fs-hero-mock" data-rv style={{ transitionDelay: "0.12s" }}>
+            <img src="/fungi-source/sourcelibrary-fungi.png" alt="Mockup of the Source Library — Fungi Collection page that this research is ported into" />
+            <figcaption>The handoff — a glimpse of the Source&nbsp;Library · Fungi&nbsp;Collection interface this research ports into: faceted, searchable, open via API.</figcaption>
+          </figure>
         </div>
       </section>
 

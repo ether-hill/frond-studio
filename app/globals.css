@@ -2002,3 +2002,13 @@ button {
 .fs-more .ui-btn-pill { font-variant-numeric: tabular-nums; }
 .fs-more-n { margin-left: 9px; opacity: 0.55; }
 .fs-more-count { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--fg-faint); }
+
+/* mycelium hero — two-column: title + floating Source Library mockup */
+.fs-hero-inner { position: relative; z-index: 2; flex: 1; width: 100%; max-width: var(--maxw); margin: 0 auto; padding: clamp(104px, 15vh, 172px) var(--gutter) clamp(52px, 8vh, 96px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: clamp(20px, 3vw, 56px); align-items: center; }
+.fs-hero-mock { margin: 0; }
+.fs-hero-mock img { width: 100%; height: auto; display: block; }
+.fs-hero-mock figcaption { margin: 4px auto 0; max-width: 50ch; padding: 0 7%; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.03em; line-height: 1.55; color: var(--fg-faint); }
+@media (max-width: 900px) {
+  .fs-hero-inner { grid-template-columns: 1fr; gap: clamp(18px, 5vw, 40px); }
+  .fs-hero-mock { max-width: 640px; }
+}
