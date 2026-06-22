@@ -41,12 +41,21 @@ const project: EditorialProject = {
     "Accessibility (WCAG AA)",
   ],
 
-  statsLabel: "What changed",
+  statsLabel: "The build, at a glance",
   stats: [
-    { value: "2,000 years", label: "Of ideas, one home", note: "Two millennia of hermetic and freethinking texts, finally welcoming and easy to explore." },
-    { value: "One site", label: "Visit · read · belong", note: "Tickets, the library catalogue and membership, united where they were once scattered across systems." },
-    { value: "EN + NL", label: "Fully bilingual", note: "Complete parity in Dutch and English, end to end, so the collection reaches further." },
-    { value: "WCAG AA", label: "Open to everyone", note: "Accessibility built into the foundations, with a CMS the museum runs in-house." },
+    { value: "50", label: "Pages", note: "Custom pages designed across the project." },
+    { value: "20", label: "Integrations", note: "Commerce, search and catalogue systems wired together." },
+    { value: "2", label: "Languages", note: "Fully bilingual. Dutch and English, end to end." },
+    { value: "16", label: "Video assets", note: "Background and editorial films, lazy-loaded with play and pause handling." },
+  ],
+
+  // Card-only points for the /work preview row — kept distinct from the on-page
+  // "at a glance" stats so the card reads in outcomes, not build counts.
+  cardPoints: [
+    "Tickets, library catalogue and membership, finally in one place",
+    "Fully bilingual, Dutch and English",
+    "Accessible by design (WCAG AA)",
+    "A site the museum runs and grows in-house",
   ],
 
   integrations: [
@@ -123,24 +132,21 @@ const project: EditorialProject = {
     note: "A custom rotating composition built for the About page. Each pillar is a body in the same orbit, so the Embassy's founding ideas read as one connected whole.",
   },
 
-  before: [
-    "Dated design that under-served the collection",
-    "Not accessible to all visitors",
-    "Single language only",
-    "Ticketing and the library catalogue lived elsewhere",
-  ],
-  after: [
-    "Editorial, content-rich design",
-    "WCAG AA built in from the foundations",
-    "Full Dutch / English parity",
-    "Ticketing, membership and the Source Library on-site",
-  ],
-
-  // Longer-form testimonial, placed after the before/after as a calm editorial block.
+  // Longer-form testimonial, rendered as a calm editorial block.
   testimonial: {
     body: "When we began, we had no real digital presence to speak of: an outdated brand, no visitor journey, no integration with our operational systems, and no straightforward way to keep things current. Frond Studio addressed all of it. We can now reach our audience, and they can reach us, far more easily. Ticket sales have risen, refund requests have fallen to their lowest point, and newsletter signups continue to grow. What has meant the most, though, is the response. People consistently tell us the site is beautiful, and that the Embassy of the Free Mind is finally represented online the way it deserves to be.",
     author: "Chiara Mancini",
     role: "Program & Digital Strategy",
+  },
+
+  // iPhone mockup with a real screen-recording of the events → ticketing flow.
+  phoneFilm: {
+    eyebrow: "On the phone",
+    heading: "From browsing to booked",
+    body: "Visitors find an event, open it, and buy a ticket without leaving the site. Here: the agenda, the Forum for Process, and checkout for the first available date, in a handful of taps.",
+    src: `${M}/videos/iphone-tickets.mp4`,
+    poster: `${M}/videos/iphone-tickets.jpg`,
+    alt: "Screen recording of browsing the Embassy events on a phone and buying a ticket for the Forum for Process.",
   },
 
   // The closing pull-quote (over the flowing-lines video).

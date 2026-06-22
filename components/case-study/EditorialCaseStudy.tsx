@@ -224,6 +224,37 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             </section>
           ) : null}
 
+          {/* ── Phone film: a screen-recording in an iPhone mockup ── */}
+          {p.phoneFilm ? (
+            <section data-rvs>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(32px,6vw,80px)", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ flex: "1 1 320px", maxWidth: 460 }}>
+                  {p.phoneFilm.eyebrow ? <Eyebrow>{p.phoneFilm.eyebrow}</Eyebrow> : null}
+                  {p.phoneFilm.heading ? <Heading style={{ marginTop: 18, maxWidth: "15ch" }}>{p.phoneFilm.heading}</Heading> : null}
+                  {p.phoneFilm.body ? <p style={{ ...bodyStyle, marginTop: "clamp(18px,2.4vh,28px)" }}>{p.phoneFilm.body}</p> : null}
+                </div>
+                <div style={{ flex: "0 0 auto" }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "clamp(238px, 70vw, 296px)",
+                      aspectRatio: "393 / 852",
+                      background: "linear-gradient(145deg,#1c1c20,#08080a)",
+                      borderRadius: "13.5% / 6.2%",
+                      padding: "2.7%",
+                      boxShadow: "0 34px 80px rgba(0,0,0,0.55), inset 0 0 0 1.5px rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: "11.4% / 5.2%", overflow: "hidden", background: "#000" }}>
+                      <span aria-hidden style={{ position: "absolute", top: "1.7%", left: "50%", transform: "translateX(-50%)", width: "30%", height: "22px", background: "#000", borderRadius: 14, zIndex: 3 }} />
+                      <AutoVideo src={p.phoneFilm.src} poster={p.phoneFilm.poster} objectFit="cover" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
           {/* ── Front door ────────────────────────────────── */}
           {p.frontDoor ? (
             <section data-rvs>

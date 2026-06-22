@@ -51,6 +51,9 @@ export type EditorialProject = {
   client: string;
   services: string[];
 
+  /** Points shown on the /work preview card. Falls back to the stats when omitted. */
+  cardPoints?: string[];
+
   /** "At a glance" numeric stats. Omit to skip. */
   stats?: EditorialStat[];
   /** Eyebrow above the stats grid (default "By the numbers"). */
@@ -87,6 +90,8 @@ export type EditorialProject = {
   quote?: { body: string; author: string; role?: string; needsConfirmation?: boolean };
   /** Longer-form client testimonial, rendered as a calm editorial block. */
   testimonial?: { body: string; author: string; role?: string };
+  /** A portrait screen-recording shown inside an iPhone device mockup. */
+  phoneFilm?: { eyebrow?: string; heading?: string; body?: string; src: string; poster?: string; alt?: string };
   /** Looping video shown behind the quote (distinct dark/light treatment in CSS). */
   quoteBg?: EditorialMedia;
   /** Still image shown behind the quote, with a tint overlay for legibility. */
