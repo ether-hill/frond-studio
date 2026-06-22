@@ -13,7 +13,7 @@ const project: EditorialProject = {
   title: "Embassy of the Free Mind",
   category: "Museum & library website",
   oneLiner:
-    "A new home for the largest collection of hermetic and freethinking texts in the world. Built to welcome visitors, sell tickets, open a rare library, and support the mission.",
+    "A new home for the largest collection of hermetic and freethinking texts in the world.",
   liveUrl: "https://embassyofthefreemind.com",
   liveLabel: "embassyofthefreemind.com",
 
@@ -52,10 +52,9 @@ const project: EditorialProject = {
   // Card-only points for the /work preview row — kept distinct from the on-page
   // "at a glance" stats so the card reads in outcomes, not build counts.
   cardPoints: [
-    "Tickets, library catalogue and membership, finally in one place",
-    "Fully bilingual, Dutch and English",
-    "Accessible by design (WCAG AA)",
     "A site the museum runs and grows in-house",
+    "Built for the whole institution, not just the collection",
+    "Where visiting, reading and belonging all come together",
   ],
 
   integrations: [
