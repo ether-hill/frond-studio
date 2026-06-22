@@ -9,8 +9,8 @@ const nextConfig = {
     return [
       // The About page moved from /services to /about.
       { source: '/services', destination: '/about', permanent: true },
-      // The thin EFM project was retired for the editorial case study.
-      { source: '/work/embassy-of-the-free-mind', destination: '/work/embassy-of-the-free-mind-case-study', permanent: true },
+      // The EFM case study lives at the clean slug; redirect the older URL.
+      { source: '/work/embassy-of-the-free-mind-case-study', destination: '/work/embassy-of-the-free-mind', permanent: true },
     ];
   },
 };

@@ -49,7 +49,7 @@ export default function MoreWork({ items }: { items: MoreWorkItem[] }) {
   return (
     <section data-rvs className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "clamp(56px,9vh,120px) var(--gutter)", borderTop: "1px solid var(--line)" }}>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 24, marginBottom: "clamp(28px,4vh,48px)" }}>
-        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(28px,3.6vw,52px)", fontWeight: 500, letterSpacing: "-0.02em" }}>
+        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-title)", fontWeight: 500, letterSpacing: "-0.02em" }}>
           See more work
         </h2>
         <div style={{ display: "flex", gap: 10 }}>
@@ -83,7 +83,7 @@ export default function MoreWork({ items }: { items: MoreWorkItem[] }) {
                 {p.label}
               </span>
             ) : null}
-            <span className="vwork-name" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 500, fontSize: "clamp(20px,2vw,28px)", letterSpacing: "-0.018em", lineHeight: 1.05, marginTop: 6 }}>
+            <span className="vwork-name" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 500, fontSize: "var(--text-subtitle)", letterSpacing: "-0.018em", lineHeight: 1.05, marginTop: 6 }}>
               {p.title}
             </span>
           </Link>

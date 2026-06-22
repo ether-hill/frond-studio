@@ -1,17 +1,20 @@
 import RevealRoot from "@/components/RevealRoot";
+import Divider from "@/components/Divider";
 import HeroPhysarum from "@/components/HeroPhysarum";
 import HeroControls from "@/components/HeroControls";
 import SelectedWork from "@/components/SelectedWork";
 import SelectedProjects from "@/components/SelectedProjects";
+import FeaturedInstrument from "@/components/FeaturedInstrument";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
 import Cta from "@/components/Cta";
-import { getProjects } from "@/sanity/lib/queries";
+import { getWorkCards } from "@/lib/work";
 
 export const revalidate = 60;
 
 export default async function Home() {
-  const projects = await getProjects();
-  const featured = projects.slice(0, 6);
+  // Same ordered lineup as /work (editorial flagships first), so the home
+  // surfaces the most recent / featured work, not just the Sanity slice.
+  const featured = (await getWorkCards()).slice(0, 6);
 
   return (
     <RevealRoot>
@@ -47,7 +50,7 @@ export default async function Home() {
               .hero-rise/.hero-fade), NOT GSAP — so the heavy WebGL sim on the
               main thread can't stall it. Triggered by `.intro-ready` (added by
               RevealRoot once fonts are ready), pre-hidden only under `.gsap-on`. */}
-          <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "clamp(36px,6.6vw,114px)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
+          <h1 className="hero-h1" style={{ fontFamily: "var(--font-display), sans-serif", fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 0.92, letterSpacing: "-0.038em" }}>
             <span className="hero-clip">
               <span className="hero-rise" style={{ animationDelay: "0.04s" }}>Natural</span>
             </span>
@@ -62,7 +65,7 @@ export default async function Home() {
               animationDelay: "0.26s",
               maxWidth: 680,
               marginTop: "clamp(22px,3vh,38px)",
-              fontSize: "clamp(19px,1.7vw,27px)",
+              fontSize: "var(--text-lead)",
               lineHeight: 1.4,
               color: "var(--fg)",
             }}
@@ -87,6 +90,8 @@ export default async function Home() {
         </div>
       </section>
 
+      <Divider />
+
       <SelectedWork projects={featured} />
 
       {/* Capabilities — interactive 3D node cloud, full-bleed behind the copy */}
@@ -104,7 +109,7 @@ export default async function Home() {
           style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)", pointerEvents: "none" }}
         >
           <div className="cap-text" data-stag style={{ maxWidth: "40ch", userSelect: "none" }}>
-            <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 400, letterSpacing: "-0.015em" }}>
+            <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-title)", fontWeight: 400, letterSpacing: "-0.015em" }}>
               Focus areas
             </h2>
             <p
@@ -112,7 +117,7 @@ export default async function Home() {
                 marginTop: "clamp(20px,3vh,32px)",
                 maxWidth: "40ch",
                 fontFamily: "var(--font-display), sans-serif",
-                fontSize: "clamp(19px,1.7vw,27px)",
+                fontSize: "var(--text-lead)",
                 fontWeight: 400,
                 lineHeight: 1.34,
                 letterSpacing: "-0.01em",
@@ -128,7 +133,13 @@ export default async function Home() {
         </div>
       </section>
 
+      <Divider />
+
       <SelectedProjects />
+
+      <Divider />
+
+      <FeaturedInstrument />
 
       <Cta />
     </RevealRoot>

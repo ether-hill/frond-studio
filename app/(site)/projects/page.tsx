@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
-import Cta from "@/components/Cta";
 import { PERSONAL_PROJECTS } from "@/lib/projects";
 
 export const metadata: Metadata = {
@@ -63,7 +62,7 @@ export default function ProjectsPage() {
                     margin: "20px 0 0",
                     fontFamily: "var(--font-display), sans-serif",
                     fontWeight: 500,
-                    fontSize: "clamp(30px,3.6vw,48px)",
+                    fontSize: "var(--text-title)",
                     lineHeight: 1.0,
                     letterSpacing: "-0.02em",
                   }}
@@ -71,7 +70,7 @@ export default function ProjectsPage() {
                   {p.title}
                 </h2>
 
-                <p style={{ margin: "16px 0 0", fontSize: 15, lineHeight: 1.6, color: "var(--fg-dim)", maxWidth: "44ch" }}>
+                <p style={{ margin: "16px 0 0", fontSize: "var(--text-body)", lineHeight: 1.6, color: "var(--fg-dim)", maxWidth: "44ch" }}>
                   {p.summary}
                 </p>
 
@@ -132,8 +131,6 @@ export default function ProjectsPage() {
           })}
         </div>
       </section>
-
-      <Cta />
     </RevealRoot>
   );
 }

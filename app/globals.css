@@ -27,6 +27,19 @@
   --pad-bottom: clamp(72px, 11vh, 128px); /* page foot before the CTA */
   --section-y: clamp(72px, 11vh, 128px);  /* between in-page sections */
   --eyebrow-tracking: 0.2em;              /* mono micro-label tracking */
+
+  /* Type scale — the single source of truth for typography across the whole
+     site (showcased on /design-system). Role-named, rem-based, fluid; mins and
+     maxes are anchored so the hierarchy holds at every width. Reach for these —
+     never hardcode a clamp()/px font size for content type. Change a value here
+     and it updates the site + the showcase. */
+  --text-display:  clamp(2.75rem, 1.82rem + 4.64vw, 6rem);      /* 44 → 96  page heroes */
+  --text-headline: clamp(2.25rem, 1.75rem + 2.5vw, 4rem);       /* 36 → 64  big statements / sub-heroes (CTA) */
+  --text-title:    clamp(1.75rem, 1.36rem + 1.96vw, 3.125rem);  /* 28 → 50  section headings */
+  --text-subtitle: clamp(1.375rem, 1.16rem + 1.07vw, 2.125rem); /* 22 → 34  sub-headings / card titles */
+  --text-lead:     clamp(1.1875rem, 1.1rem + 0.45vw, 1.5rem);   /* 19 → 24  lead / intro */
+  --text-body:     clamp(1rem, 0.98rem + 0.09vw, 1.0625rem);    /* 16 → 17  body copy */
+  --text-caption:  clamp(0.8125rem, 0.79rem + 0.09vw, 0.875rem);/* 13 → 14  small print */
 }
 
 [data-theme="light"] {
@@ -56,6 +69,14 @@
   :root {
     --gutter: 16px;
   }
+}
+
+/* Site-standard section divider — a full-bleed hairline between stacked
+   top-level components. See components/Divider.tsx. */
+.section-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--line);
 }
 
 * {
@@ -213,17 +234,15 @@ button {
   right: 0;
   z-index: 60;
   transform: translateY(0);
-  /* Always-on frosted glass: a light translucent tint + hairline edge + a real
-     backdrop blur. The tint is kept low so the blurred backdrop (hero canvas,
-     headline, sections scrolling under) reads through the glass instead of being
-     masked by an opaque bar. Write ONLY the standard `backdrop-filter` — letting
-     the build's CSS prefixer add `-webkit-` keeps BOTH the prefixed and unprefixed
-     property in the output (hand-writing the -webkit- line made the minifier drop
-     the standard one, so Firefox/non-WebKit lost the blur entirely). Light theme
-     overrides the background below. */
-  border-bottom: 1px solid var(--line);
-  background: rgba(11, 10, 8, 0.4);
-  backdrop-filter: blur(22px) saturate(1.4);
+  /* At the top of the page (and on load, data-nav="top") the dark-theme bar is
+     fully transparent with no blur, so the home hero reads cleanly THROUGH the
+     nav. The frosted-glass tint + backdrop blur are applied only once the page
+     is scrolled (data-nav="solid"). Write ONLY the standard `backdrop-filter` —
+     letting the build's CSS prefixer add `-webkit-` keeps BOTH the prefixed and
+     unprefixed property in the output (hand-writing the -webkit- line made the
+     minifier drop the standard one, so Firefox/non-WebKit lost the blur). */
+  border-bottom: 1px solid transparent;
+  background: transparent;
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
     background-color 0.5s ease, border-color 0.5s ease;
 }
@@ -235,16 +254,13 @@ button {
   border-bottom-color: var(--line);
   backdrop-filter: blur(22px) saturate(1.4);
 }
-/* Light theme: the bar can float over the dark hero (homepage) where a
-   transparent top state would hide the dark nav text, so keep it solid
-   white-90% at every scroll position. Keyed on the theme (set before paint),
-   NOT route detection — usePathname doesn't resolve reliably in the static
-   build. Dark theme keeps its transparent top state. The hide-on-scroll-down
-   transform still applies (it only sets transform, not background). */
+/* Light theme: dark nav text over the dark hero would be unreadable on a
+   transparent bar, so keep a solid background at the top too (still no blur
+   until scrolled). Keyed on the theme (set before paint), NOT route detection.
+   The blur for the scrolled state comes from the [data-nav="solid"] rule above. */
 [data-theme="light"] .nav-bar {
   background: var(--nav);
   border-bottom-color: var(--line);
-  backdrop-filter: blur(18px);
 }
 .seg button[data-on="true"] {
   background: var(--fg);
@@ -425,7 +441,7 @@ button {
 }
 .ethos-statement {
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(28px, 3.4vw, 52px);
+  font-size: var(--text-title);
   font-weight: 500;
   line-height: 1.06;
   letter-spacing: -0.022em;
@@ -433,7 +449,7 @@ button {
 .about-body {
   margin-top: clamp(16px, 2.2vh, 24px);
   max-width: 50ch;
-  font-size: clamp(15px, 1.15vw, 17px);
+  font-size: var(--text-body);
   line-height: 1.62;
   color: var(--fg-dim);
 }
@@ -1156,7 +1172,6 @@ button {
 .sym-hero-media {
   position: relative;
   align-self: stretch;
-  overflow: hidden;
   background: #000;
 }
 .sym-eyebrow {
@@ -1189,7 +1204,7 @@ button {
 .sym-h2 {
   font-family: var(--font-display), sans-serif;
   font-weight: 600;
-  font-size: clamp(34px, 5.2vw, 64px);
+  font-size: var(--text-headline);
   line-height: 1.0;
   letter-spacing: -0.025em;
   margin: 0;
@@ -1198,7 +1213,7 @@ button {
 .sym-lead {
   font-family: var(--font-body), sans-serif;
   font-weight: 300;
-  font-size: clamp(17px, 1.55vw, 23px);
+  font-size: var(--text-lead);
   line-height: 1.6;
   color: var(--fg-dim);
 }
@@ -1212,12 +1227,10 @@ button {
 }
 .sym-feature .sym-text { max-width: 46ch; }
 .sym-feature.rev .sym-media { order: 2; }
+/* Parallax feature media — intentionally un-boxed: no frame, no clip, so the
+   slow-zoom video bleeds past its slot into the section padding. */
 .sym-media {
   position: relative;
-  overflow: hidden;
-  border-radius: 10px;
-  background: #000;
-  border: 1px solid var(--line-2);
 }
 .sym-media.sq { aspect-ratio: 1 / 1; }
 .sym-media.port { aspect-ratio: 3 / 4; }
@@ -1238,7 +1251,7 @@ button {
 .sym-slide h3 {
   font-family: var(--font-display), sans-serif;
   font-weight: 600;
-  font-size: clamp(22px, 2.6vw, 34px);
+  font-size: var(--text-subtitle);
   line-height: 1.15;
   letter-spacing: -0.018em;
   margin: 0 0 clamp(18px, 3vh, 28px);
@@ -1247,7 +1260,7 @@ button {
 .sym-slide p {
   font-family: var(--font-body), sans-serif;
   font-weight: 300;
-  font-size: clamp(15px, 1.25vw, 18px);
+  font-size: var(--text-body);
   line-height: 1.62;
   color: var(--fg-dim);
   margin: 0;
@@ -1356,12 +1369,66 @@ button {
   color: var(--fg-dim);
 }
 
+/* Instagram feed — 3×5 grid of recent posts + follow CTA */
+.ig-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.ig-head .sym-readbtn {
+  margin-top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.ig-grid {
+  margin-top: clamp(28px, 4.5vh, 56px);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: clamp(6px, 0.7vw, 12px);
+}
+.ig-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+}
+.ig-tile img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ig-tile:hover img { transform: scale(1.06); }
+.ig-ph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--fg-faint);
+  background: radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%);
+  transition: color 0.3s ease;
+}
+.ig-tile:hover .ig-ph { color: var(--fg); }
+
 @media (max-width: 860px) {
   .sym-feature { grid-template-columns: 1fr; gap: 32px; }
   .sym-feature.rev .sym-media { order: 0; }
   .sym-feature .sym-text { max-width: none; }
   .sym-grid { grid-template-columns: 1fr; }
   .sym-carousel { padding: 0 36px; }
+  .ig-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 520px) {
+  .ig-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* Timelapse Media Production — full-bleed video hero (the opening inkcaps
@@ -1421,7 +1488,7 @@ button {
 .tlmp-card-body h3 {
   font-family: var(--font-display), sans-serif;
   font-weight: 600;
-  font-size: clamp(19px, 1.7vw, 24px);
+  font-size: var(--text-subtitle);
   line-height: 1.18;
   letter-spacing: -0.015em;
   margin: 0;
@@ -1430,7 +1497,7 @@ button {
 .tlmp-card-body p {
   font-family: var(--font-body), sans-serif;
   font-weight: 300;
-  font-size: clamp(14px, 1.05vw, 16px);
+  font-size: var(--text-body);
   line-height: 1.6;
   color: var(--fg-dim);
   margin: 12px 0 0;
@@ -1442,33 +1509,55 @@ button {
 }
 
 /* ── Cymatics R&D article (/projects/cymatics-bubbles) ──────────────────────
-   Editorial layout: full-bleed banner video, then a centered article column —
-   wide 16:9 video players (shared .sym-player) interleaved with narrower prose.
-   Reuses the .sym-root dark canvas. */
+   Full-bleed banner video, then a full-width article on the standard site grid:
+   a two-column masthead, a 2-up video grid (lead piece spans both columns), and
+   a two-column body. Reuses the shared .sym-player and the .sym-root dark canvas. */
+/* Hero — full-viewport video banner with the title + subtext overlaid bottom-left
+   (matches the Timelapse hero). The gradient darkens the bottom for the copy and
+   the top for the transparent nav. */
 .cym-hero {
   position: relative;
-  width: 100%;
-  height: clamp(340px, 56vh, 680px);
-  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  min-height: 100svh;
   background: #000;
+  overflow: hidden;
 }
-.cym-hero::after {
+.cym-hero-media { position: absolute; inset: 0; }
+.cym-hero-media::after {
   content: "";
   position: absolute;
-  inset: auto 0 0 0;
-  height: 28%;
+  inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent, #000);
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.86) 0%,
+    rgba(0, 0, 0, 0.4) 34%,
+    rgba(0, 0, 0, 0.12) 64%,
+    rgba(0, 0, 0, 0.42) 100%
+  );
+}
+.cym-hero-inner {
+  position: relative;
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--gutter) clamp(56px, 11vh, 132px);
+}
+.cym-hero-title {
+  margin: clamp(20px, 3.2vh, 38px) 0 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: var(--text-display);
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  max-width: 18ch;
 }
 .cym-article {
-  max-width: 1100px;
+  max-width: var(--maxw);
   margin: 0 auto;
   padding: clamp(44px, 7vh, 88px) var(--gutter) clamp(56px, 9vh, 120px);
-}
-.cym-prose {
-  max-width: 760px;
-  margin-left: auto;
-  margin-right: auto;
 }
 .cym-kicker {
   font-family: var(--font-mono);
@@ -1485,14 +1574,52 @@ button {
   letter-spacing: 0.04em;
   color: var(--fg-faint);
 }
-.cym-media { margin: clamp(34px, 5.5vh, 66px) auto; }
+/* Video grid — two equal columns; the lead piece spans both. The 4:3 cells
+   sit between the gobstoppers' 16:9 and the newer square clips, so each crops
+   evenly around its centred bubble. */
+.cym-grid {
+  margin-top: clamp(40px, 6vh, 84px);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(16px, 1.8vw, 30px);
+}
+.cym-cell { margin: 0; }
+.cym-grid .sym-player { aspect-ratio: 4 / 3; }
+.cym-lead { grid-column: 1 / -1; }
+.cym-grid .cym-lead .sym-player { aspect-ratio: 16 / 9; }
+.cym-cap {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+
+/* Body — a single readable measure under the grid; stacks multiple paragraphs. */
+.cym-body {
+  margin-top: clamp(40px, 6vh, 84px);
+  max-width: 68ch;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 2.4vh, 28px);
+}
+.cym-body .sym-lead { margin: 0; }
+
 .cym-refs {
-  margin-top: clamp(36px, 5.5vh, 64px);
+  margin-top: clamp(40px, 6vh, 72px);
   padding-top: clamp(24px, 3.5vh, 36px);
   border-top: 1px solid var(--line-2);
   display: flex;
   flex-direction: column;
   gap: 11px;
+}
+
+@media (max-width: 860px) {
+  .cym-hero { min-height: 0; aspect-ratio: 4 / 5; }
+  .cym-grid { grid-template-columns: 1fr; }
+  .cym-grid .sym-player,
+  .cym-grid .cym-lead .sym-player { aspect-ratio: 4 / 3; }
 }
 .cym-refs .lbl {
   font-family: var(--font-mono);
@@ -1507,6 +1634,73 @@ button {
   font-size: 13px;
   color: var(--fg-dim);
   width: fit-content;
+}
+
+/* ── "More projects" carousel (foot of a project page) ──────────────────────
+   Header with title + prev/next arrows top-right, then a scroll-snap track of
+   .vwork cards: 4 per view on desktop, 2 on tablet, 1 on mobile. */
+.morep-section {
+  border-top: 1px solid var(--line);
+  background: var(--bg-0);
+  color: var(--fg);
+}
+.morep {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: var(--section-y) var(--gutter);
+}
+.morep-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: clamp(28px, 4.5vh, 52px);
+}
+.morep-title {
+  font-family: var(--font-display), sans-serif;
+  font-size: var(--text-title);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+}
+.morep-nav { display: flex; gap: 10px; flex: 0 0 auto; }
+.morep-arrow {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  transition: background-color 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
+}
+.morep-arrow:hover { background: color-mix(in srgb, var(--fg) 9%, transparent); border-color: var(--fg); }
+.morep-arrow:disabled { opacity: 0.32; cursor: default; }
+.morep-arrow:disabled:hover { background: transparent; border-color: var(--line); }
+
+.morep-track {
+  display: flex;
+  gap: clamp(20px, 2.4vw, 40px);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+}
+.morep-track::-webkit-scrollbar { display: none; }
+.morep-card {
+  scroll-snap-align: start;
+  /* 4 cards across, accounting for the 3 inter-card gaps */
+  flex: 0 0 calc((100% - clamp(20px, 2.4vw, 40px) * 3) / 4);
+  min-width: 0;
+}
+@media (max-width: 1100px) {
+  .morep-card { flex-basis: calc((100% - clamp(20px, 2.4vw, 40px)) / 2); }
+}
+@media (max-width: 680px) {
+  .morep-card { flex-basis: 100%; }
 }
 
 /* ── Cymatics interactive page (/projects/cymatics) ─────────────────────────
@@ -1634,6 +1828,8 @@ button {
 /* ── Editorial case study (EditorialCaseStudy.tsx) ─────────────────────── */
 .ecs-frame { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--bg-2); box-shadow: 0 50px 130px rgba(0, 0, 0, 0.55); }
 .ecs-frame-flat { box-shadow: none; }
+/* Showcase: a full-width rounded media well (feature video + text section). */
+.ecs-showcase-well { position: relative; width: 100%; border-radius: 14px; overflow: hidden; background: var(--media); border: 1px solid var(--line-2); }
 .ecs-frame-bar { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid var(--line-2); background: color-mix(in srgb, var(--bg-2) 70%, var(--bg-0)); }
 .ecs-frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); display: block; }
 .ecs-url { margin-left: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-faint); background: var(--bg-0); border: 1px solid var(--line-2); border-radius: 7px; padding: 5px 13px; flex: 1 1 auto; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1643,6 +1839,8 @@ button {
 .ecs-hero { position: relative; overflow: hidden; width: 100vw; margin-left: calc(50% - 50vw); padding: clamp(58px, 9vh, 120px) var(--gutter) clamp(66px, 10vh, 140px); }
 .ecs-hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: var(--media); z-index: 0; }
 .ecs-hero-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to top, rgba(8,7,5,0.82) 0%, rgba(8,7,5,0.4) 46%, rgba(8,7,5,0.55) 100%); }
+/* Lighter tint: lets the backdrop image read more. */
+.ecs-hero-lite .ecs-hero-scrim { background: linear-gradient(to top, rgba(8,7,5,0.55) 0%, rgba(8,7,5,0.16) 46%, rgba(8,7,5,0.3) 100%); }
 .ecs-hero-card { position: relative; z-index: 2; max-width: 1140px; margin: 0 auto; background: rgba(18,15,11,0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.12); border-radius: 15px; padding: clamp(13px, 1.5vw, 22px); box-shadow: 0 50px 110px rgba(0,0,0,0.55); }
 .ecs-hero-bar { display: flex; align-items: center; gap: 8px; margin-bottom: clamp(12px, 1.4vw, 18px); }
 .ecs-hero-bar i { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.18); display: block; }
@@ -1697,6 +1895,19 @@ button {
 [data-theme="light"] .quote-vid { filter: none; mix-blend-mode: multiply; opacity: 1; }
 .ecs-quote-vignette { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 42%, var(--bg-0) 98%); }
 .ecs-quote-inner { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; text-align: center; padding: clamp(80px, 13vh, 170px) var(--gutter); }
+/* Quote over a still image: a tint between the image and the text for legibility. */
+.ecs-quote-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.ecs-quote-tint { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: rgba(8, 7, 5, 0.38); }
+[data-theme="light"] .ecs-quote-tint { background: rgba(243, 239, 230, 0.42); }
+.ecs-quote-tint-none .ecs-quote-tint { display: none; }
+/* Light-mode quote treatments (chooser). "dark" makes light mode match the dark
+   rendering by locally overriding the theme vars; "soft" pulls the cream vignette
+   way in so the edges stay legible. Dark mode is untouched. */
+[data-theme="light"] .ecs-quote-light-dark { --bg-0: #0b0a08; --fg: #f1ede5; --fg-dim: #a39d92; }
+[data-theme="light"] .ecs-quote-light-dark .ecs-quote-tint { background: rgba(8, 7, 5, 0.38); }
+[data-theme="light"] .ecs-quote-light-soft .ecs-quote-vignette { background: radial-gradient(ellipse at center, transparent 84%, var(--bg-0) 100%); }
+/* Reusable chooser label (top-left chip). */
+.ecs-vlabel { position: absolute; top: 16px; left: var(--gutter); z-index: 2; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg); background: color-mix(in srgb, var(--bg-0) 55%, transparent); border: 1px solid var(--line); border-radius: 999px; padding: 7px 15px; }
 
 /* Before / after — two neutral columns. */
 .ecs-ba { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 5vw, 84px); }
@@ -1721,4 +1932,83 @@ button {
 @media (max-width: 560px) {
   .ecs-grid { grid-template-columns: 1fr 1fr; }
   .ecs-band { min-height: 320px; }
+}
+
+/* ── Fungi Source (bibliography project) — reuses the standard page section;
+   adds only a plate-wall gallery and a bibliography list ──────────────────── */
+.fs-section { margin-top: clamp(64px, 11vh, 140px); }
+.fs-h2 { font-family: var(--font-display), sans-serif; font-size: var(--text-title); font-weight: 500; letter-spacing: -0.018em; }
+.fs-sub { margin: clamp(16px, 2.4vh, 28px) 0 0; max-width: 64ch; font-size: var(--text-body); line-height: 1.7; color: var(--fg-dim); }
+
+/* plate gallery — a masonry wall of public-domain illustrations (opens a lightbox) */
+.fs-plates { margin-top: clamp(28px, 4vh, 52px); column-count: 4; column-gap: clamp(12px, 1.4vw, 22px); }
+.fs-plate { display: inline-block; width: 100%; margin: 0 0 clamp(12px, 1.4vw, 22px); break-inside: avoid; padding: 0; border: 0; background: none; text-align: left; cursor: zoom-in; color: inherit; font: inherit; }
+.fs-plate img { width: 100%; display: block; border-radius: 6px; border: 1px solid var(--line); background: var(--bg-2); transition: filter 0.4s ease; }
+.fs-plate:hover img { filter: brightness(1.08); }
+.fs-plate-cap { display: block; margin-top: 9px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; line-height: 1.5; color: var(--fg-faint); }
+.fs-plate:hover .fs-plate-cap { color: var(--fg-dim); }
+@media (max-width: 1100px) { .fs-plates { column-count: 3; } }
+@media (max-width: 720px) { .fs-plates { column-count: 2; } }
+@media (max-width: 440px) { .fs-plates { column-count: 1; } }
+
+/* the collection — a grid of book covers (opens a lightbox) */
+.fs-covers { margin-top: clamp(28px, 4vh, 52px); display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: clamp(16px, 2vw, 30px); }
+.fs-cover { display: flex; flex-direction: column; padding: 0; border: 0; background: none; text-align: left; cursor: zoom-in; color: inherit; font: inherit; }
+.fs-cover-shot { display: block; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 6px; border: 1px solid var(--line); background: var(--bg-2); }
+.fs-cover-shot img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease; }
+.fs-cover:hover .fs-cover-shot img { transform: scale(1.04); filter: brightness(1.06); }
+.fs-cover-title { margin-top: 12px; font-family: var(--font-display), sans-serif; font-size: 14px; font-weight: 500; line-height: 1.25; color: var(--fg); }
+.fs-cover-meta { margin-top: 4px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em; color: var(--fg-faint); }
+
+/* lightbox */
+.fs-lb { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: clamp(20px, 5vw, 72px); background: rgba(4, 4, 6, 0.92); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: fs-fade 0.25s ease; }
+@keyframes fs-fade { from { opacity: 0; } to { opacity: 1; } }
+.fs-lb-fig { margin: 0; max-width: min(1100px, 92vw); display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.fs-lb-fig img { max-width: 100%; max-height: 78vh; object-fit: contain; border-radius: 6px; border: 1px solid var(--line); background: var(--bg-2); box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6); }
+.fs-lb-fig figcaption { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; max-width: 64ch; }
+/* book layout — cover left, summary + details right */
+.fs-lb-fig.book { flex-direction: row; align-items: flex-start; gap: clamp(28px, 4vw, 60px); max-width: min(1120px, 95vw); }
+.fs-lb-fig.book img { width: min(48vw, 520px); max-width: 520px; max-height: 86vh; flex: 0 0 auto; }
+.fs-lb-fig.book figcaption { align-items: flex-start; text-align: left; max-width: 44ch; }
+.fs-lb-fig strong { font-family: var(--font-display), sans-serif; font-size: var(--text-subtitle); font-weight: 500; line-height: 1.12; color: var(--fg); }
+.fs-lb-meta { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; color: var(--fg-dim); }
+.fs-lb-body { margin: 6px 0 0; font-size: 14.5px; line-height: 1.65; color: var(--fg-dim); }
+.fs-lb-details { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin: 8px 0 0; width: 100%; }
+.fs-lb-details dt { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-faint); }
+.fs-lb-details dd { margin: 0; font-size: 13px; color: var(--fg-dim); }
+.fs-lb-link { margin-top: 12px; align-self: flex-start; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 11px 18px; transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease; }
+.fs-lb-link:hover { background: var(--accent); color: var(--bg-0); border-color: var(--accent); }
+.fs-lb-count { margin-top: 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; color: var(--fg-faint); }
+@media (max-width: 700px) {
+  .fs-lb-fig.book { flex-direction: column; align-items: center; }
+  .fs-lb-fig.book img { max-width: min(70vw, 240px); }
+  .fs-lb-fig.book figcaption { align-items: center; text-align: center; }
+  .fs-lb-link { align-self: center; }
+}
+.fs-lb-x, .fs-lb-arrow { position: fixed; z-index: 1; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 999px; background: rgba(10, 10, 12, 0.6); color: var(--fg); cursor: pointer; transition: background-color 0.25s ease, border-color 0.25s ease; }
+.fs-lb-x { top: clamp(16px, 3vw, 28px); right: clamp(16px, 3vw, 28px); width: 44px; height: 44px; font-size: 14px; }
+.fs-lb-arrow { top: 50%; transform: translateY(-50%); width: 52px; height: 52px; font-size: 30px; line-height: 1; }
+.fs-lb-arrow.prev { left: clamp(12px, 2vw, 28px); }
+.fs-lb-arrow.next { right: clamp(12px, 2vw, 28px); }
+.fs-lb-x:hover, .fs-lb-arrow:hover { background: var(--fg); color: var(--bg-0); border-color: var(--fg); }
+@media (max-width: 600px) { .fs-lb-arrow { width: 42px; height: 42px; font-size: 24px; } }
+
+/* mycelium hero — tiny remix / timer button (clears the nav, aligned to content edge) */
+.fs-myc-btn { position: absolute; top: clamp(88px, 13vh, 128px); right: var(--content-edge); z-index: 3; }
+@media (max-width: 600px) { .fs-myc-btn { top: clamp(76px, 11vh, 104px); right: var(--gutter); } }
+
+/* load more (plates) */
+.fs-more { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: clamp(28px, 4vh, 48px); }
+.fs-more .ui-btn-pill { font-variant-numeric: tabular-nums; }
+.fs-more-n { margin-left: 9px; opacity: 0.55; }
+.fs-more-count { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--fg-faint); }
+
+/* mycelium hero — two-column: title + floating Source Library mockup */
+.fs-hero-inner { position: relative; z-index: 2; flex: 1; width: 100%; max-width: var(--maxw); margin: 0 auto; padding: clamp(104px, 15vh, 172px) var(--gutter) clamp(52px, 8vh, 96px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: clamp(20px, 3vw, 56px); align-items: center; }
+.fs-hero-mock { margin: 0; }
+.fs-hero-mock img { width: 100%; height: auto; display: block; }
+.fs-hero-mock figcaption { margin: 4px auto 0; max-width: 50ch; padding: 0 7%; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.03em; line-height: 1.55; color: var(--fg-faint); }
+@media (max-width: 900px) {
+  .fs-hero-inner { grid-template-columns: 1fr; gap: clamp(18px, 5vw, 40px); }
+  .fs-hero-mock { max-width: 640px; }
 }

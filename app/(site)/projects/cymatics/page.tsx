@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
-import Cta from "@/components/Cta";
+import MoreProjects from "@/components/MoreProjects";
 import CymaticsSimulator from "@/components/projects/cymatics/CymaticsSimulator";
 
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ export default function CymaticsPage() {
                 margin: 0,
                 fontFamily: "var(--font-display), sans-serif",
                 fontWeight: 600,
-                fontSize: "clamp(25px,3.6vw,53px)",
+                fontSize: "var(--text-title)",
                 lineHeight: 1.08,
                 letterSpacing: "-0.03em",
                 color: "var(--fg)",
@@ -67,7 +67,7 @@ export default function CymaticsPage() {
                   margin: 0,
                   fontFamily: "var(--font-display), sans-serif",
                   fontWeight: 600,
-                  fontSize: "clamp(24px,2.8vw,38px)",
+                  fontSize: "var(--text-subtitle)",
                   lineHeight: 1.12,
                   letterSpacing: "-0.02em",
                   color: "var(--fg)",
@@ -99,9 +99,7 @@ export default function CymaticsPage() {
 
       </div>
 
-      {/* Shared closing banner — the global "Letting things flow" CTA, so edits
-          to it propagate to every page that uses it. */}
-      <Cta />
+      <MoreProjects excludeSlug="cymatics" />
     </RevealRoot>
   );
 }

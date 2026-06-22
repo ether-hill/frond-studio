@@ -105,4 +105,26 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     href: "/projects/cymatics-bubbles",
     image: "/cards/cymatics.jpg",
   },
+  {
+    slug: "further-cymatics",
+    title: "Further Cymatics",
+    kicker: "R&D · SOUND & PROGRAMMABLE LIGHT",
+    summary:
+      "New cymatics rigs that pair sound with programmable light — RGB LED ring arrays driven by Arduino and DMX, temporal-aliasing tests that phase light against sound for smooth linear motion, and new vessel geometries in size, depth and multi-ring form.",
+    year: "2025",
+    tags: ["Cymatics", "R&D", "RGB LED", "DMX"],
+    href: "/projects/further-cymatics",
+    image: "/cards/further-cymatics.jpg",
+  },
+  {
+    slug: "fungi-source",
+    title: "Fungi Source",
+    kicker: "RESEARCH · OPEN FUNGI LIBRARY",
+    summary:
+      "A far-and-wide search for the literature of fungi — early treatises to modern field guides, public-domain first — gathered, OCR'd, translated and catalogued into one centralised open database. Free and open-sourced, shared via an API to power AI tools and research, and handed off to Source Library.",
+    year: "2026",
+    tags: ["Research", "Open Data", "Translation", "Mycology"],
+    href: "/projects/fungi-source",
+    image: "/cards/fungi-source.jpg",
+  },
 ];

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import VideoPlayer from "@/components/projects/symcyto/VideoPlayer";
 import ResearchCarousel, { type ResearchSlide } from "@/components/projects/symcyto/ResearchCarousel";
+import InstagramFeed from "@/components/projects/symcyto/InstagramFeed";
+import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
   title: "Symcyto — New Forms of Harvest · Frond Studio",
@@ -74,7 +75,7 @@ export default function SymcytoPage() {
                 margin: "clamp(28px,5vh,52px) 0 0",
                 fontFamily: "var(--font-display), sans-serif",
                 fontWeight: 600,
-                fontSize: "clamp(40px,5.4vw,68px)",
+                fontSize: "var(--text-headline)",
                 lineHeight: 1.0,
                 letterSpacing: "-0.03em",
                 color: "var(--fg)",
@@ -177,38 +178,11 @@ export default function SymcytoPage() {
           </div>
         </section>
 
-        {/* Let's connect */}
-        <section className="sym-section" style={{ background: "#000", borderTop: "1px solid var(--line-2)", paddingBottom: "clamp(64px,10vh,120px)" }}>
-          <div className="sym-wrap" style={{ textAlign: "center" }}>
-            <h2 className="sym-h2" data-rvs>
-              Let&apos;s connect
-            </h2>
-            <p className="sym-lead" data-rvs style={{ margin: "clamp(20px,3vh,32px) auto 0", maxWidth: "48ch" }}>
-              Symcyto is a project of Frond Studio — a transdisciplinary design, research, development and production studio based
-              in Amsterdam. Get in touch about the work, the chambers, or a collaboration.
-            </p>
-            <div
-              data-rvs
-              style={{ marginTop: "clamp(32px,5vh,48px)", display: "flex", flexWrap: "wrap", gap: "14px 18px", justifyContent: "center", alignItems: "center" }}
-            >
-              <Link href="/contact" className="sym-readbtn">
-                Message us
-              </Link>
-              <a className="sym-readbtn" href="https://www.instagram.com/symcyto/" target="_blank" rel="noopener noreferrer">
-                Instagram
-              </a>
-              <a className="sym-readbtn" href="https://www.youtube.com/@Symcyto" target="_blank" rel="noopener noreferrer">
-                YouTube
-              </a>
-            </div>
-            <div style={{ marginTop: "clamp(40px,6vh,64px)" }}>
-              <Link className="linku" href="/projects" style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.04em", color: "var(--fg-dim)" }}>
-                ← All projects
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* Instagram feed — recent posts + follow */}
+        <InstagramFeed handle="@symcyto" profileUrl="https://www.instagram.com/symcyto/" />
+
       </div>
+      <MoreProjects excludeSlug="symcyto" />
     </RevealRoot>
   );
 }

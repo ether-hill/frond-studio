@@ -42,7 +42,7 @@ export default function NewsletterSignup() {
 
   if (state === "done") {
     return (
-      <p style={{ color: "var(--fg-dim)", fontSize: 15, lineHeight: 1.55, maxWidth: "30ch" }}>
+      <p style={{ color: "var(--fg-dim)", fontSize: "var(--text-body)", lineHeight: 1.55, maxWidth: "30ch" }}>
         You&apos;re on the list — thanks for signing up. 🌱
       </p>
     );

@@ -21,7 +21,7 @@ function Column({ kind, points }: { kind: "before" | "after"; points: string[] }
       </h3>
       <ul style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {points.map((p) => (
-          <li key={p} style={{ display: "flex", alignItems: "flex-start", gap: 14, fontSize: "clamp(16px,1.4vw,20px)", lineHeight: 1.45, color: "var(--fg)", whiteSpace: "normal" }}>
+          <li key={p} style={{ display: "flex", alignItems: "flex-start", gap: 14, fontSize: "var(--text-lead)", lineHeight: 1.45, color: "var(--fg)", whiteSpace: "normal" }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: tone.dot, flexShrink: 0, marginTop: "0.55em" }} />
             <span>{p}</span>
           </li>

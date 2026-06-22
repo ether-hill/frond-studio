@@ -16,7 +16,7 @@ function MetaRow({ label, children }: { label: string; children: React.ReactNode
       >
         {label}
       </div>
-      <div style={{ fontSize: 15, color: "var(--fg)", lineHeight: 1.5 }}>{children}</div>
+      <div style={{ fontSize: "var(--text-body)", color: "var(--fg)", lineHeight: 1.5 }}>{children}</div>
     </div>
   );
 }
@@ -37,7 +37,7 @@ function Block({ label, body }: { label: string; body: string }) {
       >
         {label}
       </h2>
-      <p style={{ fontSize: "clamp(17px,1.5vw,21px)", lineHeight: 1.55, color: "var(--fg-dim)", maxWidth: "54ch" }}>{body}</p>
+      <p style={{ fontSize: "var(--text-lead)", lineHeight: 1.55, color: "var(--fg-dim)", maxWidth: "54ch" }}>{body}</p>
     </div>
   );
 }

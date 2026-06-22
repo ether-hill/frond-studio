@@ -21,12 +21,16 @@ const COLORS = [
   { name: "line", role: "Borders / rules", dark: "13% fg", light: "16% fg" },
 ];
 
+// Reads the live type tokens (globals.css :root) — this page renders each row AT
+// its token, so the showcase can never drift from what ships.
 const TYPE = [
-  { label: "Display / H1", cls: "clamp(52px,9vw,148px)", weight: 600, sample: "Natural selections" },
-  { label: "Section / H2", cls: "clamp(34px,4.6vw,66px)", weight: 500, sample: "Capabilities" },
-  { label: "Statement", cls: "clamp(26px,3.1vw,46px)", weight: 500, sample: "We borrow the patterns of living systems." },
-  { label: "Lead", cls: "clamp(19px,1.7vw,27px)", weight: 400, sample: "The interesting problems don’t fit inside one discipline." },
-  { label: "Body", cls: "clamp(15px,1.15vw,17px)", weight: 400, sample: "We work across design, engineering, strategy and AI as a single craft." },
+  { label: "Display", cls: "var(--text-display)", size: "44 → 96px", role: "Page heroes", weight: 600, sample: "Natural selections" },
+  { label: "Headline", cls: "var(--text-headline)", size: "36 → 64px", role: "Big statements / CTA", weight: 500, sample: "We borrow the patterns of living systems." },
+  { label: "Title", cls: "var(--text-title)", size: "28 → 50px", role: "Section headings", weight: 500, sample: "Capabilities" },
+  { label: "Subtitle", cls: "var(--text-subtitle)", size: "22 → 34px", role: "Sub-headings, card titles", weight: 500, sample: "Theraminimal" },
+  { label: "Lead", cls: "var(--text-lead)", size: "19 → 24px", role: "Intro / lead paragraphs", weight: 400, sample: "The interesting problems don’t fit inside one discipline." },
+  { label: "Body", cls: "var(--text-body)", size: "16 → 17px", role: "Body copy", weight: 400, sample: "We work across design, engineering, strategy and AI as a single craft." },
+  { label: "Caption", cls: "var(--text-caption)", size: "13 → 14px", role: "Small print / meta", weight: 400, sample: "Small print, fine details and meta." },
 ];
 
 const TOKENS = [
@@ -67,9 +71,9 @@ function Section({ id, n, title, intro, children }: { id: string; n: string; tit
     <section id={id} data-rv style={{ borderTop: "1px solid var(--line)", paddingTop: "clamp(28px,4vh,48px)", marginTop: "clamp(52px,8vh,104px)" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 8 }}>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 500, color: "var(--fg-faint)" }}>{n}</span>
-        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(20px,2.25vw,33px)", fontWeight: 500, letterSpacing: "-0.015em" }}>{title}</h2>
+        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-subtitle)", fontWeight: 500, letterSpacing: "-0.015em" }}>{title}</h2>
       </div>
-      {intro ? <p style={{ maxWidth: "60ch", color: "var(--fg-dim)", fontSize: "clamp(15px,1.15vw,17px)", lineHeight: 1.6, marginBottom: "clamp(28px,4vh,40px)" }}>{intro}</p> : null}
+      {intro ? <p style={{ maxWidth: "60ch", color: "var(--fg-dim)", fontSize: "var(--text-body)", lineHeight: 1.6, marginBottom: "clamp(28px,4vh,40px)" }}>{intro}</p> : null}
       {children}
     </section>
   );
@@ -142,11 +146,14 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* Typography */}
-        <Section id="type" n="04" title="Typography" intro="Schibsted Grotesk for everything visible (var(--font-display) / --font-body), a monospace stack (var(--font-mono)) for micro-labels, nav and controls. No serif. Sizes are fluid clamp() steps.">
+        <Section id="type" n="04" title="Typography" intro="Schibsted Grotesk for everything visible (var(--font-display) / --font-body), a monospace stack (var(--font-mono)) for micro-labels, nav and controls. No serif. Sizes are fluid clamp() steps, exposed as CSS tokens (--text-display … --text-body) — the single source of truth; components reference these, never hardcoded sizes.">
           <div style={{ display: "flex", flexDirection: "column", gap: "clamp(20px,3vh,32px)" }}>
             {TYPE.map((t) => (
               <div key={t.label} style={{ borderTop: "1px solid var(--line-2)", paddingTop: 16 }}>
-                <div style={{ ...monoLabel, marginBottom: 12 }}>{t.label} · {t.cls}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, flexWrap: "wrap", marginBottom: 12 }}>
+                  <span style={monoLabel}>{t.label} — {t.role}</span>
+                  <span style={{ ...monoLabel, color: "var(--fg-faint)" }}>{t.cls} · {t.size}</span>
+                </div>
                 <div style={{ fontFamily: "var(--font-display), sans-serif", fontSize: t.cls, fontWeight: t.weight, lineHeight: 1.05, letterSpacing: "-0.02em" }}>
                   {t.sample}
                 </div>

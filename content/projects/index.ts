@@ -1,12 +1,10 @@
 import type { Project } from "./_types";
-import sourceLibrary from "./source-library";
 
-// Registry of content-file (rich case-study) projects. Adding a project = drop a
-// new content file and list it here. These take precedence over the Sanity-backed
-// thin layout on the /work/[slug] route and are merged into the /work index.
-// (The thin Embassy of the Free Mind project was retired in favour of the
-// editorial case study at /work/embassy-of-the-free-mind-case-study.)
-export const CONTENT_PROJECTS: Project[] = [sourceLibrary];
+// Registry of content-file (rich case-study) projects using the canonical
+// CaseStudy template. Currently empty: Embassy of the Free Mind and Source
+// Library both moved to the editorial layout (see ./editorial.ts). Kept so a
+// future project can use the canonical template without re-wiring the route.
+export const CONTENT_PROJECTS: Project[] = [];
 
 export function getContentProject(slug: string): Project | undefined {
   return CONTENT_PROJECTS.find((p) => p.slug === slug);

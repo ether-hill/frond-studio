@@ -11,10 +11,14 @@ export default function VideoPlayer({
   src,
   poster,
   title,
+  ratio,
 }: {
   src: string;
   poster?: string;
   title?: string;
+  /** Override the player's aspect-ratio (e.g. "1 / 1") so it matches the video
+   *  and nothing is cropped. Omit to use the layout default (16:9 / grid 4:3). */
+  ratio?: string;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [started, setStarted] = useState(false);
@@ -29,7 +33,7 @@ export default function VideoPlayer({
   };
 
   return (
-    <div className="sym-player">
+    <div className="sym-player" style={ratio ? { aspectRatio: ratio } : undefined}>
       <video
         ref={ref}
         src={src}

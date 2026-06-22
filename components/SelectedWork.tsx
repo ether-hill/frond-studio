@@ -27,12 +27,10 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
           alignItems: "center",
           gap: 24,
           flexWrap: "wrap",
-          borderTop: "1px solid var(--line)",
-          paddingTop: 22,
           marginBottom: "clamp(34px,5vh,58px)",
         }}
       >
-        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
+        <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-title)", fontWeight: 500, letterSpacing: "-0.018em" }}>
           Recent Work
         </h2>
         <Link href="/work" className="pill pill-ghost">
@@ -44,7 +42,13 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
         {projects.map((p) => (
           <Link key={p._id} className="vwork" href={`/work/${p.slug}`} style={{ display: "flex", flexDirection: "column", textDecoration: "none", color: "inherit" }}>
             <span className="proj-shot">
-              {p.thumbnailVideo ? <AutoVideo src={p.thumbnailVideo} poster={`/posters/${p.slug}.jpg`} /> : <MediaPlaceholder label={p.title} />}
+              {p.thumbnailVideo ? (
+                <AutoVideo src={p.thumbnailVideo} poster={`/posters/${p.slug}.jpg`} />
+              ) : p.thumbnailImage ? (
+                <img src={p.thumbnailImage} alt={`${p.title} preview`} loading="lazy" decoding="async" width={1600} height={900} />
+              ) : (
+                <MediaPlaceholder label={p.title} />
+              )}
             </span>
             <div
               style={{
@@ -65,13 +69,16 @@ export default function SelectedWork({ projects }: { projects: ProjectCard[] }) 
                 margin: 0,
                 fontFamily: "var(--font-display), sans-serif",
                 fontWeight: 500,
-                fontSize: "clamp(24px,2.4vw,34px)",
+                fontSize: "var(--text-subtitle)",
                 lineHeight: 1.02,
                 letterSpacing: "-0.018em",
               }}
             >
               {p.title}
             </h3>
+            {p.summary && (
+              <p style={{ margin: "12px 0 0", fontSize: 14.5, lineHeight: 1.55, color: "var(--fg-dim)" }}>{p.summary}</p>
+            )}
             <span className="linku link-cta" style={{ marginTop: 20 }}>
               Open →
             </span>

@@ -15,8 +15,8 @@ export default function Credits({ credits, frondRole }: { credits?: string; fron
         Credits
       </h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: "60ch" }}>
-        {credits ? <p style={{ fontSize: "clamp(16px,1.4vw,20px)", lineHeight: 1.5, color: "var(--fg)" }}>{credits}</p> : null}
-        {frondRole ? <p style={{ fontSize: 15, lineHeight: 1.55, color: "var(--fg-dim)" }}>{frondRole}</p> : null}
+        {credits ? <p style={{ fontSize: "var(--text-lead)", lineHeight: 1.5, color: "var(--fg)" }}>{credits}</p> : null}
+        {frondRole ? <p style={{ fontSize: "var(--text-body)", lineHeight: 1.55, color: "var(--fg-dim)" }}>{frondRole}</p> : null}
       </div>
     </section>
   );

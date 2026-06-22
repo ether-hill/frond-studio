@@ -38,8 +38,10 @@ export type EditorialProject = {
 
   /** Hero media, shown inside a browser frame. */
   hero: EditorialMedia;
-  /** Full-bleed blurred image shown behind the hero browser frame. */
+  /** Full-bleed image shown behind the hero browser frame. */
   heroBg?: string;
+  /** Lighter scrim over the hero backdrop (less dark tint). */
+  heroLite?: boolean;
   /** Thumbnail for the /work index row + "See more work" cards. */
   card?: { video?: string; poster?: string };
 
@@ -49,25 +51,33 @@ export type EditorialProject = {
   client: string;
   services: string[];
 
-  /** "At a glance" numeric stats (4). */
-  stats: EditorialStat[];
-  /** Tech + integrations, rendered as a logo grid. */
-  integrations: string[];
+  /** "At a glance" numeric stats. Omit to skip. */
+  stats?: EditorialStat[];
+  /** Eyebrow above the stats grid (default "By the numbers"). */
+  statsLabel?: string;
+  /** Optional "as of <date>" note shown next to the stats eyebrow. */
+  statsAsOf?: string;
+  /** Tech + integrations, rendered as a logo grid. Omit to skip. */
+  integrations?: string[];
 
-  /** Homepage intent block (text only). */
-  frontDoor: EditorialSection;
-  /** Full-bleed montage band: a line of serif over media. */
-  band: { text: string; media: EditorialMedia };
+  /** Intent block (text only). Omit to skip. */
+  frontDoor?: EditorialSection;
+  /** Full-bleed montage band: a line of serif over media. Omit to skip. */
+  band?: { text: string; media: EditorialMedia };
 
-  /** Content model block + the overlapping device cluster. */
-  contentModel: EditorialSection;
-  devices: { phone: EditorialMedia; tablet: EditorialMedia; laptop: EditorialMedia };
+  /** Text block followed by a full-width media well (e.g. a feature video).
+      A lighter alternative to band/pillars; omit to skip. */
+  showcase?: EditorialSection & { media: EditorialMedia };
 
-  /** Film & motion block + two circular looping clips. */
-  film: EditorialSection & { clips: EditorialFilmClip[] };
+  /** Content model block + the overlapping device cluster. Omit to skip. */
+  contentModel?: EditorialSection;
+  devices?: { phone: EditorialMedia; tablet: EditorialMedia; laptop: EditorialMedia };
 
-  /** About-page feature: a single media in a browser frame + caption. */
-  pillars: EditorialSection & { media: EditorialMedia; caption: string; note: string };
+  /** Film & motion block + two circular looping clips. Omit to skip. */
+  film?: EditorialSection & { clips: EditorialFilmClip[] };
+
+  /** Feature: a single media in a browser frame + caption. Omit to skip. */
+  pillars?: EditorialSection & { media: EditorialMedia; caption: string; note: string };
 
   /** Before / after fragment lists (rendered neutral, no colour coding). */
   before?: string[];
@@ -77,6 +87,10 @@ export type EditorialProject = {
   quote?: { body: string; author: string; needsConfirmation?: boolean };
   /** Looping video shown behind the quote (distinct dark/light treatment in CSS). */
   quoteBg?: EditorialMedia;
+  /** Still image shown behind the quote, with a tint overlay for legibility. */
+  quoteBgImage?: string;
+  /** Light-mode treatment for the quote backdrop. "dark" mirrors the dark rendering. */
+  quoteBgImageLight?: "dark" | "soft";
   credits?: string;
 
   prev?: { slug: string; title: string };

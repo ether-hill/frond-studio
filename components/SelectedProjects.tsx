@@ -6,11 +6,13 @@ import { PERSONAL_PROJECTS } from "@/lib/projects";
  * three-up with their 16:9 covers (first six). Mirrors the /projects index but
  * compact.
  */
-const RECENT = PERSONAL_PROJECTS.slice(0, 6);
+// Newest-first: PERSONAL_PROJECTS is maintained oldest→newest, so reverse to
+// surface the most recently added projects (the cymatics work) on the home.
+const RECENT = [...PERSONAL_PROJECTS].reverse().slice(0, 6);
 
 export default function SelectedProjects() {
   return (
-    <section style={{ borderTop: "1px solid var(--line)" }}>
+    <section>
       <div
         className="page-gutter"
         style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--section-y) var(--gutter)" }}
@@ -23,12 +25,10 @@ export default function SelectedProjects() {
             alignItems: "center",
             gap: 24,
             flexWrap: "wrap",
-            borderTop: "1px solid var(--line)",
-            paddingTop: 22,
             marginBottom: "clamp(34px,5vh,58px)",
           }}
         >
-          <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "clamp(34px,4.6vw,66px)", fontWeight: 500, letterSpacing: "-0.018em" }}>
+          <h2 style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "var(--text-title)", fontWeight: 500, letterSpacing: "-0.018em" }}>
             Recent Projects
           </h2>
           <Link href="/projects" className="pill pill-ghost">
@@ -72,7 +72,7 @@ export default function SelectedProjects() {
                     margin: 0,
                     fontFamily: "var(--font-display), sans-serif",
                     fontWeight: 500,
-                    fontSize: "clamp(24px,2.4vw,34px)",
+                    fontSize: "var(--text-subtitle)",
                     lineHeight: 1.02,
                     letterSpacing: "-0.018em",
                   }}

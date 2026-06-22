@@ -13,8 +13,8 @@ export default function PageHeader({ title, intro, introSerif, compact }: Props)
         style={{
           fontFamily: "var(--font-display), sans-serif",
           fontWeight: 600,
-          // matches the homepage hero h1 size
-          fontSize: compact ? "clamp(27px,4.95vw,86px)" : "clamp(36px,6.6vw,114px)",
+          // page hero; `compact` drops a step (design-system reference page)
+          fontSize: compact ? "var(--text-headline)" : "var(--text-display)",
           lineHeight: 0.92,
           letterSpacing: "-0.038em",
         }}
@@ -32,7 +32,7 @@ export default function PageHeader({ title, intro, introSerif, compact }: Props)
             maxWidth: introSerif ? "26ch" : 620,
             marginTop: "clamp(24px,3.5vh,42px)",
             fontFamily: introSerif ? "var(--font-display), sans-serif" : "var(--font-body), sans-serif",
-            fontSize: introSerif ? "clamp(24px,2.6vw,40px)" : "clamp(16px,1.4vw,19px)",
+            fontSize: introSerif ? "var(--text-subtitle)" : "var(--text-lead)",
             fontWeight: introSerif ? 400 : undefined,
             lineHeight: introSerif ? 1.18 : 1.55,
             letterSpacing: introSerif ? "-0.012em" : undefined,

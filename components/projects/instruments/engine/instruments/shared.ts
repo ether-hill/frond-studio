@@ -41,7 +41,7 @@ export function suspendAudio(): void {
 // ---- one-time CSS ----------------------------------------------------------
 
 let cssDone = false;
-function injectCss(): void {
+export function injectCss(): void {
   if (cssDone) return;
   cssDone = true;
   const s = document.createElement("style");
@@ -219,25 +219,33 @@ export function segmented<T extends string>(o: SegOpts<T>): { el: HTMLElement; s
 }
 
 /** Big POWER control that wires audio start/stop. onToggle resolves before the UI flips. */
-export function powerButton(onToggle: (on: boolean) => Promise<void> | void): { el: HTMLButtonElement } {
+export function powerButton(
+  onToggle: (on: boolean) => Promise<void> | void,
+  labels?: { on: string; off: string },
+): { el: HTMLButtonElement; set(on: boolean): void } {
+  const onLabel = labels?.on ?? "SOUND ON";
+  const offLabel = labels?.off ?? "POWER ON";
   const b = document.createElement("button");
   b.className = "inst-power"; b.type = "button";
   b.dataset.on = "0";
   b.setAttribute("aria-pressed", "false");
   const render = () => {
     const on = b.dataset.on === "1";
-    b.innerHTML = `<span class="inst-dot"></span>${on ? "SOUND ON" : "POWER ON"}`;
+    b.innerHTML = `<span class="inst-dot"></span>${on ? onLabel : offLabel}`;
     b.setAttribute("aria-pressed", String(on));
   };
   render();
+  // Reflect state set elsewhere (e.g. when interacting auto-powers the instrument)
+  // so the label never desyncs from the data-on visual.
+  const set = (on: boolean) => { b.dataset.on = on ? "1" : "0"; render(); };
   let busy = false;
   b.addEventListener("click", async () => {
     if (busy) return; busy = true;
     const next = b.dataset.on !== "1";
-    try { await onToggle(next); b.dataset.on = next ? "1" : "0"; render(); }
+    try { await onToggle(next); set(next); }
     finally { busy = false; }
   });
-  return { el: b };
+  return { el: b, set };
 }
 
 // ---- musical keyboard ------------------------------------------------------

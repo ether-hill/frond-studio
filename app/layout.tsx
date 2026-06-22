@@ -25,12 +25,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" data-theme="dark" className={schibsted.variable} suppressHydrationWarning>
       <head>
-        {/* Runs before first paint: (1) applies the saved/system colour theme so
-            there's no flash of the wrong theme, and (2) marks JS active so GSAP
-            reveal targets start hidden (degrades gracefully without JS). */}
+        {/* Runs before first paint: (1) applies the colour theme so there's no
+            flash of the wrong theme — dark is always the default; only an
+            explicit saved 'light' choice opts out (system preference is ignored),
+            and (2) marks JS active so GSAP reveal targets start hidden (degrades
+            gracefully without JS). */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var d=document.documentElement;try{var t=localStorage.getItem('frond-theme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';d.setAttribute('data-theme',t);}catch(e){}try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('gsap-on');}catch(e){}})();`,
+            __html: `(function(){var d=document.documentElement;try{var t=localStorage.getItem('frond-theme');if(t!=='light'&&t!=='dark')t='dark';d.setAttribute('data-theme',t);}catch(e){}try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('gsap-on');}catch(e){}})();`,
           }}
         />
       </head>

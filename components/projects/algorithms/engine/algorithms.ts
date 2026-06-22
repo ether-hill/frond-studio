@@ -7,14 +7,52 @@
 
 import { GENERATORS, renderArt, type Params } from "./artGenerators";
 import { PhysMod, M_DEFAULTS, type MParams } from "./physmod";
-import { Physarum } from "./physarum";
-import { VERSIONS, HERO_VERSION_ID } from "./versions";
+import { Physarum, DEFAULTS } from "./physarum";
+import { VERSION_BY_ID, HERO_VERSION_ID, type Version } from "./versions";
 
-// Jones (2010) agent-model presets for the algorithms demo — the 2D versions from
-// the SMA Config studio, surfaced via the same preset chooser as Mycelium.
-export const JONES_PRESETS = VERSIONS.filter((v) => v.dimension !== "3d").map((v) => ({
+// Jones (2010) agent-model presets — the exact curated set the SMA Config studio
+// ships (Playground 3): Aurora Veil (v6), Monochrome Drift (v7 · the default hero),
+// Blue Field, Starseed and Bubble Gum. Engine, defaults and params are identical to
+// SMA Config — these three "extra" scenes are registered inline there, so we mirror
+// them here verbatim.
+const JONES_EXTRA: Version[] = [
+  {
+    id: "blue", label: "Blue Field", blurb: "",
+    params: {
+      ...DEFAULTS,
+      agentTexW: 256, sensorAngle: 6.341, sensorDist: 8.739, turnSpeed: 26.023, stepSize: 1.7,
+      deposit: 0.09, decay: 0.9052, diffuse: 0.0353, stepsPerFrame: 3, spawn: "random",
+      bg: "#04060a", lo: "#0b3a6b", hi: "#7df3ff", intensity: 3, gamma: 0.3,
+      displayMode: "palette", species: 1, avoid: 0,
+    },
+  },
+  {
+    id: "starseed", label: "Starseed", blurb: "",
+    params: {
+      ...DEFAULTS,
+      agentTexW: 512, sensorAngle: 10, sensorDist: 7, turnSpeed: 23, stepSize: 1.5,
+      deposit: 0.04, decay: 0.815, diffuse: 0, stepsPerFrame: 3, intensity: 3.15, gamma: 0.3,
+      bg: "#1a1438", lo: "#2a1457", hi: "#a8963e", spawn: "ring", species: 2, avoid: 0,
+      mouseFood: 0, foodRadius: 36, displayMode: "rgb", colR: "#e1c45b", colG: "#937a34", colB: "#ffd23d",
+    },
+  },
+  {
+    id: "bubblegum", label: "Bubble Gum", blurb: "",
+    params: {
+      ...DEFAULTS,
+      agentTexW: 256, sensorAngle: 26, sensorDist: 24, turnSpeed: 45.383, stepSize: 2.6,
+      deposit: 0.5888, decay: 0.899, diffuse: 0.1, stepsPerFrame: 3, intensity: 0.865, gamma: 0.4859,
+      bg: "#2b1226", lo: "#5a2490", hi: "#f0a8ec", spawn: "center", species: 3, avoid: 0.28,
+      mouseFood: 0, foodRadius: 36, displayMode: "rgb", colR: "#b65e77", colG: "#c7527b", colB: "#f47c94",
+    },
+  },
+];
+const JONES_VERSIONS: Version[] = [VERSION_BY_ID["v6"], VERSION_BY_ID["v7"], ...JONES_EXTRA];
+export const JONES_PRESETS = JONES_VERSIONS.map((v) => ({
   key: v.id, label: v.label.replace(/^v\d+\s*·\s*/, ""), params: v.params,
 }));
+// The default Jones scene = SMA Config's hero (v7 · Monochrome Drift).
+export const JONES_DEFAULT_PARAMS = VERSION_BY_ID[HERO_VERSION_ID].params;
 
 // Physarum now runs the studio's latest GPU model — the density-modulated Physarum
 // from Playground 2 (src/physmod.ts), ~590k agents on the WebGL2 engine, instead of
@@ -49,25 +87,25 @@ export interface Algo {
 
 export const DATA: Algo[] = [
   {
-    i: "01", tag: "physarum", gen: "physarum", name: "Physarum", sub: "SLIME MOLD TRANSPORT NETWORKS", filename: "physarum_polycephalum.sim",
+    i: "01", tag: "physarum-jones", gen: "physarum-jones", name: "Physarum — Jones", sub: "JONES AGENT MODEL", filename: "jones_2010.sim",
     group: "NATURE SYSTEM",
-    note: "Tero et al., “Rules for Biologically Inspired Adaptive Network Design”, Science, 2010.",
+    note: "J. Jones, “Characteristics of Pattern Formation and Evolution in Approximations of Physarum Transport Networks”, Artificial Life, 2010.",
     paras: [
-      "Physarum polycephalum is a single-celled organism with no brain and no nervous system, yet it reliably finds the shortest path through a maze and rebuilds the Tokyo rail network when food is placed at the cities.",
-      "Our model is an agent swarm. Each particle senses a chemical trail just ahead of itself, steers toward the strongest signal, and deposits more trail as it moves. The trail diffuses and decays. From those four rules alone, the minimal transport network emerges.",
+      "The Jones agent model is the canonical multi-agent slime-mould simulation, and the engine behind the SMA Config studio. Hundreds of thousands of agents move over a shared trail map, each sensing three points ahead and turning toward the strongest signal.",
+      "Every agent deposits a chemical trail as it moves; the field diffuses and decays. From stigmergy alone — coordination through the environment — labyrinths, reticulated transport networks and fanning search fronts emerge. Pick a preset to change the regime.",
     ],
     steps: [
-      { n: "1", title: "Sense", text: "Each agent samples the trail at three points ahead — front, front-left, front-right." },
-      { n: "2", title: "Rotate", text: "It turns toward whichever sensor reads the highest concentration." },
-      { n: "3", title: "Deposit", text: "It steps forward and lays a fixed amount of chemoattractant on the grid." },
-      { n: "4", title: "Diffuse & Decay", text: "The whole field is blurred slightly and faded, carving stable channels." },
+      { n: "1", title: "Sense", text: "Each agent probes three points ahead — left, centre, right — of the trail map." },
+      { n: "2", title: "Rotate", text: "It steers toward whichever sensor reads the strongest trail." },
+      { n: "3", title: "Deposit", text: "Moving forward, it lays a chemical trail onto the continuum grid." },
+      { n: "4", title: "Diffuse & Decay", text: "The field blurs and fades, so paths adapt, merge or collapse." },
     ],
     params: [
-      { label: "agents", value: "~590,000 (GPU)" },
-      { label: "model", value: "density-modulated" },
-      { label: "sensor_reach", value: "base · power · scale" },
-      { label: "engine", value: "WebGL2 · 5-pass" },
-      { label: "render", value: "white-on-black" },
+      { label: "model", value: "Jones (2010) agents" },
+      { label: "engine", value: "WebGL2 · GPU" },
+      { label: "sensors", value: "L · C · R, 3-point" },
+      { label: "presets", value: "aurora veil … bubble gum" },
+      { label: "studio", value: "→ SMA Config" },
     ],
   },
   {
@@ -81,15 +119,15 @@ export const DATA: Algo[] = [
     steps: [
       { n: "1", title: "Diffuse", text: "Each chemical spreads across the grid at its own diffusion rate." },
       { n: "2", title: "React", text: "Where they meet, U + 2V → 3V converts feed into product." },
-      { n: "3", title: "Feed", text: "Chemical U is replenished everywhere at the feed rate F." },
+      { n: "3", title: "Feed", text: "Chemical U is replenished at feed rate F — here ramped with radius, so one frame crosses several regimes at once." },
       { n: "4", title: "Kill", text: "Chemical V is removed at rate (F + k), setting the pattern regime." },
     ],
     params: [
-      { label: "feed_rate F", value: "0.034 – 0.058" },
-      { label: "kill_rate k", value: "0.057 – 0.065" },
-      { label: "diffusion_U", value: "0.16" },
-      { label: "diffusion_V", value: "0.08" },
-      { label: "pattern", value: "coral / mitosis" },
+      { label: "engine", value: "WebGL2 · GPU" },
+      { label: "grid", value: "1024² · float" },
+      { label: "feed / kill", value: "radial gradient" },
+      { label: "presets", value: "mitosis … sunburst" },
+      { label: "pattern", value: "coral · labyrinth · spots" },
     ],
   },
   {
@@ -310,28 +348,6 @@ export const DATA: Algo[] = [
       { label: "branching", value: "density-dependent" },
       { label: "fusion", value: "anastomosis" },
       { label: "substrate", value: "depleting nutrient" },
-    ],
-  },
-  {
-    i: "13", tag: "physarum-jones", gen: "physarum-jones", name: "Physarum — Jones", sub: "JONES AGENT MODEL", filename: "jones_2010.sim",
-    group: "NATURE SYSTEM",
-    note: "J. Jones, “Characteristics of Pattern Formation and Evolution in Approximations of Physarum Transport Networks”, Artificial Life, 2010.",
-    paras: [
-      "The Jones agent model is the canonical multi-agent slime-mould simulation, and the engine behind the SMA Config studio. Hundreds of thousands of agents move over a shared trail map, each sensing three points ahead and turning toward the strongest signal.",
-      "Every agent deposits a chemical trail as it moves; the field diffuses and decays. From stigmergy alone — coordination through the environment — labyrinths, reticulated transport networks and fanning search fronts emerge. Pick a preset to change the regime.",
-    ],
-    steps: [
-      { n: "1", title: "Sense", text: "Each agent probes three points ahead — left, centre, right — of the trail map." },
-      { n: "2", title: "Rotate", text: "It steers toward whichever sensor reads the strongest trail." },
-      { n: "3", title: "Deposit", text: "Moving forward, it lays a chemical trail onto the continuum grid." },
-      { n: "4", title: "Diffuse & Decay", text: "The field blurs and fades, so paths adapt, merge or collapse." },
-    ],
-    params: [
-      { label: "model", value: "Jones (2010) agents" },
-      { label: "engine", value: "WebGL2 · GPU" },
-      { label: "sensors", value: "L · C · R, 3-point" },
-      { label: "presets", value: "classic … aurora" },
-      { label: "studio", value: "→ SMA Config" },
     ],
   },
 ];
