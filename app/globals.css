@@ -1933,3 +1933,79 @@ button {
   .ecs-grid { grid-template-columns: 1fr 1fr; }
   .ecs-band { min-height: 320px; }
 }
+
+/* ── Fungi Source (research project / bibliography) — antiquarian, media-rich ── */
+.fs-root { background: var(--bg-0); color: var(--fg); }
+.fs-hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(128px, 21vh, 230px) var(--gutter) clamp(64px, 10vh, 120px);
+  background: radial-gradient(95% 120% at 50% 0%, rgba(217, 201, 176, 0.08), transparent 58%), var(--bg-0);
+  border-bottom: 1px solid var(--line-2);
+}
+.fs-hero-inner { max-width: var(--maxw); margin: 0 auto; }
+.fs-kicker {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+  letter-spacing: 0.28em; text-transform: uppercase; color: var(--accent);
+}
+.fs-title {
+  margin: clamp(20px, 3vh, 34px) 0 0; font-family: Georgia, "Times New Roman", serif;
+  font-style: italic; font-weight: 400; font-size: var(--text-display); line-height: 0.96;
+  letter-spacing: -0.01em; color: var(--fg);
+}
+.fs-lead {
+  margin: clamp(22px, 3.4vh, 38px) 0 0; max-width: 60ch;
+  font-size: var(--text-lead); line-height: 1.55; color: var(--fg-dim);
+}
+.fs-article { max-width: var(--maxw); margin: 0 auto; padding: clamp(56px, 9vh, 120px) var(--gutter); }
+.fs-feature {
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 5vw, 84px);
+  align-items: center; margin-bottom: clamp(64px, 11vh, 140px);
+}
+.fs-feature.rev > .fs-media { order: 2; }
+.fs-ey {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--fg-faint); margin-bottom: 14px;
+}
+.fs-h2 {
+  margin: 0; font-family: Georgia, "Times New Roman", serif; font-style: italic; font-weight: 400;
+  font-size: var(--text-title); line-height: 1.0; letter-spacing: -0.01em; color: var(--fg);
+}
+.fs-body { margin: clamp(18px, 2.6vh, 28px) 0 0; max-width: 46ch; font-size: var(--text-body); line-height: 1.7; color: var(--fg-dim); }
+/* parchment placeholder media frame (swap the inner for real scans/plates) */
+.fs-media { position: relative; }
+.fs-frame {
+  position: relative; aspect-ratio: 4 / 3; border-radius: 8px; overflow: hidden;
+  border: 1px solid rgba(217, 201, 176, 0.16); display: grid; place-items: center;
+  background:
+    radial-gradient(120% 130% at 50% 22%, rgba(217, 201, 176, 0.12), transparent 62%),
+    linear-gradient(180deg, rgba(217, 201, 176, 0.055), rgba(217, 201, 176, 0.012));
+}
+.fs-frame::after { content: ""; position: absolute; inset: 12px; border: 1px solid rgba(217, 201, 176, 0.1); border-radius: 5px; pointer-events: none; }
+.fs-fcap {
+  position: relative; text-align: center; padding: 0 18px; font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-faint);
+}
+.fs-orn { display: block; margin-bottom: 12px; font-family: Georgia, serif; font-size: 32px; color: rgba(217, 201, 176, 0.42); }
+.fs-gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(12px, 1.4vw, 20px); margin: clamp(28px, 4vh, 52px) 0 clamp(64px, 11vh, 140px); }
+.fs-gallery .fs-frame { aspect-ratio: 3 / 4; }
+.fs-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.fs-tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--fg-dim); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+.fs-cta {
+  display: inline-flex; align-items: center; gap: 10px; margin-top: clamp(24px, 3.4vh, 36px); width: fit-content;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--fg); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 14px 24px;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+.fs-cta:hover { background: var(--fg); color: var(--bg-0); border-color: var(--fg); }
+.fs-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(16px, 2vw, 32px); margin-top: clamp(36px, 5vh, 64px); border-top: 1px solid var(--line-2); padding-top: clamp(28px, 4vh, 44px); }
+.fs-step .n { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; color: var(--accent); }
+.fs-step h4 { margin: 10px 0 8px; font-family: Georgia, serif; font-style: italic; font-weight: 400; font-size: var(--text-subtitle); color: var(--fg); }
+.fs-step p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--fg-dim); }
+@media (max-width: 860px) {
+  .fs-feature { grid-template-columns: 1fr; gap: 28px; }
+  .fs-feature.rev > .fs-media { order: 0; }
+  .fs-gallery { grid-template-columns: repeat(3, 1fr); }
+  .fs-steps { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 520px) { .fs-gallery { grid-template-columns: repeat(2, 1fr); } }

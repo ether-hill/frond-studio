@@ -116,4 +116,15 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     href: "/projects/further-cymatics",
     image: "/cards/further-cymatics.jpg",
   },
+  {
+    slug: "fungi-source",
+    title: "Fungi Source",
+    kicker: "RESEARCH · FUNGI BIBLIOGRAPHY",
+    summary:
+      "An open-ended search for the literature of fungi — gathering ancient, antiquarian and modern books, with a bias toward the public domain, catalogued through a custom interface and handed off to Source Library.",
+    year: "2026",
+    tags: ["Research", "Bibliography", "Public Domain", "Mycology"],
+    href: "/projects/fungi-source",
+    image: "/cards/fungi-source.jpg",
+  },
 ];
