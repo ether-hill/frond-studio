@@ -25,7 +25,7 @@ const project: EditorialProject = {
     ratio: "16:9",
     label: "embassyofthefreemind.com",
   },
-  heroBg: `${M}/videos/hero-bg.jpg`,
+  heroBg: `${M}/hero-bg-affiche.avif`,
   card: { video: `${M}/card.mp4`, poster: `${M}/card.jpg` },
 
   introLead:
