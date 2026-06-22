@@ -234,6 +234,13 @@ export function mountMini(root: HTMLElement): () => void {
   const drv: Drv[] = Array.from({ length: NVOICES }, () => ({ mode: null, cur: { x: 0.5, vol: 0.5 }, target: { x: 0.5, vol: 0.5 }, nextChange: 0 }));
   let timer = 0;
 
+  // Global FX: a feedback delay on the master bus; reverb + vibrato drive the
+  // per-voice params. Defaults match the voice defaults so nothing jumps on load.
+  let delayWet: GainNode | null = null;
+  const fx = { delay: 0.22, reverb: 0.5, vib: 0.3 };
+  function applyDelay(): void { if (delayWet) delayWet.gain.setTargetAtTime(fx.delay, delayWet.context.currentTime, 0.05); }
+  function applyVoiceFx(): void { for (const v of voices) if (v.ready) { v.set("reverb", fx.reverb); v.set("vibDepth", fx.vib); } }
+
   // A dedicated AudioContext for this instrument — created on the first user
   // gesture and resumed/suspended on its own, independent of the shared context
   // the hero biome (and the full instruments) use.
@@ -247,7 +254,15 @@ export function mountMini(root: HTMLElement): () => void {
     if (master) return;
     const comp = c.createDynamicsCompressor();
     comp.threshold.value = -12; comp.ratio.value = 4; comp.connect(c.destination);
-    master = c.createGain(); master.gain.value = 0; master.connect(comp);
+    master = c.createGain(); master.gain.value = 0;
+    // dry path
+    const dry = c.createGain(); dry.gain.value = 1; master.connect(dry); dry.connect(comp);
+    // global feedback delay (wet level = fx.delay)
+    const delay = c.createDelay(1.0); delay.delayTime.value = 0.3;
+    const fbk = c.createGain(); fbk.gain.value = 0.36;
+    master.connect(delay); delay.connect(fbk); fbk.connect(delay);
+    delayWet = c.createGain(); delayWet.gain.value = fx.delay;
+    delay.connect(delayWet); delayWet.connect(comp);
   }
   async function ensureVoice(i: number): Promise<void> {
     await ensureChain();
@@ -368,8 +383,8 @@ export function mountMini(root: HTMLElement): () => void {
   async function powerOn(): Promise<void> {
     await ensureChain();
     powered = true; power.set(true); setMaster(masterVol);
-    await startAuto(FOCUS, "drift");
-    for (let i = 1; i < count; i++) await startAuto(i, AUTO_MODES[Math.floor(rnd() * AUTO_MODES.length)]);
+    // No auto on power-on — the field is ready to play; auto only via Random Auto.
+    readout.textContent = "ON · TOUCH TO PLAY · RANDOM AUTO";
   }
   function powerOff(): void {
     powered = false; power.set(false); setMaster(0);
@@ -382,6 +397,9 @@ export function mountMini(root: HTMLElement): () => void {
   async function setCount(n: number): Promise<void> {
     count = clamp(n, 1, NVOICES); voicesSeg.set(String(count));
     if (!powered) return;
+    // Voice count only drives sound while auto is running (the field plays one
+    // voice). Don't spin up auto here — that's the Random Auto button's job.
+    if (drv.every((d) => d.mode === null)) return;
     for (let i = 0; i < NVOICES; i++) {
       if (i >= count) stopAuto(i);
       else if (!drv[i].mode) await startAuto(i, i === FOCUS ? "drift" : AUTO_MODES[Math.floor(rnd() * AUTO_MODES.length)]);
@@ -412,12 +430,15 @@ export function mountMini(root: HTMLElement): () => void {
   }
   async function begin(clientX: number, clientY: number): Promise<void> {
     await ensureVoice(FOCUS); powerUpSilent();
+    applyDelay(); voices[FOCUS].set("reverb", fx.reverb); voices[FOCUS].set("vibDepth", fx.vib);
     drv[FOCUS].mode = null; maybeStopTimer(); // manual takes over voice A
     showCrosshair(true); voices[FOCUS].gate(true); update(clientX, clientY);
   }
   function end(): void {
     voices[FOCUS].gate(false); activePointer = null;
-    if (powered) startAuto(FOCUS, "drift"); else showCrosshair(false); // resume a gentle drift
+    showCrosshair(false);
+    // Stay silent on release — auto only runs when Random Auto is clicked.
+    if (powered) readout.textContent = "ON · TOUCH TO PLAY · RANDOM AUTO";
   }
   const onDown = async (e: PointerEvent) => {
     if (activePointer !== null) return;
@@ -451,7 +472,17 @@ export function mountMini(root: HTMLElement): () => void {
   };
   field.addEventListener("keydown", onKey);
 
-  wrap.append(bar, field);
+  // --- effects rack (delay · reverb · vibrato) under the field ---
+  const fxBar = document.createElement("div");
+  fxBar.style.cssText = "display:flex;align-items:flex-end;gap:clamp(14px,2vw,28px);flex-wrap:wrap";
+  const pct = (v: number) => `${Math.round(v * 100)}%`;
+  const delaySlider = slider({ label: "DELAY", min: 0, max: 1, step: 0.01, value: fx.delay, format: pct, onInput: (v) => { fx.delay = v; applyDelay(); } });
+  const reverbSlider = slider({ label: "REVERB", min: 0, max: 1, step: 0.01, value: fx.reverb, format: pct, onInput: (v) => { fx.reverb = v; applyVoiceFx(); } });
+  const vibSlider = slider({ label: "VIBRATO", min: 0, max: 1, step: 0.01, value: fx.vib, format: pct, onInput: (v) => { fx.vib = v; applyVoiceFx(); } });
+  for (const sl of [delaySlider, reverbSlider, vibSlider]) sl.el.style.cssText += ";flex:1 1 150px;min-width:120px";
+  fxBar.append(delaySlider.el, reverbSlider.el, vibSlider.el);
+
+  wrap.append(bar, field, fxBar);
   root.appendChild(wrap);
 
   return () => {
