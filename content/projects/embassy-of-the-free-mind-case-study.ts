@@ -29,9 +29,9 @@ const project: EditorialProject = {
   card: { video: `${M}/card.mp4`, poster: `${M}/card.jpg` },
 
   introLead:
-    "The Embassy of the Free Mind holds a world-class collection of hermetic texts. Its old site got in the way: hard to navigate, single language, and cut off from ticketing and the library catalogue.",
+    "A home for everything the Embassy is",
   introBody:
-    "Frond rebuilt the museum's site as a modern web app. The content structure matches how the museum actually publishes: exhibitions, news, the Codex Hermeticus newsletter, partners and FAQs. The result honours the material and runs the daily work of the place.",
+    "The Embassy is a museum, a library, a programme of events and a community of members, and the site was built to serve all of it. Everyone who comes to it, whether to visit, to read, to book or to belong, finds their place, and the institution has one home that holds the whole of what it does.",
   client: "Embassy of the Free Mind",
   services: [
     "Art Direction",

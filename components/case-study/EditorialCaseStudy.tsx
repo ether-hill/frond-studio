@@ -241,13 +241,12 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
                           aspectRatio: "393 / 852",
                           boxSizing: "border-box",
                           background: "linear-gradient(145deg,#1c1c20,#08080a)",
-                          borderRadius: "14% / 6.4%",
-                          padding: "2.7%",
+                          borderRadius: "12% / 5.4%",
+                          padding: "1.7%",
                           boxShadow: "0 34px 80px rgba(0,0,0,0.55), inset 0 0 0 1.5px rgba(255,255,255,0.08)",
                         }}
                       >
-                        <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: "11.6% / 5.4%", overflow: "hidden", background: "#000" }}>
-                          <span aria-hidden style={{ position: "absolute", top: "1.7%", left: "50%", transform: "translateX(-50%)", width: "30%", height: "8.4%", maxHeight: 26, background: "#000", borderRadius: 16, zIndex: 3 }} />
+                        <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: "10.4% / 4.8%", overflow: "hidden", background: "#000" }}>
                           <AutoVideo src={p.phoneFilm.src} poster={p.phoneFilm.poster} objectFit="cover" />
                         </div>
                       </div>
