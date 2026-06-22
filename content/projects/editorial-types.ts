@@ -84,7 +84,9 @@ export type EditorialProject = {
   after?: string[];
 
   /** Client testimonial. May be a clearly-marked placeholder. */
-  quote?: { body: string; author: string; needsConfirmation?: boolean };
+  quote?: { body: string; author: string; role?: string; needsConfirmation?: boolean };
+  /** Longer-form client testimonial, rendered as a calm editorial block. */
+  testimonial?: { body: string; author: string; role?: string };
   /** Looping video shown behind the quote (distinct dark/light treatment in CSS). */
   quoteBg?: EditorialMedia;
   /** Still image shown behind the quote, with a tint overlay for legibility. */

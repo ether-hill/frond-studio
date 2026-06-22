@@ -74,7 +74,10 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
     <div className="ecs-quote-inner">
       <blockquote style={{ margin: 0 }}>
         <p style={{ fontFamily: DISPLAY, fontSize: "clamp(26px,3.6vw,52px)", fontWeight: 400, lineHeight: 1.18, letterSpacing: "-0.018em", color: "var(--fg)" }}>&ldquo;{p.quote.body}&rdquo;</p>
-        <footer style={{ marginTop: "clamp(30px,4vh,48px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-dim)" }}>{p.quote.author}</footer>
+        <footer style={{ marginTop: "clamp(30px,4vh,48px)", fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-dim)" }}>
+          {p.quote.author}
+          {p.quote.role ? <span style={{ display: "block", marginTop: 6, color: "var(--fg-faint)" }}>{p.quote.role}</span> : null}
+        </footer>
       </blockquote>
     </div>
   ) : null;
@@ -200,6 +203,24 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
                   </ul>
                 </div>
               ))}
+            </section>
+          ) : null}
+
+          {/* ── Client testimonial (longer-form, calm) ──────── */}
+          {p.testimonial ? (
+            <section data-rvs>
+              <Eyebrow>In their words</Eyebrow>
+              <blockquote style={{ margin: "clamp(20px,3vh,32px) 0 0", maxWidth: "62ch" }}>
+                <p style={{ fontFamily: DISPLAY, fontWeight: 400, fontSize: "clamp(21px,2.4vw,33px)", lineHeight: 1.36, letterSpacing: "-0.012em", color: "var(--fg)" }}>
+                  &ldquo;{p.testimonial.body}&rdquo;
+                </p>
+                <footer style={{ marginTop: "clamp(24px,3.2vh,40px)" }}>
+                  <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg)" }}>{p.testimonial.author}</div>
+                  {p.testimonial.role ? (
+                    <div style={{ marginTop: 6, fontFamily: MONO, fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-faint)" }}>{p.testimonial.role}</div>
+                  ) : null}
+                </footer>
+              </blockquote>
             </section>
           ) : null}
 

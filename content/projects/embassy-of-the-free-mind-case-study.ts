@@ -136,12 +136,18 @@ const project: EditorialProject = {
     "Ticketing, membership and the Source Library on-site",
   ],
 
-  // Pulled from the design reference. Confirm exact wording and attribution with
-  // the EFM team before launch.
+  // Longer-form testimonial, placed after the before/after as a calm editorial block.
+  testimonial: {
+    body: "When we began, we had no real digital presence to speak of: an outdated brand, no visitor journey, no integration with our operational systems, and no straightforward way to keep things current. Frond Studio addressed all of it. We can now reach our audience, and they can reach us, far more easily. Ticket sales have risen, refund requests have fallen to their lowest point, and newsletter signups continue to grow. What has meant the most, though, is the response. People consistently tell us the site is beautiful, and that the Embassy of the Free Mind is finally represented online the way it deserves to be.",
+    author: "Chiara Mancini",
+    role: "Program & Digital Strategy",
+  },
+
+  // The closing pull-quote (over the flowing-lines video).
   quote: {
-    body: "Frond gave a centuries-old collection a home that finally feels as open and alive as the ideas inside it.",
-    author: "Chiara, Embassy of the Free Mind",
-    needsConfirmation: true,
+    body: "What stood out most was trust. I could rely on Frond Studio not only to deliver, but to exceed what we had imagined. They stayed a step ahead at every stage, and the whole project came into focus once the design, systems, and structure aligned.",
+    author: "Chiara Mancini",
+    role: "Program & Digital Strategy",
   },
   quoteBg: {
     type: "video",
