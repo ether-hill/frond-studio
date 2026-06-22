@@ -38,8 +38,11 @@ export const STUDIO_CSS = `
 .studio-presetbar button:hover { border-color: rgba(255,255,255,0.6); }
 
 /* the visual — expands to fill the space; the sim covers it via object-fit */
-.studio-visual { position: relative; width: 100%; height: min(86vh, 1040px); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #000; touch-action: none; }
-.studio-visual canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; image-rendering: auto; touch-action: none; }
+/* touch-action: pan-y lets the page scroll vertically when a finger lands on the
+   visual (touch-action:none used to trap the touch and block scrolling on mobile);
+   horizontal drags still reach interactive systems. */
+.studio-visual { position: relative; width: 100%; height: min(86vh, 1040px); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #000; touch-action: pan-y; }
+.studio-visual canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; object-position: center; image-rendering: auto; touch-action: pan-y; }
 .studio-visual::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 88% 88% at 50% 50%, transparent 60%, rgba(0,0,0,0.45) 100%); z-index: 1; }
 
 /* action buttons — over the visual, top-right (RESTART / RANDOMISE / etc.) */
@@ -84,7 +87,8 @@ export const STUDIO_CSS = `
 .studio-paneltoggle .caret { color: var(--fg-dim); }
 .studio-panelbody { margin-top: clamp(18px, 2.4vw, 30px); }
 .studio-panelbody.hidden { display: none; }
-.studio-about-body { color: var(--fg-dim); font-size: clamp(13px, 1vw, 15px); line-height: 1.65; }
+.studio-about-body { color: var(--fg-dim); font-size: clamp(13px, 1vw, 15px); line-height: 1.65; overflow-wrap: anywhere; word-break: break-word; }
+.studio-about-cols > * { min-width: 0; }
 .studio-about-lead { max-width: 72ch; font-size: clamp(15px, 1.25vw, 18px); line-height: 1.55; color: var(--fg); margin: 0 0 clamp(22px, 3vw, 36px); }
 .studio-about-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 80px); max-width: 90ch; }
 .studio-about-body h4 { color: var(--fg); font: 700 10px var(--font-mono); letter-spacing: 0.18em; text-transform: uppercase; margin: 0 0 13px; }
@@ -102,10 +106,11 @@ export const STUDIO_CSS = `
 
 @media (max-width: 860px) {
   .studio-grid { grid-template-columns: 1fr; gap: 16px; }
-  .studio-visual { height: min(72vh, 680px); }
+  .studio-visual { height: min(58vh, 520px); }
   .studio-side { position: static; top: auto; }
   .studio-ctrltoggle { display: inline-flex; }
   .studio-about-cols { grid-template-columns: 1fr; gap: clamp(20px, 5vw, 32px); }
+  .studio-selectbar select { min-width: 0; width: 100%; }
 }
 `;
 
