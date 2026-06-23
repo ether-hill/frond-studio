@@ -29,7 +29,9 @@ export default function TimelapseMediaProductionPage() {
             statement overlaid bottom-left, matching the original. */}
         <section className="tlmp-hero">
           <div className="tlmp-hero-media">
-            <AutoVideo src="/timelapse/inkcaps-opener.mp4" poster="/timelapse/inkcaps-poster.avif" />
+            {/* No poster — the wrong still was flashing; the #000 hero lets the
+                video fade in cleanly from black via AutoVideo's opacity fade. */}
+            <AutoVideo src="/timelapse/inkcaps-opener.mp4" />
           </div>
           <div className="tlmp-hero-inner" data-stag>
             <h1
