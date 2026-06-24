@@ -23,19 +23,28 @@ const PLATE_ITEMS: GalleryItem[] = FUNGI_PLATES.map((p) => ({
   hrefLabel: "View on Wikimedia Commons →",
 }));
 
-const BOOK_ITEMS: GalleryItem[] = FUNGI_BOOKS.map((b) => ({
-  image: b.image,
-  title: b.title,
-  meta: `${b.author} · ${b.year}`,
-  body: b.note,
-  details: [
-    { label: "Language", value: b.language },
-    { label: "Rights", value: b.rights },
-    { label: "Source", value: b.source },
-  ],
-  href: b.url,
-  hrefLabel: "Read the full book — Internet Archive →",
-}));
+// Ranked by importance (historical significance blended with popularity), most
+// significant first.
+const BOOK_ITEMS: GalleryItem[] = [...FUNGI_BOOKS]
+  .sort((a, b) => b.importance - a.importance)
+  .map((b, i) => ({
+    image: b.image,
+    title: b.title,
+    meta: `${b.author} · ${b.year}`,
+    sub: `${b.language} · ${b.pages} pp${b.illustrations > 0 ? ` · ${b.illustrations} illus.` : ""}`,
+    badge: `${i + 1}`,
+    body: b.note,
+    details: [
+      { label: "Rank", value: `#${i + 1} of ${FUNGI_BOOKS.length} · importance ${b.importance}/100` },
+      { label: "Language", value: b.language },
+      { label: "Pages", value: `${b.pages}` },
+      { label: "Illustrations", value: b.illustrations > 0 ? `${b.illustrations}` : "—" },
+      { label: "Rights", value: b.rights },
+      { label: "Source", value: b.source },
+    ],
+    href: b.url,
+    hrefLabel: "Read the full book — Internet Archive →",
+  }));
 
 const sectionHeading: React.CSSProperties = {
   fontFamily: "var(--font-display), sans-serif",
@@ -104,9 +113,9 @@ export default function FungiSourcePage() {
         <section className="fs-section" data-rv>
           <h2 style={sectionHeading}>The collection</h2>
           <p className="fs-sub">
-            {FUNGI_BOOKS.length} titles across {LANGS} languages and three centuries — every one public domain, with the full
-            book a click away on the Internet Archive. A working seed of the database; it grows continuously. Tap a cover for the
-            summary, details and the download.
+            {FUNGI_BOOKS.length} titles across {LANGS} languages and three centuries — every one public domain, ranked by
+            importance (historical significance blended with popularity). Each carries its page and illustration counts, with the
+            full book a click away on the Internet Archive. Tap a cover for the summary, details and the download.
           </p>
           <FungiGallery items={BOOK_ITEMS} variant="covers" />
         </section>

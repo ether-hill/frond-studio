@@ -7,6 +7,8 @@ export type GalleryItem = {
   image: string;
   title?: string; // lightbox heading + cover-grid title
   meta?: string; // cover-grid + lightbox subline (author · year)
+  sub?: string; // cover-grid secondary line (language · pages · illustrations)
+  badge?: string; // cover-grid corner badge (e.g. importance rank)
   caption?: string; // plate caption (grid + lightbox)
   body?: string; // lightbox: full summary
   details?: { label: string; value: string }[]; // lightbox: structured details
@@ -116,9 +118,11 @@ export default function FungiGallery({ items, variant, initialCount, step = 12, 
             <button key={it.image + i} type="button" className="fs-cover" onClick={() => setOpen(i)} data-rvs>
               <span className="fs-cover-shot">
                 <img src={it.image} alt={it.title || ""} loading="lazy" decoding="async" />
+                {it.badge && <span className="fs-cover-badge">{it.badge}</span>}
               </span>
               <span className="fs-cover-title">{it.title}</span>
               <span className="fs-cover-meta">{it.meta}</span>
+              {it.sub && <span className="fs-cover-sub">{it.sub}</span>}
             </button>
           ) : (
             <button key={it.image + i} type="button" className="fs-plate" onClick={() => setOpen(i)}>
