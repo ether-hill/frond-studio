@@ -1860,7 +1860,6 @@ button {
 .ecs-hero-bar i { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.18); display: block; }
 .ecs-hero-url { margin-left: 14px; flex: 1 1 auto; max-width: 340px; height: 25px; border-radius: 999px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 0 14px; display: flex; align-items: center; font-family: var(--font-mono); font-size: 11px; color: rgba(244,240,232,0.6); white-space: nowrap; overflow: hidden; }
 .ecs-hero-screen { position: relative; border-radius: 9px; overflow: hidden; background: #16130f; aspect-ratio: 16 / 9; border: 1px solid rgba(255,255,255,0.06); }
-.ecs-hero-screen:hover video, .ecs-hero-screen:hover img { transform: scale(1.045); }
 
 /* Intro: text left, meta right (plain text, no pills + outline live button). */
 .ecs-intro { display: grid; grid-template-columns: 1.35fr 0.65fr; gap: clamp(40px, 6vw, 110px); align-items: start; }
