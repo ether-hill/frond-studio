@@ -44,7 +44,7 @@ const project: EditorialProject = {
   statsLabel: "The build, at a glance",
   stats: [
     { value: "50", label: "Pages", note: "Custom pages designed across the project." },
-    { value: "20", label: "Integrations", note: "Commerce, search and catalogue systems wired together." },
+    { value: "20", label: "Collections", note: "Content management made easy for a large team." },
     { value: "2", label: "Languages", note: "Fully bilingual. Dutch and English, end to end." },
     { value: "16", label: "Video assets", note: "Background and editorial films, lazy-loaded with play and pause handling." },
   ],
@@ -119,7 +119,7 @@ const project: EditorialProject = {
   pillars: {
     eyebrow: "About page · The seven pillars",
     heading: "Honouring the pillars meant making something special",
-    body: "The seven pillars sit at the heart of how the Embassy tells its story, and the team felt they deserved more than a list. We answered with a celestial wheel: the pillars set in slow orbit, turning the About page into a small piece of cosmology.",
+    body: "The seven pillars sit at the heart of how the Embassy tells its story, and the team felt they deserved more than a list.",
     media: {
       type: "video",
       src: `${M}/videos/pillars.mp4`,
