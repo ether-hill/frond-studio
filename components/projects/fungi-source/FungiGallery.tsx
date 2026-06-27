@@ -27,6 +27,10 @@ type Props = {
   maxCount?: number;
   /** Label for the load-more control. */
   moreLabel?: string;
+  /** Offer a grid ⇄ list view switch (covers variant only). */
+  toggle?: boolean;
+  /** Initial view when `toggle` is on. Default: "grid". */
+  initialView?: "grid" | "list";
 };
 
 /**
@@ -38,12 +42,15 @@ type Props = {
  * "Load more" control; its tiles skip the per-item reveal so freshly-loaded
  * ones aren't stuck in the reveal-hidden state.
  */
-export default function FungiGallery({ items, variant, initialCount, step = 12, maxCount, moreLabel = "Load more" }: Props) {
+export default function FungiGallery({ items, variant, initialCount, step = 12, maxCount, moreLabel = "Load more", toggle = false, initialView = "grid" }: Props) {
   const isBook = variant === "covers";
   const cap = Math.min(maxCount ?? items.length, items.length);
   const [shown, setShown] = useState(Math.min(initialCount ?? items.length, cap));
   const [open, setOpen] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [view, setView] = useState<"grid" | "list">(initialView);
+  const showToggle = toggle && isBook;
+  const asList = showToggle && view === "list";
   useEffect(() => setMounted(true), []);
 
   const close = useCallback(() => setOpen(null), []);
@@ -112,26 +119,53 @@ export default function FungiGallery({ items, variant, initialCount, step = 12, 
 
   return (
     <>
-      <div className={isBook ? "fs-covers" : "fs-plates"} data-stag={isBook ? "" : undefined}>
-        {items.slice(0, shown).map((it, i) =>
-          isBook ? (
-            <button key={it.image + i} type="button" className="fs-cover" onClick={() => setOpen(i)} data-rvs>
-              <span className="fs-cover-shot">
-                <img src={it.image} alt={it.title || ""} loading="lazy" decoding="async" />
-                {it.badge && <span className="fs-cover-badge">{it.badge}</span>}
-              </span>
-              <span className="fs-cover-title">{it.title}</span>
-              <span className="fs-cover-meta">{it.meta}</span>
-              {it.sub && <span className="fs-cover-sub">{it.sub}</span>}
-            </button>
-          ) : (
-            <button key={it.image + i} type="button" className="fs-plate" onClick={() => setOpen(i)}>
-              <img src={it.image} alt={it.caption || ""} loading="lazy" decoding="async" />
-              <span className="fs-plate-cap">{it.caption}</span>
-            </button>
-          ),
-        )}
-      </div>
+      {showToggle && (
+        <div className="fs-viewtoggle" role="group" aria-label="View">
+          <button type="button" className={view === "grid" ? "on" : ""} aria-pressed={view === "grid"} onClick={() => setView("grid")}>Grid</button>
+          <button type="button" className={view === "list" ? "on" : ""} aria-pressed={view === "list"} onClick={() => setView("list")}>List</button>
+        </div>
+      )}
+
+      {asList ? (
+        <ol className="fs-booklist">
+          {items.slice(0, shown).map((it, i) => (
+            <li key={it.image + i}>
+              <button type="button" className="fs-bookrow" onClick={() => setOpen(i)}>
+                <span className="fs-bookrow-shot">
+                  <img src={it.image} alt={it.title || ""} loading="lazy" decoding="async" />
+                  {it.badge && <span className="fs-bookrow-badge">{it.badge}</span>}
+                </span>
+                <span className="fs-bookrow-main">
+                  <span className="fs-bookrow-title">{it.title}</span>
+                  <span className="fs-bookrow-meta">{it.meta}</span>
+                </span>
+                {it.sub && <span className="fs-bookrow-sub">{it.sub}</span>}
+              </button>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div className={isBook ? "fs-covers" : "fs-plates"} data-stag={isBook ? "" : undefined}>
+          {items.slice(0, shown).map((it, i) =>
+            isBook ? (
+              <button key={it.image + i} type="button" className="fs-cover" onClick={() => setOpen(i)} data-rvs>
+                <span className="fs-cover-shot">
+                  <img src={it.image} alt={it.title || ""} loading="lazy" decoding="async" />
+                  {it.badge && <span className="fs-cover-badge">{it.badge}</span>}
+                </span>
+                <span className="fs-cover-title">{it.title}</span>
+                <span className="fs-cover-meta">{it.meta}</span>
+                {it.sub && <span className="fs-cover-sub">{it.sub}</span>}
+              </button>
+            ) : (
+              <button key={it.image + i} type="button" className="fs-plate" onClick={() => setOpen(i)}>
+                <img src={it.image} alt={it.caption || ""} loading="lazy" decoding="async" />
+                <span className="fs-plate-cap">{it.caption}</span>
+              </button>
+            ),
+          )}
+        </div>
+      )}
 
       {shown < cap && (
         <div className="fs-more">

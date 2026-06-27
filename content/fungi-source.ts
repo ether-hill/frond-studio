@@ -98,41 +98,45 @@ export type SourceLibraryBook = {
   language: string;
   pages: number;
   inFungiSource?: boolean;
+  cover: string; // Source Library book slug — its cover thumbnail + book page
 };
 
 export const SOURCE_LIBRARY_URL = "https://sourcelibrary.org/collections/mycology";
+// Cover thumbnails and per-book pages mirror Source Library, keyed by its book slug.
+export const slCover = (slug: string) => `/fungi-source/sl-covers/${slug}.jpg`;
+export const slBookUrl = (slug: string) => `https://sourcelibrary.org/book/${slug}`;
 
 export const SOURCE_LIBRARY_BOOKS: SourceLibraryBook[] = [
-  { title: "New Genera of Plants", author: "Pier Antonio Micheli", year: "1729", language: "Latin", pages: 476, inFungiSource: true },
-  { title: "Coloured Figures of English Fungi or Mushrooms", author: "James Sowerby", year: "1797", language: "English", pages: 1120, inFungiSource: true },
-  { title: "Iconography of the Mushrooms of Paulet", author: "J. H. Léveillé; plates by Paulet", year: "1855", language: "French", pages: 598, inFungiSource: true },
-  { title: "Icones Fungorum Hucusque Cognitorum, Vol 1", author: "A. C. I. Corda", year: "1837", language: "Latin", pages: 1 },
-  { title: "Illustrated Icons of Rare Fungi Species", author: "Christiaan Hendrik Persoon", year: "1803", language: "Latin", pages: 152 },
-  { title: "Theatrum Fungorum oft het Toonsel der Campernoelien", author: "Franciscus van Sterbeeck", year: "1675", language: "Dutch", pages: 491, inFungiSource: true },
-  { title: "Rariorum Plantarum Historia (with Fungorum Historia)", author: "Carolus Clusius", year: "1601", language: "Latin", pages: 749, inFungiSource: true },
-  { title: "Edible and Poisonous Mushrooms: What to Eat and What to Avoid", author: "Mordecai Cubitt Cooke", year: "1894", language: "English", pages: 180 },
-  { title: "Systema Mycologicum, Vol 2", author: "Elias Magnus Fries", year: "1823", language: "Latin", pages: 636, inFungiSource: true },
-  { title: "Illustrations and Descriptions of Lesser Known Fungi", author: "Christiaan Hendrik Persoon", year: "1798", language: "Latin", pages: 108 },
-  { title: "Selecta Fungorum Carpologia, Vol 2", author: "Louis-René & Charles Tulasne", year: "1863", language: "Latin", pages: 260, inFungiSource: true },
-  { title: "Mycological System", author: "Elias Magnus Fries", year: "1821", language: "Latin", pages: 588, inFungiSource: true },
-  { title: "Mycological System", author: "Elias Magnus Fries", year: "1832", language: "Latin", pages: 744, inFungiSource: true },
-  { title: "Treatise on Mushrooms", author: "Jean-Jacques Paulet", year: "1793", language: "French", pages: 514 },
-  { title: "Histoire des Champignons de la France, Vol 1", author: "Pierre Bulliard", year: "1791", language: "French", pages: 552, inFungiSource: true },
-  { title: "Methodical Synopsis of Fungi", author: "Christiaan Hendrik Persoon", year: "1801", language: "Latin", pages: 760, inFungiSource: true },
-  { title: "Critical Review of the Mycological System", author: "Elias Magnus Fries", year: "1836", language: "Latin", pages: 638 },
-  { title: "An History of Fungusses, growing about Halifax (Vols 1–2)", author: "James Bolton", year: "1788", language: "English", pages: 334 },
-  { title: "Monograph of the Truffles", author: "Carlo Vittadini", year: "1831", language: "Latin", pages: 115 },
-  { title: "Selecta Fungorum Carpologia, Vol 1", author: "Louis-René & Charles Tulasne", year: "1861", language: "Latin", pages: 376, inFungiSource: true },
-  { title: "Compendium of All Fungi Known to Date", author: "Pier Andrea Saccardo", year: "1882", language: "Latin", pages: 804, inFungiSource: true },
-  { title: "European Mycology", author: "Christiaan Hendrik Persoon", year: "1828", language: "Latin", pages: 313 },
-  { title: "Histoire des Champignons de la France, Vol 2", author: "Pierre Bulliard", year: "1791", language: "French", pages: 394, inFungiSource: true },
-  { title: "Icones Fungorum Niskiensium", author: "Lewis David von Schweinitz", year: "1805", language: "Latin", pages: 110 },
-  { title: "Catalogue of Fungi", author: "August J. G. K. Batsch", year: "1783", language: "Latin", pages: 105 },
-  { title: "Outlines of British Fungology", author: "M. J. Berkeley", year: "1860", language: "English", pages: 582, inFungiSource: true },
-  { title: "History of the Fungi of the Rimini Territory", author: "Giovanni Antonio Battarra", year: "1755", language: "Latin", pages: 176, inFungiSource: true },
-  { title: "Illustrations of Fungi which Grow in Bavaria and the Palatinate around Ratisbon", author: "Jacob Christian Schaeffer; C. H. Persoon (ed.)", year: "1800", language: "Latin", pages: 172, inFungiSource: true },
-  { title: "Illustrations of British Fungi (Hymenomycetes), atlas vol", author: "Mordecai Cubitt Cooke", year: "1881", language: "English", pages: 704, inFungiSource: true },
-  { title: "History of the Fungi of the Kingdom of Naples", author: "Vincenzo Briganti", year: "1848", language: "Latin", pages: 269 },
+  { title: "New Genera of Plants", author: "Pier Antonio Micheli", year: "1729", language: "Latin", pages: 476, inFungiSource: true, cover: "nova-plantarum-genera-micheli" },
+  { title: "Coloured Figures of English Fungi or Mushrooms", author: "James Sowerby", year: "1797", language: "English", pages: 1120, inFungiSource: true, cover: "coloured-figures-of-english-fungi-or-mushrooms-a25f" },
+  { title: "Iconography of the Mushrooms of Paulet", author: "J. H. Léveillé; plates by Paulet", year: "1855", language: "French", pages: 598, inFungiSource: true, cover: "iconographie-des-champignons-de-paulet-217-plates-a008" },
+  { title: "Icones Fungorum Hucusque Cognitorum, Vol 1", author: "A. C. I. Corda", year: "1837", language: "Latin", pages: 1, cover: "icones-fungorum-hucusque-cognitorum-vol-1-b70e" },
+  { title: "Illustrated Icons of Rare Fungi Species", author: "Christiaan Hendrik Persoon", year: "1803", language: "Latin", pages: 152, cover: "icones-pictae-specierum-rariorum-fungorum-aa26" },
+  { title: "Theatrum Fungorum oft het Toonsel der Campernoelien", author: "Franciscus van Sterbeeck", year: "1675", language: "Dutch", pages: 491, inFungiSource: true, cover: "theatrum-fungorum-oft-het-toonsel-der-campernoelien-9371" },
+  { title: "Rariorum Plantarum Historia (with Fungorum Historia)", author: "Carolus Clusius", year: "1601", language: "Latin", pages: 749, inFungiSource: true, cover: "rariorum-plantarum-historia-with-fungorum-historia-9083" },
+  { title: "Edible and Poisonous Mushrooms: What to Eat and What to Avoid", author: "Mordecai Cubitt Cooke", year: "1894", language: "English", pages: 180, cover: "edible-and-poisonous-mushrooms-what-to-eat-and-what-to-avoid-c2c9" },
+  { title: "Systema Mycologicum, Vol 2", author: "Elias Magnus Fries", year: "1823", language: "Latin", pages: 636, inFungiSource: true, cover: "systema-mycologicum-vol-2-aeb5" },
+  { title: "Illustrations and Descriptions of Lesser Known Fungi", author: "Christiaan Hendrik Persoon", year: "1798", language: "Latin", pages: 108, cover: "icones-et-descriptiones-fungorum-minus-cognitorum-a6c0" },
+  { title: "Selecta Fungorum Carpologia, Vol 2", author: "Louis-René & Charles Tulasne", year: "1863", language: "Latin", pages: 260, inFungiSource: true, cover: "selecta-fungorum-carpologia-vol-2-bad0" },
+  { title: "Mycological System", author: "Elias Magnus Fries", year: "1821", language: "Latin", pages: 588, inFungiSource: true, cover: "systema-mycologicum-vol-1-ac68" },
+  { title: "Mycological System", author: "Elias Magnus Fries", year: "1832", language: "Latin", pages: 744, inFungiSource: true, cover: "systema-mycologicum-vol-3-b132" },
+  { title: "Treatise on Mushrooms", author: "Jean-Jacques Paulet", year: "1793", language: "French", pages: 514, cover: "trait-des-champignons-9e05" },
+  { title: "Histoire des Champignons de la France, Vol 1", author: "Pierre Bulliard", year: "1791", language: "French", pages: 552, inFungiSource: true, cover: "histoire-des-champignons-de-la-france-vol-1-9a51" },
+  { title: "Methodical Synopsis of Fungi", author: "Christiaan Hendrik Persoon", year: "1801", language: "Latin", pages: 760, inFungiSource: true, cover: "synopsis-methodica-fungorum-a72d" },
+  { title: "Critical Review of the Mycological System", author: "Elias Magnus Fries", year: "1836", language: "Latin", pages: 638, cover: "epicrisis-systematis-mycologici-b41b" },
+  { title: "An History of Fungusses, growing about Halifax (Vols 1–2)", author: "James Bolton", year: "1788", language: "English", pages: 334, cover: "an-history-of-fungusses-growing-about-halifax-vols-1-2-9902" },
+  { title: "Monograph of the Truffles", author: "Carlo Vittadini", year: "1831", language: "Latin", pages: 115, cover: "monographia-tuberacearum-truffle-monograph-b69a" },
+  { title: "Selecta Fungorum Carpologia, Vol 1", author: "Louis-René & Charles Tulasne", year: "1861", language: "Latin", pages: 376, inFungiSource: true, cover: "selecta-fungorum-carpologia-vol-1-b957" },
+  { title: "Compendium of All Fungi Known to Date", author: "Pier Andrea Saccardo", year: "1882", language: "Latin", pages: 804, inFungiSource: true, cover: "sylloge-fungorum-omnium-hucusque-cognitorum-vol-1-be96" },
+  { title: "European Mycology", author: "Christiaan Hendrik Persoon", year: "1828", language: "Latin", pages: 313, cover: "mycologia-europaea-vol-1-aabf" },
+  { title: "Histoire des Champignons de la France, Vol 2", author: "Pierre Bulliard", year: "1791", language: "French", pages: 394, inFungiSource: true, cover: "histoire-des-champignons-de-la-france-vol-2-9c7a" },
+  { title: "Icones Fungorum Niskiensium", author: "Lewis David von Schweinitz", year: "1805", language: "Latin", pages: 110, cover: "icones-fungorum-niskiensium-abf9" },
+  { title: "Catalogue of Fungi", author: "August J. G. K. Batsch", year: "1783", language: "Latin", pages: 105, cover: "elenchus-fungorum-vol-1-9898" },
+  { title: "Outlines of British Fungology", author: "M. J. Berkeley", year: "1860", language: "English", pages: 582, inFungiSource: true, cover: "outlines-of-british-fungology-b710" },
+  { title: "History of the Fungi of the Rimini Territory", author: "Giovanni Antonio Battarra", year: "1755", language: "Latin", pages: 176, inFungiSource: true, cover: "fungorum-agri-ariminensis-historia-973a" },
+  { title: "Illustrations of Fungi which Grow in Bavaria and the Palatinate around Ratisbon", author: "Jacob Christian Schaeffer; C. H. Persoon (ed.)", year: "1800", language: "Latin", pages: 172, inFungiSource: true, cover: "fungorum-qui-in-bavaria-et-palatinatu-circa-ratisbonam-nascuntur-icones-97eb" },
+  { title: "Illustrations of British Fungi (Hymenomycetes), atlas vol", author: "Mordecai Cubitt Cooke", year: "1881", language: "English", pages: 704, inFungiSource: true, cover: "illustrations-of-british-fungi-hymenomycetes-atlas-vol-bbd5" },
+  { title: "History of the Fungi of the Kingdom of Naples", author: "Vincenzo Briganti", year: "1848", language: "Latin", pages: 269, cover: "historia-fungorum-regni-neapolitani-c1bb" },
 ];
 
 export type FungiPlate = { src: string; caption: string; link: string };

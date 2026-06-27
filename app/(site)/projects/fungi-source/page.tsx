@@ -6,7 +6,7 @@ import MoreProjects from "@/components/MoreProjects";
 import MyceliumBg from "@/components/MyceliumBg";
 import MyceliumTimer from "@/components/projects/fungi-source/MyceliumTimer";
 import FungiGallery, { type GalleryItem } from "@/components/projects/fungi-source/FungiGallery";
-import { FUNGI_BOOKS, FUNGI_PLATES, SOURCE_LIBRARY_BOOKS, SOURCE_LIBRARY_URL, type FungiBook } from "@/content/fungi-source";
+import { FUNGI_BOOKS, FUNGI_PLATES, SOURCE_LIBRARY_BOOKS, SOURCE_LIBRARY_URL, slCover, slBookUrl, type FungiBook } from "@/content/fungi-source";
 
 export const metadata: Metadata = {
   title: "Fungi Source · Frond Studio",
@@ -55,6 +55,24 @@ const RECOMMENDED_ITEMS: GalleryItem[] = RECOMMENDED_BOOKS.map((b, i) =>
     value: `#${i + 1} of ${RECOMMENDED_BOOKS.length} to add · importance ${b.importance}/100`,
   }),
 );
+
+// Source Library's 30 catalogued titles — covers mirrored from sourcelibrary.org.
+const SL_ITEMS: GalleryItem[] = SOURCE_LIBRARY_BOOKS.map((b) => ({
+  image: slCover(b.cover),
+  title: b.title,
+  meta: `${b.author} · ${b.year}`,
+  sub: `${b.language} · ${b.pages} pp${b.inFungiSource ? " · in our collection" : ""}`,
+  badge: b.inFungiSource ? "✓" : undefined,
+  body: b.inFungiSource ? "Catalogued in Source Library and independently surfaced by Fungi Source." : "Catalogued in Source Library.",
+  details: [
+    { label: "Language", value: b.language },
+    { label: "Pages", value: `${b.pages}` },
+    { label: "In our collection", value: b.inFungiSource ? "Yes" : "—" },
+  ],
+  href: slBookUrl(b.cover),
+  hrefLabel: "View on Source Library →",
+}));
+const SL_OVERLAP = SOURCE_LIBRARY_BOOKS.filter((b) => b.inFungiSource).length;
 
 const sectionHeading: React.CSSProperties = {
   fontFamily: "var(--font-display), sans-serif",
@@ -135,32 +153,15 @@ export default function FungiSourcePage() {
           <h2 style={sectionHeading}>Already in Source Library</h2>
           <p className="fs-sub">
             Source Library&apos;s mycology collection as it stands today — all {SOURCE_LIBRARY_BOOKS.length} catalogued titles
-            (a few works run across multiple volumes). The ones marked{" "}
-            <span style={{ color: "var(--accent)" }}>in our set</span> are titles Fungi Source independently surfaced, so the{" "}
-            {RECOMMENDED_BOOKS.length} recommendations below extend the collection rather than repeat it.{" "}
+            with their covers (a few works run across multiple volumes). The {SL_OVERLAP} marked{" "}
+            <span style={{ color: "var(--accent)" }}>✓ in our collection</span> are titles Fungi Source independently surfaced,
+            so the {RECOMMENDED_BOOKS.length} recommendations below extend the collection rather than repeat it. Switch to list
+            for a compact view; tap any cover for details and the Source Library page.{" "}
             <a className="linku" href={SOURCE_LIBRARY_URL} target="_blank" rel="noopener noreferrer">
               View the collection →
             </a>
           </p>
-          <ol className="fs-sl">
-            {SOURCE_LIBRARY_BOOKS.map((b, i) => (
-              <li key={`${b.title}-${b.year}-${i}`} className="fs-sl-row">
-                <span className="fs-sl-n">{i + 1}</span>
-                <span className="fs-sl-main">
-                  <span className="fs-sl-title">{b.title}</span>
-                  <span className="fs-sl-meta">
-                    {b.author} · {b.year}
-                  </span>
-                </span>
-                <span className="fs-sl-tags">
-                  <span className="fs-sl-lang">
-                    {b.language} · {b.pages} pp
-                  </span>
-                  {b.inFungiSource && <span className="fs-sl-mark">✓ in our set</span>}
-                </span>
-              </li>
-            ))}
-          </ol>
+          <FungiGallery items={SL_ITEMS} variant="covers" toggle />
         </section>
 
         {/* Recommended additions — ranked by importance */}
@@ -171,7 +172,7 @@ export default function FungiSourcePage() {
             with popularity), the strongest candidates first. Each carries its page and illustration counts, with the full book a
             click away on the Internet Archive. Tap a cover for the summary, details and the download.
           </p>
-          <FungiGallery items={RECOMMENDED_ITEMS} variant="covers" />
+          <FungiGallery items={RECOMMENDED_ITEMS} variant="covers" toggle />
         </section>
 
         {/* Plates — image-driven, lightbox */}
