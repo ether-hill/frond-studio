@@ -7,6 +7,12 @@ export default function Wordmark({
   size?: number;
   link?: boolean;
 }) {
+  // The STUDIO letters are flush-distributed to "Frond"'s box width via
+  // space-between, which aligns the glyph *boxes*. But in Schibsted Grotesk the
+  // "d" stem sits ~0.0795em inside its box (right side bearing) while the "o"
+  // sits only ~0.41px inside, so the o's ink lands a hair right of the d's.
+  // Pull the row in by that side-bearing difference so the two ink edges meet.
+  const oEdgeAlign = size * 0.0795 - 0.41;
   const inner = (
     <span style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1, gap: 3 }}>
       <span
@@ -24,7 +30,7 @@ export default function Wordmark({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          width: "100%",
+          width: `calc(100% - ${oEdgeAlign}px)`,
           fontFamily: "var(--font-body), sans-serif",
           fontSize: 10,
           fontWeight: 500,
