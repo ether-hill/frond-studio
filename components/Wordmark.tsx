@@ -8,7 +8,7 @@ export default function Wordmark({
   link?: boolean;
 }) {
   const inner = (
-    <span style={{ display: "flex", flexDirection: "column", lineHeight: 1, gap: 3 }}>
+    <span style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1, gap: 3 }}>
       <span
         style={{
           fontFamily: "var(--font-body), sans-serif",
@@ -20,17 +20,23 @@ export default function Wordmark({
         Frond
       </span>
       <span
+        aria-label="Studio"
         style={{
+          display: "flex",
+          justifyContent: "space-between",
+          width: "100%",
           fontFamily: "var(--font-body), sans-serif",
           fontSize: 10,
           fontWeight: 500,
-          letterSpacing: "0.44em",
           textTransform: "uppercase",
           color: "var(--fg-dim)",
-          paddingLeft: 1,
         }}
       >
-        Studio
+        {"Studio".split("").map((letter, i) => (
+          <span key={i} aria-hidden="true">
+            {letter}
+          </span>
+        ))}
       </span>
     </span>
   );
