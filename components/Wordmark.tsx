@@ -15,8 +15,12 @@ export default function Wordmark({
   // and the measured Frond ink span; everything scales with `size`.
   const studioSize = size * 0.4;
   const colGap = size * 0.12;
-  const studioLeft = size * 0.06855; // S box-left so S ink-left meets F ink-left
-  const studioWidth = size * 2.55365; // row width so O ink-right meets d ink-right
+  // STUDIO ink is widened 1% beyond Frond's width, centred (0.5% each side), to
+  // offset the optical illusion that the lighter, tracked-out word reads narrower.
+  // Base (edges-flush) coeffs were 0.06855 / 2.55365; Frond ink width ≈ 2.5256·size,
+  // so left −= 0.5%·W and width += 1%·W.
+  const studioLeft = size * 0.055922; // S box-left, pulled out 0.5% of Frond width
+  const studioWidth = size * 2.578906; // row width: +1% of Frond width over flush
   const inner = (
     <span style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1, gap: colGap }}>
       <span
