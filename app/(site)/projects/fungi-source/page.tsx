@@ -6,7 +6,7 @@ import MoreProjects from "@/components/MoreProjects";
 import MyceliumBg from "@/components/MyceliumBg";
 import MyceliumTimer from "@/components/projects/fungi-source/MyceliumTimer";
 import FungiGallery, { type GalleryItem } from "@/components/projects/fungi-source/FungiGallery";
-import { FUNGI_BOOKS, FUNGI_PLATES } from "@/content/fungi-source";
+import { FUNGI_BOOKS, FUNGI_PLATES, type FungiBook } from "@/content/fungi-source";
 
 export const metadata: Metadata = {
   title: "Fungi Source · Frond Studio",
@@ -24,27 +24,41 @@ const PLATE_ITEMS: GalleryItem[] = FUNGI_PLATES.map((p) => ({
 }));
 
 // Ranked by importance (historical significance blended with popularity), most
-// significant first.
-const BOOK_ITEMS: GalleryItem[] = [...FUNGI_BOOKS]
-  .sort((a, b) => b.importance - a.importance)
-  .map((b, i) => ({
-    image: b.image,
-    title: b.title,
-    meta: `${b.author} · ${b.year}`,
-    sub: `${b.language} · ${b.pages} pp${b.illustrations > 0 ? ` · ${b.illustrations} illus.` : ""}`,
-    badge: `${i + 1}`,
-    body: b.note,
-    details: [
-      { label: "Rank", value: `#${i + 1} of ${FUNGI_BOOKS.length} · importance ${b.importance}/100` },
-      { label: "Language", value: b.language },
-      { label: "Pages", value: `${b.pages}` },
-      { label: "Illustrations", value: b.illustrations > 0 ? `${b.illustrations}` : "—" },
-      { label: "Rights", value: b.rights },
-      { label: "Source", value: b.source },
-    ],
-    href: b.url,
-    hrefLabel: "Read the full book — Internet Archive →",
-  }));
+// significant first — then split into what Source Library already holds vs. what
+// this research recommends adding.
+const RANKED = [...FUNGI_BOOKS].sort((a, b) => b.importance - a.importance);
+const EXISTING_BOOKS = RANKED.filter((b) => b.inSourceLibrary);
+const RECOMMENDED_BOOKS = RANKED.filter((b) => !b.inSourceLibrary);
+
+const bookItem = (b: FungiBook, badge: string, rank: { label: string; value: string }): GalleryItem => ({
+  image: b.image,
+  title: b.title,
+  meta: `${b.author} · ${b.year}`,
+  sub: `${b.language} · ${b.pages} pp${b.illustrations > 0 ? ` · ${b.illustrations} illus.` : ""}`,
+  badge,
+  body: b.note,
+  details: [
+    rank,
+    { label: "Language", value: b.language },
+    { label: "Pages", value: `${b.pages}` },
+    { label: "Illustrations", value: b.illustrations > 0 ? `${b.illustrations}` : "—" },
+    { label: "Rights", value: b.rights },
+    { label: "Source", value: b.source },
+  ],
+  href: b.url,
+  hrefLabel: "Read the full book — Internet Archive →",
+});
+
+const EXISTING_ITEMS: GalleryItem[] = EXISTING_BOOKS.map((b) =>
+  bookItem(b, "✓", { label: "Status", value: `Already in Source Library · importance ${b.importance}/100` }),
+);
+
+const RECOMMENDED_ITEMS: GalleryItem[] = RECOMMENDED_BOOKS.map((b, i) =>
+  bookItem(b, `${i + 1}`, {
+    label: "Recommended",
+    value: `#${i + 1} of ${RECOMMENDED_BOOKS.length} to add · importance ${b.importance}/100`,
+  }),
+);
 
 const sectionHeading: React.CSSProperties = {
   fontFamily: "var(--font-display), sans-serif",
@@ -109,15 +123,38 @@ export default function FungiSourcePage() {
           </p>
         </div>
 
-        {/* The collection — cover grid, lightbox */}
+        {/* The collection — split into already-catalogued vs. recommended additions */}
         <section className="fs-section" data-rv>
           <h2 style={sectionHeading}>The collection</h2>
           <p className="fs-sub">
-            {FUNGI_BOOKS.length} titles across {LANGS} languages and three centuries — every one public domain, ranked by
-            importance (historical significance blended with popularity). Each carries its page and illustration counts, with the
-            full book a click away on the Internet Archive. Tap a cover for the summary, details and the download.
+            {FUNGI_BOOKS.length} titles across {LANGS} languages and three centuries — every one public domain, every one
+            checked against what Source Library already holds. {EXISTING_BOOKS.length} are already in its mycology collection;
+            the other {RECOMMENDED_BOOKS.length} are what this research recommends adding, ranked by importance.
           </p>
-          <FungiGallery items={BOOK_ITEMS} variant="covers" />
+        </section>
+
+        {/* Already in Source Library */}
+        <section className="fs-section" data-rv>
+          <h2 style={sectionHeading}>Already in Source Library</h2>
+          <p className="fs-sub">
+            {EXISTING_BOOKS.length} of our titles are already catalogued in the{" "}
+            <a className="linku" href="https://sourcelibrary.org/collections/mycology" target="_blank" rel="noopener noreferrer">
+              Source Library mycology collection
+            </a>{" "}
+            — cross-checked so the handoff doesn&apos;t duplicate anything already published. Listed here for the record.
+          </p>
+          <FungiGallery items={EXISTING_ITEMS} variant="covers" />
+        </section>
+
+        {/* Recommended additions — ranked by importance */}
+        <section className="fs-section" data-rv>
+          <h2 style={sectionHeading}>Recommended to add</h2>
+          <p className="fs-sub">
+            {RECOMMENDED_BOOKS.length} titles not yet in the collection — ranked by importance (historical significance blended
+            with popularity), the strongest candidates first. Each carries its page and illustration counts, with the full book a
+            click away on the Internet Archive. Tap a cover for the summary, details and the download.
+          </p>
+          <FungiGallery items={RECOMMENDED_ITEMS} variant="covers" />
         </section>
 
         {/* Plates — image-driven, lightbox */}
