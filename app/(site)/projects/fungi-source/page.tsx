@@ -6,7 +6,7 @@ import MoreProjects from "@/components/MoreProjects";
 import MyceliumBg from "@/components/MyceliumBg";
 import MyceliumTimer from "@/components/projects/fungi-source/MyceliumTimer";
 import FungiGallery, { type GalleryItem } from "@/components/projects/fungi-source/FungiGallery";
-import { FUNGI_BOOKS, FUNGI_PLATES, type FungiBook } from "@/content/fungi-source";
+import { FUNGI_BOOKS, FUNGI_PLATES, SOURCE_LIBRARY_BOOKS, SOURCE_LIBRARY_URL, type FungiBook } from "@/content/fungi-source";
 
 export const metadata: Metadata = {
   title: "Fungi Source · Frond Studio",
@@ -48,10 +48,6 @@ const bookItem = (b: FungiBook, badge: string, rank: { label: string; value: str
   href: b.url,
   hrefLabel: "Read the full book — Internet Archive →",
 });
-
-const EXISTING_ITEMS: GalleryItem[] = EXISTING_BOOKS.map((b) =>
-  bookItem(b, "✓", { label: "Status", value: `Already in Source Library · importance ${b.importance}/100` }),
-);
 
 const RECOMMENDED_ITEMS: GalleryItem[] = RECOMMENDED_BOOKS.map((b, i) =>
   bookItem(b, `${i + 1}`, {
@@ -128,22 +124,43 @@ export default function FungiSourcePage() {
           <h2 style={sectionHeading}>The collection</h2>
           <p className="fs-sub">
             {FUNGI_BOOKS.length} titles across {LANGS} languages and three centuries — every one public domain, every one
-            checked against what Source Library already holds. {EXISTING_BOOKS.length} are already in its mycology collection;
-            the other {RECOMMENDED_BOOKS.length} are what this research recommends adding, ranked by importance.
+            checked against the {SOURCE_LIBRARY_BOOKS.length} titles Source Library already holds. {EXISTING_BOOKS.length} of
+            ours are among them; the other {RECOMMENDED_BOOKS.length} are what this research recommends adding, ranked by
+            importance.
           </p>
         </section>
 
-        {/* Already in Source Library */}
+        {/* Already in Source Library — the full collection, mirrored */}
         <section className="fs-section" data-rv>
           <h2 style={sectionHeading}>Already in Source Library</h2>
           <p className="fs-sub">
-            {EXISTING_BOOKS.length} of our titles are already catalogued in the{" "}
-            <a className="linku" href="https://sourcelibrary.org/collections/mycology" target="_blank" rel="noopener noreferrer">
-              Source Library mycology collection
-            </a>{" "}
-            — cross-checked so the handoff doesn&apos;t duplicate anything already published. Listed here for the record.
+            Source Library&apos;s mycology collection as it stands today — all {SOURCE_LIBRARY_BOOKS.length} catalogued titles
+            (a few works run across multiple volumes). The ones marked{" "}
+            <span style={{ color: "var(--accent)" }}>in our set</span> are titles Fungi Source independently surfaced, so the{" "}
+            {RECOMMENDED_BOOKS.length} recommendations below extend the collection rather than repeat it.{" "}
+            <a className="linku" href={SOURCE_LIBRARY_URL} target="_blank" rel="noopener noreferrer">
+              View the collection →
+            </a>
           </p>
-          <FungiGallery items={EXISTING_ITEMS} variant="covers" />
+          <ol className="fs-sl">
+            {SOURCE_LIBRARY_BOOKS.map((b, i) => (
+              <li key={`${b.title}-${b.year}-${i}`} className="fs-sl-row">
+                <span className="fs-sl-n">{i + 1}</span>
+                <span className="fs-sl-main">
+                  <span className="fs-sl-title">{b.title}</span>
+                  <span className="fs-sl-meta">
+                    {b.author} · {b.year}
+                  </span>
+                </span>
+                <span className="fs-sl-tags">
+                  <span className="fs-sl-lang">
+                    {b.language} · {b.pages} pp
+                  </span>
+                  {b.inFungiSource && <span className="fs-sl-mark">✓ in our set</span>}
+                </span>
+              </li>
+            ))}
+          </ol>
         </section>
 
         {/* Recommended additions — ranked by importance */}

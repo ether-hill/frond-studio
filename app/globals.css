@@ -1962,6 +1962,21 @@ button {
 .fs-cover-meta { margin-top: 4px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em; color: var(--fg-faint); }
 .fs-cover-sub { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.02em; color: var(--fg-faint); opacity: 0.75; }
 
+/* source library mirror — the full 30-title collection as a reference list */
+.fs-sl { margin-top: clamp(28px, 4vh, 52px); list-style: none; padding: 0; border-top: 1px solid var(--line); }
+.fs-sl-row { display: grid; grid-template-columns: 2.1rem minmax(0, 1fr) auto; align-items: baseline; gap: clamp(10px, 1.6vw, 22px); padding: 13px 0; border-bottom: 1px solid var(--line); }
+.fs-sl-n { font-family: var(--font-mono); font-size: 11px; color: var(--fg-faint); font-variant-numeric: tabular-nums; }
+.fs-sl-main { min-width: 0; }
+.fs-sl-title { font-family: var(--font-display), sans-serif; font-size: 15px; font-weight: 500; line-height: 1.3; color: var(--fg); }
+.fs-sl-meta { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em; color: var(--fg-faint); }
+.fs-sl-tags { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+.fs-sl-lang { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--fg-faint); white-space: nowrap; }
+.fs-sl-mark { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; white-space: nowrap; }
+@media (max-width: 560px) {
+  .fs-sl-row { grid-template-columns: 1.6rem 1fr; }
+  .fs-sl-tags { grid-column: 2; justify-content: flex-start; margin-top: 5px; }
+}
+
 /* lightbox */
 .fs-lb { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: clamp(20px, 5vw, 72px); background: rgba(4, 4, 6, 0.92); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: fs-fade 0.25s ease; }
 @keyframes fs-fade { from { opacity: 0; } to { opacity: 1; } }
