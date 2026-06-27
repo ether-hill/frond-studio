@@ -7,14 +7,18 @@ export default function Wordmark({
   size?: number;
   link?: boolean;
 }) {
-  // The STUDIO letters are flush-distributed to "Frond"'s box width via
-  // space-between, which aligns the glyph *boxes*. But in Schibsted Grotesk the
-  // "d" stem sits ~0.0795em inside its box (right side bearing) while the "o"
-  // sits only ~0.41px inside, so the o's ink lands a hair right of the d's.
-  // Pull the row in by that side-bearing difference so the two ink edges meet.
-  const oEdgeAlign = size * 0.0795 - 0.41;
+  // STUDIO is set to 0.4× the Frond size and letter-spaced (space-between) so its
+  // ink box is *exactly* as wide as "Frond" — both edges flush. space-between
+  // would only align the glyph boxes, but Schibsted Grotesk's side bearings differ
+  // (F ink-left 0.080em vs S 0.012em; d vs o on the right), so the row is nudged
+  // in by those differences. Coefficients are derived from the font's glyph bounds
+  // and the measured Frond ink span; everything scales with `size`.
+  const studioSize = size * 0.4;
+  const colGap = size * 0.12;
+  const studioLeft = size * 0.06855; // S box-left so S ink-left meets F ink-left
+  const studioWidth = size * 2.55365; // row width so O ink-right meets d ink-right
   const inner = (
-    <span style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1, gap: 3 }}>
+    <span style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1, gap: colGap }}>
       <span
         style={{
           fontFamily: "var(--font-body), sans-serif",
@@ -30,9 +34,10 @@ export default function Wordmark({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          width: `calc(100% - ${oEdgeAlign}px)`,
+          marginLeft: studioLeft,
+          width: studioWidth,
           fontFamily: "var(--font-body), sans-serif",
-          fontSize: 10,
+          fontSize: studioSize,
           fontWeight: 500,
           textTransform: "uppercase",
           color: "var(--fg-dim)",
