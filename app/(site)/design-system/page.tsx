@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
+import Wordmark from "@/components/Wordmark";
 
 export const metadata: Metadata = {
   title: "Design System · Frond Studio",
@@ -62,6 +63,25 @@ const VOICE_DONT = [
   "“We leverage cutting-edge synergies to disrupt the industry.”",
   "Buzzwords: revolutionary, world-class, seamless, unlock, supercharge.",
   "Shouting: ALL CAPS sentences, !!!, growth-hack urgency.",
+];
+
+const LOGO_DO = [
+  "Keep the two-line lockup intact: “Frond” over “STUDIO”, always together.",
+  "Leave clear space of at least the cap-height of “Frond” on every side.",
+  "Use black on light surfaces, white on dark — nothing else.",
+  "Scale it proportionally; the SVG stays crisp at any size.",
+];
+const LOGO_DONT = [
+  "Stretch, condense, rotate or skew it.",
+  "Re-space “STUDIO” or change its tracking — its width is locked to “Frond”.",
+  "Recolour it or add gradients, strokes or shadows.",
+  "Rebuild it in another typeface or swap the weights.",
+  "Shrink it until “STUDIO” stops being legible (keep “Frond” ≥ 18px).",
+];
+const LOGO_FILES = [
+  { label: "SVG", sub: "vector", black: "/brand/frond-studio-logo-black.svg", white: "/brand/frond-studio-logo-white.svg" },
+  { label: "PNG", sub: "2400px · transparent", black: "/brand/frond-studio-logo-black.png", white: "/brand/frond-studio-logo-white.png" },
+  { label: "JPG", sub: "2400px · on fill", black: "/brand/frond-studio-logo-black.jpg", white: "/brand/frond-studio-logo-white.jpg" },
 ];
 
 /* ── small presentational helpers (server component, no client JS) ──────── */
@@ -127,8 +147,60 @@ export default function DesignSystemPage() {
           </div>
         </Section>
 
+        {/* Logo */}
+        <Section id="logo" n="03" title="Logo" intro="The studio wordmark: “Frond” in Schibsted Grotesk Regular set over “STUDIO” in Medium, letter-spaced to the exact width of “Frond” with the final letters optically aligned to its edges. Treat it as one locked unit — don’t rebuild, restretch or re-space it.">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: "clamp(18px,2vw,28px)" }}>
+            <div data-theme="light" style={{ border: "1px solid rgba(23,20,16,0.16)", borderRadius: 10, background: "#f3efe6", color: "var(--fg)", display: "grid", placeItems: "center", minHeight: 200 }}>
+              <Wordmark size={46} link={false} />
+            </div>
+            <div data-theme="dark" style={{ border: "1px solid rgba(241,237,229,0.13)", borderRadius: 10, background: "#0b0a08", color: "var(--fg)", display: "grid", placeItems: "center", minHeight: 200 }}>
+              <Wordmark size={46} link={false} />
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: "clamp(18px,2vw,28px)", marginTop: "clamp(18px,2vw,28px)" }}>
+            <div style={cardStyle}>
+              <div style={{ ...monoLabel, color: "var(--accent)", marginBottom: 16 }}>Do</div>
+              <ul style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {LOGO_DO.map((v) => (
+                  <li key={v} style={{ borderTop: "1px solid var(--line-2)", paddingTop: 12, fontSize: 15, lineHeight: 1.5, color: "var(--fg-dim)" }}>{v}</li>
+                ))}
+              </ul>
+            </div>
+            <div style={cardStyle}>
+              <div style={{ ...monoLabel, marginBottom: 16 }}>Don’t</div>
+              <ul style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {LOGO_DONT.map((v) => (
+                  <li key={v} style={{ borderTop: "1px solid var(--line-2)", paddingTop: 12, fontSize: 15, lineHeight: 1.5, color: "var(--fg-faint)" }}>{v}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div style={{ marginTop: "clamp(28px,4vh,40px)" }}>
+            <div style={{ ...monoLabel, marginBottom: 14 }}>Download · black &amp; white</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 14 }}>
+              {LOGO_FILES.map((f) => (
+                <div key={f.label} style={cardStyle}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
+                    <span style={{ fontFamily: "var(--font-display), sans-serif", fontSize: 18, fontWeight: 500 }}>{f.label}</span>
+                    <span style={{ ...monoLabel, fontSize: 10 }}>{f.sub}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <a className="ds-dl" href={f.black} download>Black ↓</a>
+                    <a className="ds-dl" href={f.white} download>White ↓</a>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 13, color: "var(--fg-faint)", lineHeight: 1.55, marginTop: 16, maxWidth: "60ch" }}>
+              SVG is vector and infinitely scalable; PNG is transparent at 2400px; JPG is 2400px on a solid fill (white behind the black mark, near-black behind the white). The wordmark on this page is the live component — these files are generated to match it exactly.
+            </p>
+          </div>
+        </Section>
+
         {/* Colour */}
-        <Section id="colour" n="03" title="Colour" intro="A warm, low-chroma palette in two themes. Every value is a token that flips between light and dark, so never hardcode a colour, reach for the token. Swatches below show the current theme.">
+        <Section id="colour" n="04" title="Colour" intro="A warm, low-chroma palette in two themes. Every value is a token that flips between light and dark, so never hardcode a colour, reach for the token. Swatches below show the current theme.">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))", gap: 14 }}>
             {COLORS.map((c) => (
               <div key={c.name} style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
@@ -146,7 +218,7 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* Typography */}
-        <Section id="type" n="04" title="Typography" intro="Schibsted Grotesk for everything visible (var(--font-display) / --font-body), a monospace stack (var(--font-mono)) for micro-labels, nav and controls. No serif. Sizes are fluid clamp() steps, exposed as CSS tokens (--text-display … --text-body) — the single source of truth; components reference these, never hardcoded sizes.">
+        <Section id="type" n="05" title="Typography" intro="Schibsted Grotesk for everything visible (var(--font-display) / --font-body), a monospace stack (var(--font-mono)) for micro-labels, nav and controls. No serif. Sizes are fluid clamp() steps, exposed as CSS tokens (--text-display … --text-body) — the single source of truth; components reference these, never hardcoded sizes.">
           <div style={{ display: "flex", flexDirection: "column", gap: "clamp(20px,3vh,32px)" }}>
             {TYPE.map((t) => (
               <div key={t.label} style={{ borderTop: "1px solid var(--line-2)", paddingTop: 16 }}>
@@ -169,7 +241,7 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* Buttons & controls */}
-        <Section id="controls" n="05" title="Buttons & controls" intro="One global .ui-btn system powers the hero and the closing banner alike: round .ui-btn-icon buttons and labelled .ui-btn-pill buttons, themed entirely via tokens. They live on dark, immersive surfaces, shown here on a dark panel.">
+        <Section id="controls" n="06" title="Buttons & controls" intro="One global .ui-btn system powers the hero and the closing banner alike: round .ui-btn-icon buttons and labelled .ui-btn-pill buttons, themed entirely via tokens. They live on dark, immersive surfaces, shown here on a dark panel.">
           <div data-theme="dark" style={{ background: "#0b0a08", border: "1px solid rgba(241,237,229,0.13)", borderRadius: 12, padding: "clamp(24px,3vw,40px)", display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center" }}>
             <button type="button" className="ui-btn ui-btn-pill">Randomise ↻</button>
             <button type="button" className="ui-btn ui-btn-icon" aria-label="Sound">
@@ -186,7 +258,7 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* Pills, links, tags */}
-        <Section id="actions" n="06" title="Pills, links & tags" intro="Page-level actions and metadata. .pill (with .pill-solid / .pill-ghost / .pill-lg), the animated .linku underline and its .link-cta variant, and the .tag chip.">
+        <Section id="actions" n="07" title="Pills, links & tags" intro="Page-level actions and metadata. .pill (with .pill-solid / .pill-ghost / .pill-lg), the animated .linku underline and its .link-cta variant, and the .tag chip.">
           <div style={{ display: "flex", flexDirection: "column", gap: "clamp(22px,3vh,32px)" }}>
             <div>
               <div style={{ ...monoLabel, marginBottom: 14 }}>Pills</div>
@@ -215,7 +287,7 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* Motion */}
-        <Section id="motion" n="07" title="Motion" intro="GSAP-driven entry reveals plus living generative backgrounds. Motion is purposeful and calm; everything degrades gracefully and pauses off-screen, and all of it honours prefers-reduced-motion.">
+        <Section id="motion" n="08" title="Motion" intro="GSAP-driven entry reveals plus living generative backgrounds. Motion is purposeful and calm; everything degrades gracefully and pauses off-screen, and all of it honours prefers-reduced-motion.">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 14 }}>
             {([
               ["[data-rv] / [data-rvs]", "Fade-rise on entry (single / stronger)."],
@@ -234,7 +306,7 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* Spacing & layout */}
-        <Section id="layout" n="08" title="Spacing & layout" intro="A small set of layout tokens carries the rhythm. Reach for these instead of magic numbers.">
+        <Section id="layout" n="09" title="Spacing & layout" intro="A small set of layout tokens carries the rhythm. Reach for these instead of magic numbers.">
           <div style={{ display: "flex", flexDirection: "column" }}>
             {TOKENS.map((t) => (
               <div key={t.name} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr)", gap: 16, borderTop: "1px solid var(--line-2)", padding: "14px 0", alignItems: "baseline" }}>

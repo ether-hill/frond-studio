@@ -2,6 +2,7 @@ import Link from "next/link";
 import { NAV_LINKS } from "@/lib/site";
 import CurrentYear from "./CurrentYear";
 import NewsletterSignup from "./NewsletterSignup";
+import Wordmark from "./Wordmark";
 
 const label = (text: string) => (
   <div
@@ -40,23 +41,8 @@ export default function Footer() {
           }}
         >
           <div>
-            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1, gap: 4, marginBottom: 18 }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 27, fontWeight: 400, letterSpacing: "0.005em" }}>
-                Frond
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 10,
-                  fontWeight: 500,
-                  letterSpacing: "0.44em",
-                  textTransform: "uppercase",
-                  color: "var(--fg-dim)",
-                  paddingLeft: 1,
-                }}
-              >
-                Studio
-              </span>
+            <div style={{ marginBottom: 18 }}>
+              <Wordmark size={27} link={false} />
             </div>
             <p style={{ color: "var(--fg-dim)", fontSize: "var(--text-lead)", lineHeight: 1.5, maxWidth: "34ch" }}>
               A transdisciplinary design &amp; technology studio working remotely worldwide.
