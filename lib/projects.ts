@@ -19,6 +19,16 @@ export type PersonalProject = {
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
   {
+    slug: "shader-lab",
+    title: "Shader Lab",
+    kicker: "SHADER · REAL-TIME · LIVE CONTROLS",
+    summary:
+      "An original real-time flow-field running entirely on the GPU as a three.js fragment shader, wired to a live control panel: every slider — speed, warp, detail, palette — re-tunes the image instantly, nothing recompiles. Drag to push the flow, randomise for a new world, save a still.",
+    year: "2026",
+    tags: ["Shader", "GLSL", "three.js", "Creative Coding"],
+    href: "/projects/shader-lab",
+  },
+  {
     slug: "data-center-sim",
     title: "Data Center Sim",
     kicker: "GAME · BUILD & RUN IN BROWSER",
