@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import type { Handle, Params } from "./gpu";
 import s from "./ShaderLab.module.css";
 
@@ -10,7 +11,9 @@ export default function ShaderLab() {
   const panelRef = useRef<HTMLDivElement>(null);
   const [backend, setBackend] = useState("");
   const [fps, setFps] = useState(0);
+  const [res, setRes] = useState<[number, number]>([0, 0]);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [more, setMore] = useState(false);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -19,6 +22,14 @@ export default function ShaderLab() {
     let handle: Handle | null = null;
     let paneHandle: { dispose: () => void; refresh: () => void } | null = null;
     let cancelled = false;
+
+    // track canvas resolution for the inspector readout
+    const ro = new ResizeObserver(() => {
+      const r = mount.getBoundingClientRect();
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      setRes([Math.round(r.width * dpr), Math.round(r.height * dpr)]);
+    });
+    ro.observe(mount);
 
     (async () => {
       const [{ createPlayground, DEFAULTS, PALETTES, randomized }, { Pane }] = await Promise.all([
@@ -76,6 +87,7 @@ export default function ShaderLab() {
 
     return () => {
       cancelled = true;
+      ro.disconnect();
       paneHandle?.dispose();
       handle?.dispose();
     };
@@ -83,43 +95,52 @@ export default function ShaderLab() {
 
   return (
     <div className={s.wrap} ref={wrapRef}>
-      <header className={s.head} data-rv>
-        <div>
-          <div className={s.kicker}>SHADER · REAL-TIME · LIVE CONTROLS</div>
-          <h1 className={s.title}>Shader Lab</h1>
-        </div>
-        <p className={s.intro}>
-          An original real-time flow-field running entirely on the GPU as a fragment shader,
-          wired to a live control panel — the three.js creative-coding workflow where every
-          slider re-tunes the image instantly. Drag across the canvas to push the flow,
-          randomise for a new world, and save a still.
-        </p>
-      </header>
-
       <div className={s.stage}>
         <div ref={mountRef} className={s.canvas} />
 
-        <div className={s.badges}>
-          <span className={s.badge}>{backend || "…"}</span>
-          <span className={s.badge}>{fps} fps</span>
+        {/* overlay chrome — sits on top of the live shader */}
+        <div className={s.overlay}>
+          {/* inspector / stats (top-left) */}
+          <div className={s.inspector}>
+            <span className={s.kicker}>SHADER · REAL-TIME</span>
+            <dl className={s.stats}>
+              <div><dt>backend</dt><dd>{backend || "…"}</dd></div>
+              <div><dt>resolution</dt><dd>{res[0]}×{res[1]}</dd></div>
+              <div><dt>fps</dt><dd>{fps}</dd></div>
+            </dl>
+          </div>
+
+          {/* title + description + nav (bottom-left) */}
+          <div className={s.hero}>
+            <h1 className={s.title}>Shader Lab</h1>
+            <p className={s.desc}>
+              An original real-time flow-field running entirely on the GPU as a fragment
+              shader, wired to a live control panel.
+              {more && (
+                <span className={s.descMore}>
+                  {" "}A single full-screen triangle runs a domain-warped fractal-noise field;
+                  every control on the right is a uniform updated live, so the image re-tunes
+                  the instant you move a slider — nothing recompiles. Drag across the canvas to
+                  deflect the flow toward the cursor, randomise for a new world, or save a still.
+                </span>
+              )}{" "}
+              <button className={s.more} onClick={() => setMore((m) => !m)}>
+                {more ? "read less" : "read more"}
+              </button>
+            </p>
+            <nav className={s.nav}>
+              <Link href="/projects" className={s.navLink}>← All projects</Link>
+              <Link href="/contact" className={s.navLink}>✉ Contact</Link>
+              <button className={s.navLink} onClick={() => setPanelOpen((o) => !o)}>
+                {panelOpen ? "▣ Hide controls" : "▢ Controls"}
+              </button>
+            </nav>
+          </div>
+
+          {/* control panel (top-right) */}
+          <div className={`${s.panel} ${panelOpen ? "" : s.panelHidden}`} ref={panelRef} />
         </div>
-
-        <button
-          className={s.panelToggle}
-          onClick={() => setPanelOpen((o) => !o)}
-          aria-expanded={panelOpen}
-        >
-          {panelOpen ? "✕ Controls" : "⚙ Controls"}
-        </button>
-
-        <div className={`${s.panel} ${panelOpen ? "" : s.panelHidden}`} ref={panelRef} />
       </div>
-
-      <p className={s.legend}>
-        Rendered on {backend || "the GPU"} as a single full-screen fragment shader — an original
-        domain-warped fractal-noise field. Every control above is a uniform updated live; nothing
-        re-compiles. Drag on the image to deflect the flow toward the cursor.
-      </p>
     </div>
   );
 }
