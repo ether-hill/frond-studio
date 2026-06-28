@@ -19,6 +19,16 @@ export type PersonalProject = {
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
   {
+    slug: "data-center-sim",
+    title: "Data Center Sim",
+    kicker: "GAME · BUILD & RUN IN BROWSER",
+    summary:
+      "A management sim of a data center: lay out racks, cooling, power and networking on the floor, then keep the heat under control. Heat is a real diffusing field — place coolers near racks or watch your servers throttle, overheat and fail. Earn compute revenue and bank your way to the goal.",
+    year: "2026",
+    tags: ["Game", "Simulation", "Canvas", "TypeScript"],
+    href: "/projects/data-center-sim",
+  },
+  {
     slug: "algorithms",
     title: "Algorithms V1",
     kicker: "GENERATIVE · LIVE IN BROWSER",
