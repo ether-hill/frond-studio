@@ -221,13 +221,29 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
-  background: var(--bg-0);
+  height: clamp(440px, 68vh, 760px);
+  background:
+    radial-gradient(120% 120% at 50% 18%, #1b2430 0%, #12141a 46%, #0a0a0d 100%);
 }
-.canvas {
-  display: block;
+.scene {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  touch-action: none;
-  cursor: crosshair;
+  height: 100%;
+}
+.loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+@media (max-width: 760px) {
+  .stage { height: clamp(380px, 58vh, 560px); }
 }
 
 /* ---- toasts ---- */
