@@ -19,6 +19,16 @@ export type PersonalProject = {
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
   {
+    slug: "render-inspector",
+    title: "Render Inspector",
+    kicker: "THREE.JS · GLASS + LIVE CONTROLS",
+    summary:
+      "A glass solid spinning in front of glowing 3D text — transmission material, selective bloom and a soft contact shadow, with every material, geometry and colour knob wired to a live control panel and a renderer inspector. A faithful three.js recreation of Faraz Shaikh's R3F WebGPU-inspector demo.",
+    year: "2026",
+    tags: ["three.js", "WebGL", "Glass", "Live Controls"],
+    href: "/projects/render-inspector",
+  },
+  {
     slug: "shader-lab",
     title: "Shader Lab",
     kicker: "SHADER · REAL-TIME · LIVE CONTROLS",
