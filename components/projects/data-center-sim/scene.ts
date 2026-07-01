@@ -37,6 +37,16 @@ const COL = {
   path: 0xb9b09a,
   led: 0x7fe6c0,
   warn: 0xff6a3a,
+  // data-center campus palette (after the reference render)
+  glass: 0x9fc6e6, // blue skylight glazing
+  navy: 0x2c3a54, // dark-blue cladding
+  siding: 0xd2d6da, // light metal cladding
+  white: 0xeef1f4,
+  asphalt: 0x3a3b40,
+  solar: 0x1b2440, // roof solar panels
+  water: 0x3f6f8f,
+  turf: 0x4f8a3f, // sports pitch
+  track: 0xb0503a, // running track
 };
 
 // ---- shared tiny textures ----
@@ -206,6 +216,17 @@ export function createScene(opts: {
   const matTower = new THREE.MeshStandardMaterial({ color: 0xd2ccbd, roughness: 0.92, side: THREE.DoubleSide });
   const steamTex = softCircle();
 
+  // shared campus materials (data-hall + office + roads, after the reference)
+  const matSiding = new THREE.MeshStandardMaterial({ color: COL.siding, roughness: 0.6, metalness: 0.2 });
+  const matNavy = new THREE.MeshStandardMaterial({ color: COL.navy, roughness: 0.55, metalness: 0.2 });
+  const matWhite = new THREE.MeshStandardMaterial({ color: COL.white, roughness: 0.7 });
+  const matGlass = new THREE.MeshStandardMaterial({
+    color: COL.glass, roughness: 0.12, metalness: 0.5,
+    emissive: new THREE.Color(COL.glass), emissiveIntensity: 0.16,
+  });
+  const matAsphalt = new THREE.MeshStandardMaterial({ color: COL.asphalt, roughness: 1 });
+  const matSolar = new THREE.MeshStandardMaterial({ color: COL.solar, roughness: 0.35, metalness: 0.4 });
+
   // ================= surrounding community =================
   // Houses, a school, roads and a playground ring the data center — the people
   // who actually live with the noise. Markers over homes appear as sentiment falls.
@@ -256,6 +277,13 @@ export function createScene(opts: {
     const win = cbox(0.22, 0.2, 0.03, winMat, false);
     win.position.set(0, bh * 0.5, bd / 2 + 0.02);
     g.add(win);
+    // rooftop solar panels on many homes (as in the reference)
+    if (s % 3 !== 0) {
+      const panel = cbox(bw * 0.6, 0.02, 0.32, matSolar, false);
+      panel.position.set(0, bh + 0.16, bd * 0.2);
+      panel.rotation.x = -0.5;
+      g.add(panel);
+    }
     // discontent marker (hidden until sentiment drops past this house's threshold)
     const marker = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.3, 4), markerMat);
     marker.rotation.y = Math.PI / 4;
@@ -305,10 +333,71 @@ export function createScene(opts: {
       community.add(h);
     }
   };
-  houseRow("z", -(innerHalfD + 3.3), -innerHalfW - 0.8, innerHalfW + 0.8, 2.2, 0);
-  houseRow("z", innerHalfD + 3.3, -innerHalfW - 0.8, innerHalfW + 0.8, 2.2, Math.PI);
-  houseRow("x", -(innerHalfW + 3.3), -innerHalfD - 0.4, innerHalfD + 0.4, 2.2, Math.PI / 2);
-  houseRow("x", innerHalfW + 3.3, -innerHalfD - 0.4, innerHalfD + 0.4, 2.2, -Math.PI / 2);
+  // homes line the top and bottom; the left side is the plant's own office &
+  // truck yard, the right side is a community sports field
+  houseRow("z", -(innerHalfD + 3.3), -innerHalfW - 0.6, innerHalfW + 0.6, 2.2, 0);
+  houseRow("z", innerHalfD + 3.3, -innerHalfW - 0.6, innerHalfW + 0.6, 2.2, Math.PI);
+
+  // ---- security fence hugging the data-center campus ----
+  const fence = new THREE.Group();
+  const fenceMat = new THREE.MeshStandardMaterial({
+    color: 0x30343a, transparent: true, opacity: 0.4, side: THREE.DoubleSide, roughness: 0.9, metalness: 0.3,
+  });
+  const fh = 0.5;
+  const fxW = innerHalfW + 0.7;
+  const fzD = innerHalfD + 0.7;
+  const fencePanel = (w: number, x: number, z: number, vertical: boolean) => {
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(w, fh), fenceMat);
+    p.position.set(x, fh / 2, z);
+    if (vertical) p.rotation.y = Math.PI / 2;
+    fence.add(p);
+  };
+  fencePanel(fxW * 2, 0, -fzD, false);
+  fencePanel(fxW * 2, 0, fzD, false);
+  fencePanel(fzD * 2, -fxW, 0, true);
+  fencePanel(fzD * 2, fxW, 0, true);
+  const postGeo = new THREE.CylinderGeometry(0.02, 0.02, fh + 0.08, 6);
+  const addPost = (x: number, z: number) => { const p = new THREE.Mesh(postGeo, matMetalDark); p.position.set(x, fh / 2, z); p.castShadow = true; fence.add(p); };
+  for (let x = -fxW; x <= fxW + 0.01; x += 1.5) { addPost(x, -fzD); addPost(x, fzD); }
+  for (let z = -fzD + 1.5; z <= fzD - 0.01; z += 1.5) { addPost(-fxW, z); addPost(fxW, z); }
+  community.add(fence);
+
+  // ---- plant office + truck yard (left of the campus) ----
+  const campus = new THREE.Group();
+  campus.position.set(-(innerHalfW + 3.6), 0, 0);
+  // two-storey office: navy ground floor, white upper, rooftop units
+  const office = new THREE.Group();
+  office.position.set(0, 0, 2.2);
+  const oLower = cbox(1.5, 0.5, 1.0, matNavy); oLower.position.y = 0.25; office.add(oLower);
+  const oUpper = cbox(1.4, 0.42, 0.92, matWhite); oUpper.position.y = 0.71; office.add(oUpper);
+  for (let k = 0; k < 3; k++) { const u = cbox(0.18, 0.1, 0.18, matMetal); u.position.set(-0.4 + k * 0.4, 0.98, 0); office.add(u); }
+  for (let k = 0; k < 4; k++) { const w = cbox(0.12, 0.18, 0.02, winMat, false); w.position.set(-0.5 + k * 0.33, 0.72, 0.47); office.add(w); }
+  const oGlass = cbox(1.2, 0.16, 0.02, matGlass, false); oGlass.position.set(0, 0.3, 0.51); office.add(oGlass);
+  campus.add(office);
+  // parking lot with painted stalls
+  const lot = cbox(2.0, 0.02, 1.7, matAsphalt, false); lot.position.set(0, 0.012, -0.4); campus.add(lot);
+  const stripeMat = new THREE.MeshStandardMaterial({ color: 0xd9dde2, roughness: 1 });
+  for (let k = 0; k < 6; k++) { const st = cbox(0.02, 0.005, 0.5, stripeMat, false); st.position.set(-0.75 + k * 0.3, 0.02, -0.65); campus.add(st); }
+  // a few articulated trucks
+  const makeTruck = (trailer: number) => {
+    const t = new THREE.Group();
+    const cab = cbox(0.34, 0.26, 0.24, matWhite); cab.position.set(0.55, 0.13, 0); t.add(cab);
+    const box2 = cbox(0.75, 0.34, 0.3, new THREE.MeshStandardMaterial({ color: trailer, roughness: 0.7 })); box2.position.set(-0.05, 0.2, 0); t.add(box2);
+    return t;
+  };
+  const truckCols = [0x2f5aa8, 0xe7eaee, 0x2f5aa8];
+  for (let k = 0; k < 3; k++) { const tr = makeTruck(truckCols[k]); tr.position.set(0, 0.02, -0.9 + k * 0.42); tr.rotation.y = Math.PI / 2; campus.add(tr); }
+  community.add(campus);
+
+  // ---- community sports field (right of the campus) ----
+  const sports = new THREE.Group();
+  sports.position.set(innerHalfW + 4.2, 0, -0.5);
+  const track = cbox(3.0, 0.02, 4.4, new THREE.MeshStandardMaterial({ color: COL.track, roughness: 1 }), false); track.position.y = 0.011; sports.add(track);
+  const pitch = cbox(2.4, 0.02, 3.6, new THREE.MeshStandardMaterial({ color: COL.turf, roughness: 1 }), false); pitch.position.y = 0.014; sports.add(pitch);
+  const sportLineMat = new THREE.MeshStandardMaterial({ color: 0xeef2f0, roughness: 1 });
+  const midline = cbox(2.3, 0.004, 0.04, sportLineMat, false); midline.position.y = 0.016; sports.add(midline);
+  const circle = new THREE.Mesh(new THREE.RingGeometry(0.34, 0.38, 24), sportLineMat); circle.rotation.x = -Math.PI / 2; circle.position.y = 0.016; sports.add(circle);
+  community.add(sports);
 
   // school — a longer block with a bright roof, a small yard and a flagpole
   const school = new THREE.Group();
@@ -373,6 +462,7 @@ export function createScene(opts: {
     glowMesh?: THREE.Mesh; // emissive when hot
     led?: THREE.Mesh;
     blink?: THREE.Mesh;
+    rotor?: THREE.Object3D; // spinning wind-turbine rotor
     steam?: { spr: THREE.Sprite; t: number; sp: number; ox: number; oz: number }[];
     emitY?: number;
     dead?: boolean;
@@ -388,28 +478,36 @@ export function createScene(opts: {
 
   function makeDataHall(): { group: THREE.Group; anim: Anim } {
     const g = new THREE.Group();
-    const bodyMat = matConcrete.clone();
+    // light-metal body over a navy base band
+    const bodyMat = matSiding.clone();
     bodyMat.emissive = new THREE.Color(COL.warn);
     bodyMat.emissiveIntensity = 0;
-    const body = box(0.82, 0.5, 0.82, bodyMat, 0.25);
+    const body = box(0.84, 0.4, 0.84, bodyMat, 0.22);
     g.add(body);
-    g.add(box(0.86, 0.05, 0.86, matRoof, 0.5 + 0.02));
-    // rooftop condenser units
-    for (let k = 0; k < 3; k++) {
-      const u = box(0.18, 0.1, 0.18, matMetal, 0.57);
-      u.position.x = -0.22 + k * 0.22;
-      u.position.z = -0.16;
-      g.add(u);
+    g.add(box(0.86, 0.12, 0.86, matNavy, 0.06)); // navy plinth
+    // shallow blue-glass skylight roof (a low gable of two tilted panels)
+    for (const dir of [-1, 1]) {
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.03, 0.5), matGlass);
+      panel.position.set(0, 0.46, dir * 0.22);
+      panel.rotation.x = dir * 0.26;
+      panel.castShadow = true;
+      g.add(panel);
     }
-    const vent = box(0.5, 0.08, 0.16, matMetalDark, 0.56);
-    vent.position.z = 0.18;
-    g.add(vent);
+    // roof ridge + parapet trim
+    g.add(box(0.9, 0.04, 0.06, matNavy, 0.52));
+    // loading-bay doors along the front (+z)
+    for (let k = 0; k < 4; k++) {
+      const door = box(0.13, 0.26, 0.02, matNavy, 0.17);
+      door.position.set(-0.3 + k * 0.2, 0, 0.43);
+      door.castShadow = false;
+      g.add(door);
+    }
     // LED status strip
     const ledMat = new THREE.MeshStandardMaterial({
       color: COL.led, emissive: new THREE.Color(COL.led), emissiveIntensity: 1.1, roughness: 0.4,
     });
-    const led = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.05, 0.025), ledMat);
-    led.position.set(0, 0.3, 0.415);
+    const led = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.02), ledMat);
+    led.position.set(0, 0.34, 0.425);
     g.add(led);
     return { group: g, anim: { kind: "rack", glowMesh: body, led } };
   }
@@ -466,48 +564,37 @@ export function createScene(opts: {
     return { group: g, anim: { kind: "cooler", steam, emitY: Htow + 0.1 } };
   }
 
-  function makeSubstation(): { group: THREE.Group; anim: Anim } {
+  function makeWindTurbine(): { group: THREE.Group; anim: Anim } {
     const g = new THREE.Group();
-    g.add(box(0.9, 0.06, 0.9, new THREE.MeshStandardMaterial({ color: 0x6b6258, roughness: 1 }), 0.03));
-    // transformers
-    for (let k = 0; k < 2; k++) {
-      const tr = box(0.26, 0.3, 0.3, matMetal, 0.21);
-      tr.position.set(-0.18 + k * 0.36, 0, 0.16);
-      g.add(tr);
-      for (let b = 0; b < 3; b++) {
-        const bush = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.14, 8), matMetalDark);
-        bush.position.set(tr.position.x - 0.08 + b * 0.08, 0.43, 0.16);
-        bush.castShadow = true;
-        g.add(bush);
-      }
+    // concrete pad
+    g.add(box(0.34, 0.05, 0.34, matMetalDark, 0.025));
+    // tapered white tower
+    const towerH = 1.55;
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.08, towerH, 12), matWhite);
+    tower.position.y = towerH / 2 + 0.03;
+    tower.castShadow = true;
+    g.add(tower);
+    const hubY = towerH + 0.03;
+    // nacelle
+    const nacelle = box(0.12, 0.11, 0.28, matWhite, hubY);
+    nacelle.position.z = 0.04;
+    g.add(nacelle);
+    // rotor — 3 blades + hub, spins around Z (faces the viewer)
+    const rotor = new THREE.Group();
+    rotor.position.set(0, hubY, 0.2);
+    const hub = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10), matWhite);
+    rotor.add(hub);
+    for (let b = 0; b < 3; b++) {
+      const holder = new THREE.Group();
+      holder.rotation.z = (b * Math.PI * 2) / 3;
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.62, 0.02), matWhite);
+      blade.position.y = 0.34;
+      blade.castShadow = true;
+      holder.add(blade);
+      rotor.add(holder);
     }
-    // lattice pylon
-    const pyMat = matMetalDark;
-    const pylon = new THREE.Group();
-    pylon.position.set(0.0, 0, -0.22);
-    const legH = 0.95;
-    for (let c = 0; c < 4; c++) {
-      const ang = (c / 4) * Math.PI * 2 + Math.PI / 4;
-      const leg = box(0.03, legH, 0.03, pyMat, legH / 2);
-      const spread = 0.12;
-      leg.position.x = Math.cos(ang) * spread * 0.4;
-      leg.position.z = Math.sin(ang) * spread * 0.4;
-      leg.position.y = legH / 2;
-      pylon.add(leg);
-    }
-    const arm1 = box(0.5, 0.03, 0.03, pyMat, legH * 0.78);
-    pylon.add(arm1);
-    const arm2 = box(0.36, 0.03, 0.03, pyMat, legH * 0.95);
-    pylon.add(arm2);
-    g.add(pylon);
-    // warning light
-    const blinkMat = new THREE.MeshStandardMaterial({
-      color: COL.warn, emissive: new THREE.Color(COL.warn), emissiveIntensity: 1.4, roughness: 0.5,
-    });
-    const blink = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10), blinkMat);
-    blink.position.set(0.18, 0.5, 0.16);
-    g.add(blink);
-    return { group: g, anim: { kind: "power", blink } };
+    g.add(rotor);
+    return { group: g, anim: { kind: "power", rotor } };
   }
 
   function makeNetwork(): { group: THREE.Group; anim: Anim } {
@@ -541,7 +628,7 @@ export function createScene(opts: {
     switch (type) {
       case "rack": return makeDataHall();
       case "cooler": return makeCoolingTower();
-      case "power": return makeSubstation();
+      case "power": return makeWindTurbine();
       case "network": return makeNetwork();
     }
   }
@@ -775,9 +862,8 @@ export function createScene(opts: {
           s.spr.scale.set(sc, sc, sc);
           (s.spr.material as THREE.SpriteMaterial).opacity = Math.sin(life * Math.PI) * 0.4;
         }
-      } else if (a.kind === "power" && a.blink) {
-        (a.blink.material as THREE.MeshStandardMaterial).emissiveIntensity =
-          0.6 + 0.8 * Math.abs(Math.sin(time * 3 + i));
+      } else if (a.kind === "power" && a.rotor) {
+        a.rotor.rotation.z += dt * 1.5;
       } else if (a.kind === "network" && a.blink) {
         (a.blink.material as THREE.MeshStandardMaterial).emissiveIntensity =
           0.5 + 0.7 * Math.abs(Math.sin(time * 4 + i));
