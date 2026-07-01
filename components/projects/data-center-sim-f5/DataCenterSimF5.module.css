@@ -1,0 +1,425 @@
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: var(--pad-top) var(--gutter) var(--pad-bottom);
+}
+
+/* ---- header ---- */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px 48px;
+}
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  margin-bottom: 14px;
+}
+.title {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 600;
+  font-size: var(--text-display);
+  line-height: 0.92;
+  letter-spacing: -0.038em;
+}
+.intro {
+  max-width: 50ch;
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: 1.55;
+  color: var(--fg-dim);
+}
+.intro strong { color: var(--fg); font-weight: 600; }
+
+/* ---- stage: the diorama with the game HUD floated over it ---- */
+.stage {
+  position: relative;
+  margin-top: clamp(32px, 5vh, 56px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  height: clamp(520px, 74vh, 820px);
+  background: radial-gradient(120% 120% at 50% 16%, #182338 0%, #0e131f 52%, #080a10 100%);
+}
+.scene {
+  position: absolute;
+  inset: 0;
+}
+.loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(235, 240, 250, 0.5);
+}
+
+/* glass panels — game UI, dark in both themes */
+.panel {
+  position: absolute;
+  background: rgba(10, 13, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #eef1f6;
+}
+
+/* top-left: money + goal */
+.moneyPanel {
+  top: 14px;
+  left: 14px;
+  padding: 12px 16px 12px;
+  min-width: 205px;
+}
+.moneyVal {
+  font-family: var(--font-mono);
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.netVal {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.goalRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.goalTrack {
+  flex: 1;
+  height: 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.goalFill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #e8c46a, #7fd6a4);
+  transition: width 0.25s linear;
+}
+.goalLabel {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(238, 241, 246, 0.6);
+  white-space: nowrap;
+}
+
+/* top-right: clock + controls */
+.clockStack {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.clockPanel {
+  position: static;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+}
+.clockArc {
+  width: 62px;
+  height: 34px;
+  display: block;
+}
+.clockText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.clockDay {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: rgba(238, 241, 246, 0.6);
+}
+.clockTime {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.priceChip {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(238, 241, 246, 0.75);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.priceHot {
+  background: rgba(232, 154, 90, 0.22);
+  color: #f0b98a;
+}
+.controls {
+  position: static;
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+}
+.ctl {
+  min-width: 34px;
+  padding: 7px 9px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: rgba(238, 241, 246, 0.85);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.ctl:hover { background: rgba(255, 255, 255, 0.1); }
+.ctlOn {
+  border-color: rgba(232, 196, 106, 0.7);
+  color: #e8c46a;
+  background: rgba(232, 196, 106, 0.12);
+}
+
+/* right: gauges */
+.gauges {
+  top: 130px;
+  right: 14px;
+  width: 216px;
+  padding: 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gLabel {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.15em;
+  color: rgba(238, 241, 246, 0.55);
+}
+.gVal {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #eef1f6;
+  font-variant-numeric: tabular-nums;
+}
+.warnText { color: #ff8a75; }
+.mixRow { display: flex; flex-direction: column; gap: 6px; }
+.mixBar {
+  display: flex;
+  height: 7px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.1);
+}
+.mixBar span {
+  display: block;
+  height: 100%;
+  transition: width 0.25s linear;
+}
+.mixKey {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  color: rgba(238, 241, 246, 0.5);
+}
+.mixKey i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  margin-left: 7px;
+}
+.mixKey i:first-child { margin-left: 0; }
+.mini { display: flex; flex-direction: column; gap: 5px; }
+.miniTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.miniBar {
+  height: 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.miniBar div {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.25s linear, background 0.3s;
+}
+.hallRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.deadTag { color: #ff8a75; font-style: normal; }
+
+/* bottom: build dock */
+.dock {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 7px;
+  max-width: calc(100% - 28px);
+  overflow-x: auto;
+  background: rgba(10, 13, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  scrollbar-width: none;
+}
+.dock::-webkit-scrollbar { display: none; }
+.card {
+  --tc: #e8c46a;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 92px;
+  padding: 9px 11px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  color: #eef1f6;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s, transform 0.06s;
+}
+.card:hover { border-color: rgba(255, 255, 255, 0.35); }
+.card:active { transform: translateY(1px); }
+.cardOn {
+  border-color: var(--tc);
+  background: color-mix(in srgb, var(--tc) 16%, rgba(10, 13, 20, 0.4));
+  box-shadow: inset 0 0 0 1px var(--tc);
+}
+.cardKey {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 8.5px;
+  color: rgba(238, 241, 246, 0.4);
+}
+.cardName {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--tc);
+}
+.cardStat {
+  font-size: 9px;
+  color: rgba(238, 241, 246, 0.6);
+  white-space: nowrap;
+}
+.cardCost {
+  font-size: 10px;
+  color: rgba(238, 241, 246, 0.85);
+  font-variant-numeric: tabular-nums;
+}
+.cant { color: #ff8a75; }
+.razeCard .cardName { color: #ff8a75; }
+
+/* toasts */
+.toasts {
+  position: absolute;
+  left: 14px;
+  bottom: 86px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  max-width: min(340px, 70%);
+}
+.toast {
+  padding: 8px 13px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  background: rgba(10, 13, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #eef1f6;
+  backdrop-filter: blur(8px);
+  animation: toastIn 0.25s ease both;
+}
+.warn { border-color: #e8b15a; color: #f0cd8a; }
+.bad { border-color: #ff5f45; color: #ffa08e; }
+.good { border-color: #7fd6a4; color: #aee9c8; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.wonBanner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(127, 214, 164, 0.16);
+  border: 1px solid #7fd6a4;
+  color: #aee9c8;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  backdrop-filter: blur(8px);
+}
+
+.legend {
+  margin: 16px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--fg-faint);
+  max-width: 84ch;
+}
+.legend strong { color: var(--fg-dim); }
+
+/* ---- responsive ---- */
+@media (max-width: 900px) {
+  .gauges {
+    width: 188px;
+    padding: 11px 12px;
+    gap: 8px;
+  }
+}
+@media (max-width: 760px) {
+  .stage { height: clamp(480px, 72vh, 640px); }
+  .moneyPanel { min-width: 0; padding: 10px 12px; }
+  .gauges { display: none; }
+  .clockPanel { padding: 7px 10px; gap: 8px; }
+  .priceChip { display: none; }
+  .toasts { bottom: 96px; }
+  .card { min-width: 82px; padding: 8px 9px 7px; }
+}

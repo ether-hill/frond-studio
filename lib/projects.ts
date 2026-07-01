@@ -39,6 +39,16 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     href: "/projects/shader-lab",
   },
   {
+    slug: "data-center-sim-f5",
+    title: "Data Center Sim F5",
+    kicker: "GAME · FABLE 5 REBUILD",
+    summary:
+      "A from-scratch rebuild of the data center sim on a high-desert plateau, where everything runs on the clock: solar only works in daylight, grid power spikes in price at the evening peak and runs dirty at night, and batteries carry the sun into the dark. Clean compute sells at a premium — build big, but mind what it runs on.",
+    year: "2026",
+    tags: ["Game", "Simulation", "three.js", "TypeScript"],
+    href: "/projects/data-center-sim-f5",
+  },
+  {
     slug: "data-center-sim",
     title: "Data Center Sim",
     kicker: "GAME · BUILD & RUN IN BROWSER",
