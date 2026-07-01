@@ -226,6 +226,8 @@ export function createScene(opts: {
   });
   const matAsphalt = new THREE.MeshStandardMaterial({ color: COL.asphalt, roughness: 1 });
   const matSolar = new THREE.MeshStandardMaterial({ color: COL.solar, roughness: 0.35, metalness: 0.4 });
+  const matRoofLight = new THREE.MeshStandardMaterial({ color: 0xc4c7c9, roughness: 0.9 });
+  const matSteel = new THREE.MeshStandardMaterial({ color: 0xcfd4d8, roughness: 0.3, metalness: 0.7 });
 
   // ================= surrounding community =================
   // Houses, a school, roads and a playground ring the data center — the people
@@ -233,6 +235,7 @@ export function createScene(opts: {
   const community = new THREE.Group();
   island.add(community);
   const communityMarkers: { mesh: THREE.Object3D; threshold: number; baseY: number }[] = [];
+  const bgRotors: THREE.Object3D[] = []; // background wind-turbine rotors
 
   const roadMat = new THREE.MeshStandardMaterial({ color: 0x2c2c2f, roughness: 1 });
   const wallMats = [0xd8cdbb, 0xcbb89f, 0xc3cbcd, 0xd7c3b0, 0xcad2c4, 0xbcc3cb].map(
@@ -333,10 +336,9 @@ export function createScene(opts: {
       community.add(h);
     }
   };
-  // homes line the top and bottom; the left side is the plant's own office &
-  // truck yard, the right side is a community sports field
-  houseRow("z", -(innerHalfD + 3.3), -innerHalfW - 0.6, innerHalfW + 0.6, 2.2, 0);
-  houseRow("z", innerHalfD + 3.3, -innerHalfW - 0.6, innerHalfW + 0.6, 2.2, Math.PI);
+  // the neighbourhood lines the FRONT (+z); the coast is behind the plant
+  houseRow("z", innerHalfD + 3.2, -innerHalfW - 0.6, innerHalfW + 0.6, 2.1, Math.PI);
+  houseRow("z", innerHalfD + 5.3, -innerHalfW - 1.4, innerHalfW - 1.4, 2.1, Math.PI);
 
   // ---- security fence hugging the data-center campus ----
   const fence = new THREE.Group();
@@ -399,6 +401,102 @@ export function createScene(opts: {
   const circle = new THREE.Mesh(new THREE.RingGeometry(0.34, 0.38, 24), sportLineMat); circle.rotation.x = -Math.PI / 2; circle.position.y = 0.016; sports.add(circle);
   community.add(sports);
 
+  // hard-court (tennis) next to the pitch
+  const court = new THREE.Group();
+  court.position.set(innerHalfW + 4.2, 0, 3.2);
+  court.add((() => { const m = cbox(1.4, 0.02, 2.0, new THREE.MeshStandardMaterial({ color: 0x3a6b8c, roughness: 1 }), false); m.position.y = 0.012; return m; })());
+  court.add((() => { const m = cbox(1.0, 0.004, 0.03, sportLineMat, false); m.position.y = 0.016; return m; })());
+  community.add(court);
+
+  // parked cars in the office lot
+  const makeCar = (c: number) => {
+    const car = new THREE.Group();
+    car.add((() => { const b = cbox(0.32, 0.1, 0.16, new THREE.MeshStandardMaterial({ color: c, roughness: 0.35, metalness: 0.5 })); b.position.y = 0.06; return b; })());
+    car.add((() => { const cab = cbox(0.18, 0.08, 0.14, new THREE.MeshStandardMaterial({ color: c, roughness: 0.35, metalness: 0.5 })); cab.position.set(-0.01, 0.14, 0); return cab; })());
+    return car;
+  };
+  const carCols = [0x22252b, 0x2f3742, 0x7a1f1f, 0xcfd3d6, 0x203a5a, 0x3a3d42];
+  for (let k = 0; k < 6; k++) {
+    const car = makeCar(carCols[k % carCols.length]);
+    car.position.set(-(innerHalfW + 4.2), 0.02, -1.1 + k * 0.34);
+    car.rotation.y = Math.PI / 2;
+    community.add(car);
+  }
+
+  // solar farm — rows of tilted panels (left-back of the plot)
+  const solarFarm = new THREE.Group();
+  solarFarm.position.set(-(innerHalfW + 3.9), 0, -3.6);
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 5; c++) {
+      const post = cbox(0.02, 0.14, 0.02, matMetalDark, false); post.position.set(c * 0.58, 0.07, r * 0.5); solarFarm.add(post);
+      const panel = cbox(0.5, 0.02, 0.34, matSolar, false); panel.position.set(c * 0.58, 0.2, r * 0.5); panel.rotation.x = -0.5; solarFarm.add(panel);
+    }
+  }
+  community.add(solarFarm);
+
+  // container / generator yard — rows of grey units (left-front)
+  const yard = new THREE.Group();
+  yard.position.set(-(innerHalfW + 3.9), 0, 3.4);
+  const contCols = [0x8a8f95, 0x6f757c, 0x9aa0a6, 0x556070];
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 4; c++) {
+      const unit = cbox(0.5, 0.24, 0.26, new THREE.MeshStandardMaterial({ color: contCols[(r + c) % contCols.length], roughness: 0.85 }));
+      unit.position.set(c * 0.58, 0.12, r * 0.34);
+      yard.add(unit);
+    }
+  }
+  community.add(yard);
+
+  // ---- coastline behind the plant: sea, beach, background wind turbines ----
+  // water occupies the back band of the plot; a sandy beach fronts it
+  const sea = new THREE.Mesh(
+    new THREE.PlaneGeometry(plateW * 0.98, 5.4),
+    new THREE.MeshStandardMaterial({ color: COL.water, roughness: 0.25, metalness: 0.1 })
+  );
+  sea.rotation.x = -Math.PI / 2;
+  sea.position.set(0, 0.006, -(innerHalfD + 4.0));
+  community.add(sea);
+  const beach = cbox(plateW * 0.94, 0.02, 1.6, new THREE.MeshStandardMaterial({ color: 0xd8c48e, roughness: 1 }), false);
+  beach.position.set(0, 0.014, -(innerHalfD + 1.5));
+  community.add(beach);
+
+  const makeBgTurbine = () => {
+    const g = new THREE.Group();
+    const th = 2.6;
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.11, th, 12), matWhite);
+    tower.position.y = th / 2; tower.castShadow = true; g.add(tower);
+    const nac = cbox(0.16, 0.14, 0.36, matWhite); nac.position.set(0, th, 0.05); g.add(nac);
+    const rotor = new THREE.Group(); rotor.position.set(0, th, 0.24);
+    rotor.add(new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), matWhite));
+    for (let b = 0; b < 3; b++) {
+      const holder = new THREE.Group(); holder.rotation.z = (b * Math.PI * 2) / 3;
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.0, 0.03), matWhite); blade.position.y = 0.55; blade.castShadow = true; holder.add(blade);
+      rotor.add(holder);
+    }
+    g.add(rotor);
+    return { group: g, rotor };
+  };
+  for (let k = 0; k < 5; k++) {
+    const { group, rotor } = makeBgTurbine();
+    group.position.set(-plateHalfW + 2 + (k * (plateW - 4)) / 4, 0, -(innerHalfD + 3.4 + (k % 2) * 1.4));
+    community.add(group);
+    bgRotors.push(rotor);
+  }
+
+  // ---- street lights along the perimeter road ----
+  const lampEmit = new THREE.MeshStandardMaterial({ color: 0xffe6b0, emissive: new THREE.Color(0xffe0a0), emissiveIntensity: 0.8, roughness: 0.6 });
+  const makeLamp = () => {
+    const g = new THREE.Group();
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.02, 0.7, 6), matMetalDark); pole.position.y = 0.35; pole.castShadow = true; g.add(pole);
+    const arm = cbox(0.16, 0.02, 0.02, matMetalDark, false); arm.position.set(0.07, 0.68, 0); g.add(arm);
+    const lamp = cbox(0.06, 0.03, 0.05, lampEmit, false); lamp.position.set(0.14, 0.66, 0); g.add(lamp);
+    return g;
+  };
+  for (let p = -rRoadW + 0.6; p <= rRoadW - 0.5; p += 2.4) {
+    const a = makeLamp(); a.position.set(p, 0, rRoadD + 0.35); community.add(a);
+    const b = makeLamp(); b.position.set(p, 0, -rRoadD - 0.35); b.rotation.y = Math.PI; community.add(b);
+  }
+
   // school — a longer block with a bright roof, a small yard and a flagpole
   const school = new THREE.Group();
   const schoolBody = cbox(3.0, 0.7, 1.1, wallMats[2]);
@@ -410,7 +508,7 @@ export function createScene(opts: {
   pole.position.set(-1.7, 0.5, 0.6); school.add(pole);
   const flag = cbox(0.35, 0.22, 0.02, new THREE.MeshStandardMaterial({ color: 0x4a90d0, roughness: 0.8 }), false);
   flag.position.set(-1.52, 0.9, 0.6); school.add(flag);
-  school.position.set(-innerHalfW * 0.2, 0, -(innerHalfD + 5.2));
+  school.position.set(innerHalfW + 3.9, 0, -3.4);
   community.add(school);
   communityMarkers.push({ mesh: (() => { const m = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.36, 4), markerMat); m.rotation.y = Math.PI / 4; m.position.set(school.position.x, 1.15, school.position.z); m.visible = false; community.add(m); return m; })(), threshold: 0.35, baseY: 1.15 });
 
@@ -425,15 +523,15 @@ export function createScene(opts: {
   const swingA = cbox(0.05, 0.6, 0.05, matMetal); swingA.position.set(0.6, 0.3, -0.35); playground.add(swingA);
   const swingB = cbox(0.05, 0.6, 0.05, matMetal); swingB.position.set(0.6, 0.3, 0.35); playground.add(swingB);
   const swingBar = cbox(0.05, 0.05, 0.8, matMetal); swingBar.position.set(0.6, 0.58, 0); playground.add(swingBar);
-  playground.position.set(innerHalfW * 0.35, 0, innerHalfD + 4.9);
+  playground.position.set(0, 0, innerHalfD + 6.0);
   community.add(playground);
 
   // scattered trees around the neighbourhood
   const treeSpots: [number, number][] = [
-    [-plateHalfW + 1.4, -plateHalfD + 1.4], [plateHalfW - 1.4, -plateHalfD + 1.6],
     [-plateHalfW + 1.6, plateHalfD - 1.5], [plateHalfW - 1.5, plateHalfD - 1.4],
-    [0, -(innerHalfD + 5.6)], [-(innerHalfW + 5.4), 0], [innerHalfW + 5.4, -1.2],
-    [innerHalfW + 5.2, 2.0], [-2.4, innerHalfD + 4.6], [2.6, -(innerHalfD + 4.4)],
+    [-(innerHalfW + 5.6), innerHalfD + 3], [innerHalfW + 5.6, innerHalfD + 3],
+    [-3.4, innerHalfD + 4.4], [3.6, innerHalfD + 4.2], [-innerHalfW - 1.2, innerHalfD + 4.8],
+    [innerHalfW + 1.4, innerHalfD + 4.8], [-plateHalfW + 1.8, innerHalfD + 1], [plateHalfW - 1.8, innerHalfD + 1],
   ];
   for (const [tx, tz] of treeSpots) { const t = makeTree(); t.position.set(tx, 0, tz); community.add(t); }
 
@@ -478,27 +576,31 @@ export function createScene(opts: {
 
   function makeDataHall(): { group: THREE.Group; anim: Anim } {
     const g = new THREE.Group();
-    // light-metal body over a navy base band
+    // dark-blue lower walls, light-metal upper walls, flat light-grey roof
+    g.add(box(0.9, 0.16, 0.9, matNavy, 0.08));
     const bodyMat = matSiding.clone();
     bodyMat.emissive = new THREE.Color(COL.warn);
     bodyMat.emissiveIntensity = 0;
-    const body = box(0.84, 0.4, 0.84, bodyMat, 0.22);
+    const body = box(0.86, 0.26, 0.86, bodyMat, 0.29);
     g.add(body);
-    g.add(box(0.86, 0.12, 0.86, matNavy, 0.06)); // navy plinth
-    // shallow blue-glass skylight roof (a low gable of two tilted panels)
-    for (const dir of [-1, 1]) {
-      const panel = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.03, 0.5), matGlass);
-      panel.position.set(0, 0.46, dir * 0.22);
-      panel.rotation.x = dir * 0.26;
-      panel.castShadow = true;
-      g.add(panel);
+    g.add(box(0.92, 0.05, 0.92, matRoofLight, 0.44)); // flat roof deck
+    // rooftop HVAC/condenser units scattered across the deck
+    for (let k = 0; k < 6; k++) {
+      const u = box(0.13, 0.08, 0.13, matMetal, 0.5);
+      u.position.set(-0.28 + (k % 3) * 0.28, 0, -0.26 + ((k / 3) | 0) * 0.36);
+      g.add(u);
     }
-    // roof ridge + parapet trim
-    g.add(box(0.9, 0.04, 0.06, matNavy, 0.52));
+    // two vent stacks
+    for (let k = 0; k < 2; k++) {
+      const v = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.16, 8), matMetalDark);
+      v.position.set(-0.08 + k * 0.24, 0.55, 0.08);
+      v.castShadow = true;
+      g.add(v);
+    }
     // loading-bay doors along the front (+z)
     for (let k = 0; k < 4; k++) {
-      const door = box(0.13, 0.26, 0.02, matNavy, 0.17);
-      door.position.set(-0.3 + k * 0.2, 0, 0.43);
+      const door = box(0.15, 0.18, 0.02, matMetal, 0.11);
+      door.position.set(-0.3 + k * 0.2, 0, 0.46);
       door.castShadow = false;
       g.add(door);
     }
@@ -507,61 +609,54 @@ export function createScene(opts: {
       color: COL.led, emissive: new THREE.Color(COL.led), emissiveIntensity: 1.1, roughness: 0.4,
     });
     const led = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.02), ledMat);
-    led.position.set(0, 0.34, 0.425);
+    led.position.set(0, 0.3, 0.455);
     g.add(led);
     return { group: g, anim: { kind: "rack", glowMesh: body, led } };
   }
 
-  function makeCoolingTower(): { group: THREE.Group; anim: Anim } {
+  function makeCoolingPlant(): { group: THREE.Group; anim: Anim } {
     const g = new THREE.Group();
-    // hyperbolic profile
-    const pts: THREE.Vector2[] = [];
-    const segs = 14;
-    const Htow = 1.25;
-    for (let i = 0; i <= segs; i++) {
-      const t = i / segs;
-      const y = t * Htow;
-      // concave: wide base, narrow waist ~0.78, slight flare at top
-      const r = 0.46 - 0.24 * Math.sin(Math.min(t, 0.82) / 0.82 * Math.PI * 0.5) + 0.10 * Math.max(0, t - 0.82) / 0.18;
-      pts.push(new THREE.Vector2(Math.max(0.12, r), y));
+    g.add(box(0.94, 0.06, 0.94, matMetalDark, 0.03)); // concrete pad
+    // low equipment shed
+    const shed = box(0.6, 0.28, 0.44, matSiding, 0.15);
+    shed.position.set(-0.02, 0, -0.22);
+    g.add(shed);
+    // silver pressure tanks (cylinder + domed cap)
+    for (let k = 0; k < 3; k++) {
+      const x = -0.24 + k * 0.24;
+      const tb = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.34, 14), matSteel);
+      tb.position.set(x, 0.26, 0.2);
+      tb.castShadow = true;
+      g.add(tb);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.1, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), matSteel);
+      cap.position.set(x, 0.43, 0.2);
+      g.add(cap);
     }
-    const tower = new THREE.Mesh(new THREE.LatheGeometry(pts, 28), matTower);
-    tower.castShadow = true;
-    tower.receiveShadow = true;
-    g.add(tower);
-    // dark rim + inner basin disc near top
-    const lipR = pts[pts.length - 1].x;
-    const rim = new THREE.Mesh(
-      new THREE.TorusGeometry(lipR, 0.025, 8, 28),
-      matMetalDark
-    );
-    rim.rotation.x = Math.PI / 2;
-    rim.position.y = Htow;
-    g.add(rim);
-    const basin = new THREE.Mesh(
-      new THREE.CircleGeometry(lipR * 0.94, 24),
-      new THREE.MeshStandardMaterial({ color: 0x2a2a2c, roughness: 1 })
-    );
-    basin.rotation.x = -Math.PI / 2;
-    basin.position.y = Htow - 0.03;
-    g.add(basin);
-    // base ring
-    g.add(box(0.96, 0.06, 0.96, matMetalDark, 0.03));
-
-    // steam sprites
+    // tall thin exhaust stacks behind the tanks
+    const stackTops: number[] = [];
+    for (let k = 0; k < 3; k++) {
+      const x = -0.2 + k * 0.2;
+      const st = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.045, 0.66, 10), matSteel);
+      st.position.set(x, 0.53, -0.2);
+      st.castShadow = true;
+      g.add(st);
+      stackTops.push(x);
+    }
+    // steam rising from the stacks — the drifting plume that reaches the homes
     const steam: Anim["steam"] = [];
-    const COUNT = 6;
+    const COUNT = 7;
+    const emitY = 0.9;
     for (let i = 0; i < COUNT; i++) {
       const sm = new THREE.SpriteMaterial({
         map: steamTex, transparent: true, opacity: 0, depthWrite: false,
-        blending: THREE.NormalBlending, color: 0xe9ebe6,
+        blending: THREE.NormalBlending, color: 0xeef0ec,
       });
       const spr = new THREE.Sprite(sm);
-      spr.position.set(0, Htow + 0.2, 0);
+      spr.position.set(stackTops[i % stackTops.length], emitY, -0.2);
       g.add(spr);
-      steam.push({ spr, t: i / COUNT, sp: 0.5 + (i % 3) * 0.08, ox: 0, oz: 0 });
+      steam.push({ spr, t: i / COUNT, sp: 0.45 + (i % 3) * 0.07, ox: stackTops[i % stackTops.length], oz: -0.2 });
     }
-    return { group: g, anim: { kind: "cooler", steam, emitY: Htow + 0.1 } };
+    return { group: g, anim: { kind: "cooler", steam, emitY } };
   }
 
   function makeWindTurbine(): { group: THREE.Group; anim: Anim } {
@@ -627,7 +722,7 @@ export function createScene(opts: {
   function buildFor(type: BuildingType) {
     switch (type) {
       case "rack": return makeDataHall();
-      case "cooler": return makeCoolingTower();
+      case "cooler": return makeCoolingPlant();
       case "power": return makeWindTurbine();
       case "network": return makeNetwork();
     }
@@ -856,11 +951,12 @@ export function createScene(opts: {
             s.oz = (((i * 13 + s.sp * 31) % 10) / 10 - 0.5) * 0.18;
           }
           const life = s.t;
-          const y = (a.emitY ?? 1.3) + life * 1.25;
-          s.spr.position.set(s.ox * (0.35 + life), y, s.oz * (0.35 + life));
-          const sc = 0.34 + life * 0.78;
+          const y = (a.emitY ?? 0.9) + life * 1.5;
+          // rise and drift toward the homes (+z), like the plumes in the reference
+          s.spr.position.set(s.ox * 0.5 + life * 0.18, y, -0.2 + life * 0.9);
+          const sc = 0.4 + life * 1.15;
           s.spr.scale.set(sc, sc, sc);
-          (s.spr.material as THREE.SpriteMaterial).opacity = Math.sin(life * Math.PI) * 0.4;
+          (s.spr.material as THREE.SpriteMaterial).opacity = Math.sin(life * Math.PI) * 0.45;
         }
       } else if (a.kind === "power" && a.rotor) {
         a.rotor.rotation.z += dt * 1.5;
@@ -883,6 +979,8 @@ export function createScene(opts: {
       mat.opacity = noiseNorm < 0.05 ? 0 : (1 - r.phase) * noiseNorm * 0.5;
       mat.color.copy(rippleCol);
     }
+
+    for (const r of bgRotors) r.rotation.z += dt * 1.1;
 
     const discontent = 1 - engine.sentiment / 100;
     for (const m of communityMarkers) {
