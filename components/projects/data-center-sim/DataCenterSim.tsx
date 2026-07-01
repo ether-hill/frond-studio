@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DataCenter, SPECS, CODE, AMBIENT, type BuildingType, type Tool, type Hud } from "./engine";
 import type { Ctrl, SceneHandle } from "./scene";
+import { NoiseAudio } from "./audio";
 import s from "./DataCenterSim.module.css";
+
+const noiseToIntensity = (db: number) => Math.max(0, Math.min(1, (db - 40) / (100 - 40)));
 
 const TOOLS: BuildingType[] = ["rack", "cooler", "power", "network"];
 const SPEEDS = [1, 2, 4];
@@ -51,9 +54,37 @@ export default function DataCenterSim() {
   const [toasts, setToasts] = useState<{ id: number; text: string; kind: string }[]>([]);
   const [ready, setReady] = useState(false);
   const [sceneKey, setSceneKey] = useState(0);
+  const [sound, setSound] = useState(false);
 
   const ctrl = useRef<Ctrl>({ tool, paused, speed, heat });
   ctrl.current = { tool, paused, speed, heat };
+
+  // noise sonification (own AudioContext; created on first enable = user gesture)
+  const audioRef = useRef<NoiseAudio | null>(null);
+  const soundRef = useRef(false);
+  const lastNoiseRef = useRef(34);
+  soundRef.current = sound;
+
+  const toggleSound = useCallback(() => {
+    const next = !soundRef.current;
+    setSound(next);
+    soundRef.current = next;
+    if (next) {
+      if (!audioRef.current) audioRef.current = new NoiseAudio();
+      audioRef.current.setIntensity(noiseToIntensity(lastNoiseRef.current));
+      void audioRef.current.start();
+    } else {
+      void audioRef.current?.stop();
+    }
+  }, []);
+
+  useEffect(() => () => { audioRef.current?.dispose(); audioRef.current = null; }, []);
+
+  const handleHud = useCallback((h: Hud) => {
+    setHud(h);
+    lastNoiseRef.current = h.noise;
+    if (soundRef.current) audioRef.current?.setIntensity(noiseToIntensity(h.noise));
+  }, []);
 
   if (!engRef.current) {
     const eng = new DataCenter(13, 9);
@@ -91,7 +122,7 @@ export default function DataCenterSim() {
         container: mountRef.current,
         engine: engRef.current!,
         getCtrl: () => ctrl.current,
-        onHud: (h) => setHud(h),
+        onHud: handleHud,
         onToasts: (fresh) => {
           setToasts((prev) => [...prev, ...fresh.map((t) => ({ id: t.id, text: t.text, kind: t.kind }))].slice(-4));
           for (const t of fresh) {
@@ -121,10 +152,11 @@ export default function DataCenterSim() {
           <h1 className={s.title}>Data Center Sim</h1>
         </div>
         <p className={s.intro}>
-          Build a data center on a floating plot: place server halls, cooling towers,
-          power and networking. Compute earns money, but the halls run hot — heat spreads
-          tile to tile, so ring them with cooling towers or watch them throttle and fail.
-          Bank <strong>{hud ? fmtMoney(hud.goal) : "$120,000"}</strong> to win.
+          Build a data center on the edge of a real neighborhood — homes, a school, a
+          playground. Compute earns money, but the plant runs hot <em>and loud</em>: heat
+          spreads tile to tile, and the cooling towers roar. Turn on <strong>Sound</strong>
+          {" "}to hear it grow, and watch the <strong>Community</strong> gauge as the noise
+          reaches the people next door.
         </p>
       </header>
 
@@ -161,6 +193,21 @@ export default function DataCenterSim() {
             value={`${Math.round(hud?.maxTemp ?? AMBIENT)}°C`}
             pct={hud ? Math.min(1, (hud.maxTemp - AMBIENT) / (90 - AMBIENT)) : 0}
             warn={!!hud && hud.maxTemp > 68}
+          />
+          <Gauge
+            label="Noise"
+            value={`${Math.round(hud?.noise ?? 34)} dB`}
+            pct={hud ? Math.min(1, (hud.noise - 34) / (105 - 34)) : 0}
+            warn={!!hud && hud.noise > 72}
+          />
+          <Gauge
+            label="Community"
+            value={`${hud?.sentimentLabel ?? "Content"} · ${Math.round(hud?.sentiment ?? 100)}%`}
+            pct={hud ? hud.sentiment / 100 : 1}
+            warn={!!hud && hud.sentiment < 40}
+            color={
+              (hud?.sentiment ?? 100) >= 60 ? "#7fd6a4" : (hud?.sentiment ?? 100) >= 30 ? "#e6b15a" : "#e6705a"
+            }
           />
           <div className={s.stat}>
             <span className={s.statLabel}>Day</span>
@@ -231,6 +278,13 @@ export default function DataCenterSim() {
           <button className={`${s.btn} ${heat ? s.on : ""}`} onClick={() => setHeat((h) => !h)}>
             ◈ Heatmap
           </button>
+          <button
+            className={`${s.btn} ${sound ? s.on : ""}`}
+            onClick={toggleSound}
+            title="Hear the site — the HVAC drone gets louder and harsher as it grows"
+          >
+            {sound ? "🔊 Sound" : "🔈 Sound"}
+          </button>
           <button className={s.btn} onClick={handleReset}>↺ Reset</button>
         </div>
       </div>
@@ -247,10 +301,11 @@ export default function DataCenterSim() {
       </div>
 
       <p className={s.legend}>
-        <strong>Left-drag</strong> to place the selected tool · <strong>right-drag</strong> to orbit ·
-        <strong> scroll</strong> to zoom. Cooling towers pull heat from nearby tiles — a hall that stays
-        above ~78°C overheats, throttles to nothing and eventually fails. Toggle the heatmap to see how
-        heat diffuses across the floor.
+        <strong>Left-drag</strong> to place · <strong>right-drag</strong> to orbit ·
+        <strong> scroll</strong> to zoom. Cooling towers cool the halls but are the loudest thing on
+        site — as you scale up, the noise ripples out across the neighborhood, the audio drone
+        intensifies, and community sentiment falls (watch the homes react). A demonstration of the
+        noise-pollution trade-off real data centers impose on the communities around them.
       </p>
     </div>
   );
@@ -261,11 +316,13 @@ function Gauge({
   value,
   pct,
   warn,
+  color,
 }: {
   label: string;
   value: string;
   pct: number;
   warn?: boolean;
+  color?: string;
 }) {
   const p = Math.max(0, Math.min(1, pct));
   return (
@@ -279,7 +336,7 @@ function Gauge({
           className={s.barfill}
           style={{
             width: `${p * 100}%`,
-            background: warn ? "#e6705a" : p > 0.85 ? "#e6b15a" : "var(--accent)",
+            background: color ?? (warn ? "#e6705a" : p > 0.85 ? "#e6b15a" : "var(--accent)"),
           }}
         />
       </div>

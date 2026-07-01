@@ -22,7 +22,6 @@ export type Ctrl = { tool: Tool; paused: boolean; speed: number; heat: boolean }
 export type SceneHandle = { dispose: () => void };
 
 const CELL = 1.05;
-const PAD = 1.3;
 const SIM_HOURS_PER_SEC = 2.3;
 
 const COL = {
@@ -67,6 +66,17 @@ export function createScene(opts: {
   const W = engine.w;
   const H = engine.h;
 
+  // the buildable data-center grid sits in the centre of a larger plot; the ring
+  // around it is the surrounding neighbourhood (houses, school, roads, playground)
+  const NEIGHBOR = 6.5;
+  const innerHalfW = (W * CELL) / 2;
+  const innerHalfD = (H * CELL) / 2;
+  const plateHalfW = innerHalfW + NEIGHBOR;
+  const plateHalfD = innerHalfD + NEIGHBOR;
+  const plateW = plateHalfW * 2;
+  const plateD = plateHalfD * 2;
+  const plateR = Math.max(plateHalfW, plateHalfD);
+
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(1.7, window.devicePixelRatio || 1));
   renderer.shadowMap.enabled = true;
@@ -83,11 +93,11 @@ export function createScene(opts: {
   const scene = new THREE.Scene();
 
   // ---- camera (orbit, hand-rolled) ----
-  const camera = new THREE.PerspectiveCamera(29, 1, 0.5, 200);
+  const camera = new THREE.PerspectiveCamera(29, 1, 0.5, 260);
   const target = new THREE.Vector3(0, 0.25, 0);
-  const cam = { az: -0.72, pol: 0.88, rad: Math.max(W, H) * 2.05 };
-  const RAD_MIN = Math.max(W, H) * 1.0;
-  const RAD_MAX = Math.max(W, H) * 3.0;
+  const cam = { az: -0.72, pol: 0.86, rad: plateR * 2.15 };
+  const RAD_MIN = plateR * 0.95;
+  const RAD_MAX = plateR * 3.4;
   const placeCamera = () => {
     const r = cam.rad;
     const sp = Math.sin(cam.pol);
@@ -103,13 +113,13 @@ export function createScene(opts: {
   const hemi = new THREE.HemisphereLight(0xaec4e8, 0x4a3a2a, 0.75);
   scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff1d8, 2.1);
-  sun.position.set(W * 0.55, Math.max(W, H) * 1.2, H * 0.35);
+  sun.position.set(plateHalfW * 0.7, plateR * 1.5, plateHalfD * 0.5);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   const sc = sun.shadow.camera as THREE.OrthographicCamera;
-  const span = Math.max(W, H) * 0.72 + PAD;
+  const span = plateR + 1;
   sc.left = -span; sc.right = span; sc.top = span; sc.bottom = -span;
-  sc.near = 1; sc.far = Math.max(W, H) * 3.5;
+  sc.near = 1; sc.far = plateR * 5;
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.02;
   scene.add(sun);
@@ -123,9 +133,6 @@ export function createScene(opts: {
 
   const cellToWorld = (gx: number, gy: number) =>
     new THREE.Vector3((gx - (W - 1) / 2) * CELL, 0, (gy - (H - 1) / 2) * CELL);
-
-  const plateW = W * CELL + PAD * 2;
-  const plateD = H * CELL + PAD * 2;
 
   // grass top
   const grass = new THREE.Mesh(
@@ -198,6 +205,167 @@ export function createScene(opts: {
   const matMetalDark = new THREE.MeshStandardMaterial({ color: COL.metalDark, roughness: 0.6, metalness: 0.5 });
   const matTower = new THREE.MeshStandardMaterial({ color: 0xd2ccbd, roughness: 0.92, side: THREE.DoubleSide });
   const steamTex = softCircle();
+
+  // ================= surrounding community =================
+  // Houses, a school, roads and a playground ring the data center — the people
+  // who actually live with the noise. Markers over homes appear as sentiment falls.
+  const community = new THREE.Group();
+  island.add(community);
+  const communityMarkers: { mesh: THREE.Object3D; threshold: number; baseY: number }[] = [];
+
+  const roadMat = new THREE.MeshStandardMaterial({ color: 0x2c2c2f, roughness: 1 });
+  const wallMats = [0xd8cdbb, 0xcbb89f, 0xc3cbcd, 0xd7c3b0, 0xcad2c4, 0xbcc3cb].map(
+    (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 })
+  );
+  const roofMats = [0x8a4b3a, 0x6b6f77, 0x7a5a44, 0x515b67, 0x9a5a48].map(
+    (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9 })
+  );
+  const winMat = new THREE.MeshStandardMaterial({
+    color: 0xffd98a, emissive: new THREE.Color(0xffcf7a), emissiveIntensity: 0.7, roughness: 0.6,
+  });
+  const foliageMat = new THREE.MeshStandardMaterial({ color: 0x4f7d3a, roughness: 1 });
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a4632, roughness: 1 });
+  const markerMat = new THREE.MeshStandardMaterial({
+    color: 0xff4632, emissive: new THREE.Color(0xff4632), emissiveIntensity: 1.5, roughness: 0.5,
+  });
+
+  const cbox = (w: number, h: number, d: number, mat: THREE.Material, cast = true) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.castShadow = cast;
+    m.receiveShadow = true;
+    return m;
+  };
+
+  let seedN = 1;
+  const makeHouse = () => {
+    const s = seedN++;
+    const g = new THREE.Group();
+    const wall = wallMats[s % wallMats.length];
+    const roof = roofMats[(s * 3) % roofMats.length];
+    const bw = 0.9 + (s % 3) * 0.12;
+    const bh = 0.5 + (s % 2) * 0.14;
+    const bd = 0.9;
+    const body = cbox(bw, bh, bd, wall);
+    body.position.y = bh / 2;
+    g.add(body);
+    const roofM = new THREE.Mesh(new THREE.ConeGeometry(bw * 0.82, 0.4, 4), roof);
+    roofM.rotation.y = Math.PI / 4;
+    roofM.position.y = bh + 0.2;
+    roofM.castShadow = true;
+    g.add(roofM);
+    const win = cbox(0.22, 0.2, 0.03, winMat, false);
+    win.position.set(0, bh * 0.5, bd / 2 + 0.02);
+    g.add(win);
+    // discontent marker (hidden until sentiment drops past this house's threshold)
+    const marker = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.3, 4), markerMat);
+    marker.rotation.y = Math.PI / 4;
+    marker.position.y = bh + 0.75;
+    marker.visible = false;
+    g.add(marker);
+    communityMarkers.push({ mesh: marker, threshold: 0.15 + ((s * 0.17) % 0.72), baseY: bh + 0.75 });
+    return g;
+  };
+
+  const makeTree = () => {
+    const g = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.3, 6), trunkMat);
+    trunk.position.y = 0.15;
+    trunk.castShadow = true;
+    g.add(trunk);
+    const foliage = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.6, 7), foliageMat);
+    foliage.position.y = 0.55;
+    foliage.castShadow = true;
+    g.add(foliage);
+    return g;
+  };
+
+  // roads: a perimeter loop between the plant and the homes
+  const rRoadW = innerHalfW + 1.3;
+  const rRoadD = innerHalfD + 1.3;
+  const roadY = 0.012;
+  const addRoad = (w: number, d: number, x: number, z: number) => {
+    const m = cbox(w, 0.02, d, roadMat, false);
+    m.position.set(x, roadY, z);
+    community.add(m);
+  };
+  addRoad(rRoadW * 2 + 0.6, 0.6, 0, -rRoadD);
+  addRoad(rRoadW * 2 + 0.6, 0.6, 0, rRoadD);
+  addRoad(0.6, rRoadD * 2 + 0.6, -rRoadW, 0);
+  addRoad(0.6, rRoadD * 2 + 0.6, rRoadW, 0);
+
+  // house rows on all four sides, facing the plant
+  const houseRow = (
+    axis: "z" | "x", fixed: number, from: number, to: number, step: number, rotY: number
+  ) => {
+    for (let p = from; p <= to; p += step) {
+      const h = makeHouse();
+      if (axis === "z") h.position.set(p, 0, fixed);
+      else h.position.set(fixed, 0, p);
+      h.rotation.y = rotY + (seedN % 2 ? 0.1 : -0.12);
+      community.add(h);
+    }
+  };
+  houseRow("z", -(innerHalfD + 3.3), -innerHalfW - 0.8, innerHalfW + 0.8, 2.2, 0);
+  houseRow("z", innerHalfD + 3.3, -innerHalfW - 0.8, innerHalfW + 0.8, 2.2, Math.PI);
+  houseRow("x", -(innerHalfW + 3.3), -innerHalfD - 0.4, innerHalfD + 0.4, 2.2, Math.PI / 2);
+  houseRow("x", innerHalfW + 3.3, -innerHalfD - 0.4, innerHalfD + 0.4, 2.2, -Math.PI / 2);
+
+  // school — a longer block with a bright roof, a small yard and a flagpole
+  const school = new THREE.Group();
+  const schoolBody = cbox(3.0, 0.7, 1.1, wallMats[2]);
+  schoolBody.position.y = 0.35;
+  school.add(schoolBody);
+  school.add((() => { const r = cbox(3.1, 0.08, 1.2, new THREE.MeshStandardMaterial({ color: 0xb5443a, roughness: 0.9 })); r.position.y = 0.72; return r; })());
+  for (let k = 0; k < 5; k++) { const w = cbox(0.28, 0.26, 0.03, winMat, false); w.position.set(-1.0 + k * 0.5, 0.4, 0.56); school.add(w); }
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.0, 6), matMetalDark);
+  pole.position.set(-1.7, 0.5, 0.6); school.add(pole);
+  const flag = cbox(0.35, 0.22, 0.02, new THREE.MeshStandardMaterial({ color: 0x4a90d0, roughness: 0.8 }), false);
+  flag.position.set(-1.52, 0.9, 0.6); school.add(flag);
+  school.position.set(-innerHalfW * 0.2, 0, -(innerHalfD + 5.2));
+  community.add(school);
+  communityMarkers.push({ mesh: (() => { const m = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.36, 4), markerMat); m.rotation.y = Math.PI / 4; m.position.set(school.position.x, 1.15, school.position.z); m.visible = false; community.add(m); return m; })(), threshold: 0.35, baseY: 1.15 });
+
+  // playground — sandbox, slide, swing frame, in bright colours
+  const playground = new THREE.Group();
+  const sand = cbox(2.0, 0.04, 1.6, new THREE.MeshStandardMaterial({ color: 0xd9c48c, roughness: 1 }), false);
+  sand.position.y = 0.02; playground.add(sand);
+  const slide = cbox(0.3, 0.06, 0.9, new THREE.MeshStandardMaterial({ color: 0x3fb6a6, roughness: 0.7 }));
+  slide.position.set(-0.5, 0.28, 0); slide.rotation.x = 0.5; playground.add(slide);
+  const slideTop = cbox(0.4, 0.5, 0.4, new THREE.MeshStandardMaterial({ color: 0xe0a63a, roughness: 0.8 }));
+  slideTop.position.set(-0.5, 0.25, -0.55); playground.add(slideTop);
+  const swingA = cbox(0.05, 0.6, 0.05, matMetal); swingA.position.set(0.6, 0.3, -0.35); playground.add(swingA);
+  const swingB = cbox(0.05, 0.6, 0.05, matMetal); swingB.position.set(0.6, 0.3, 0.35); playground.add(swingB);
+  const swingBar = cbox(0.05, 0.05, 0.8, matMetal); swingBar.position.set(0.6, 0.58, 0); playground.add(swingBar);
+  playground.position.set(innerHalfW * 0.35, 0, innerHalfD + 4.9);
+  community.add(playground);
+
+  // scattered trees around the neighbourhood
+  const treeSpots: [number, number][] = [
+    [-plateHalfW + 1.4, -plateHalfD + 1.4], [plateHalfW - 1.4, -plateHalfD + 1.6],
+    [-plateHalfW + 1.6, plateHalfD - 1.5], [plateHalfW - 1.5, plateHalfD - 1.4],
+    [0, -(innerHalfD + 5.6)], [-(innerHalfW + 5.4), 0], [innerHalfW + 5.4, -1.2],
+    [innerHalfW + 5.2, 2.0], [-2.4, innerHalfD + 4.6], [2.6, -(innerHalfD + 4.4)],
+  ];
+  for (const [tx, tz] of treeSpots) { const t = makeTree(); t.position.set(tx, 0, tz); community.add(t); }
+
+  // ---- noise ripples spreading from the plant across the neighbourhood ----
+  const rippleGroup = new THREE.Group();
+  island.add(rippleGroup);
+  const rippleGeo = new THREE.RingGeometry(0.85, 1.0, 56);
+  const ripples: { mesh: THREE.Mesh; phase: number }[] = [];
+  for (let i = 0; i < 5; i++) {
+    const m = new THREE.Mesh(
+      rippleGeo,
+      new THREE.MeshBasicMaterial({
+        color: 0xffd24a, transparent: true, opacity: 0, depthWrite: false,
+        side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+      })
+    );
+    m.rotation.x = -Math.PI / 2;
+    m.position.y = 0.05;
+    rippleGroup.add(m);
+    ripples.push({ mesh: m, phase: i / 5 });
+  }
 
   // ---- building builders ----
   type Anim = {
@@ -561,6 +729,10 @@ export function createScene(opts: {
   let hudAcc = 0;
   let cancelled = false;
   const tmpColor = new THREE.Color();
+  const rippleColA = new THREE.Color(0xffd24a);
+  const rippleColB = new THREE.Color(0xff3b2f);
+  const rippleCol = new THREE.Color();
+  const hemiBase = hemi.intensity;
 
   const frame = () => {
     if (cancelled) return;
@@ -611,6 +783,29 @@ export function createScene(opts: {
           0.5 + 0.7 * Math.abs(Math.sin(time * 4 + i));
       }
     }
+
+    // ---- noise ripples, community sentiment markers & mood ----
+    const noiseNorm = Math.max(0, Math.min(1, (engine.noise - 42) / (100 - 42)));
+    const rippleMax = 2.5 + noiseNorm * (plateR - 2);
+    rippleCol.copy(rippleColA).lerp(rippleColB, noiseNorm);
+    for (const r of ripples) {
+      r.phase += dt * (0.12 + noiseNorm * 0.28);
+      if (r.phase > 1) r.phase -= 1;
+      const rad = 1 + r.phase * rippleMax;
+      r.mesh.scale.set(rad, rad, 1);
+      const mat = r.mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = noiseNorm < 0.05 ? 0 : (1 - r.phase) * noiseNorm * 0.5;
+      mat.color.copy(rippleCol);
+    }
+
+    const discontent = 1 - engine.sentiment / 100;
+    for (const m of communityMarkers) {
+      const on = discontent > m.threshold;
+      if (m.mesh.visible !== on) m.mesh.visible = on;
+      if (on) m.mesh.position.y = m.baseY + 0.1 + Math.sin(time * 3 + m.threshold * 12) * 0.07;
+    }
+    // the whole plot dims a little as the community turns against the site
+    hemi.intensity = hemiBase - discontent * 0.22;
 
     // heatmap overlay
     if (ctrl.heat) {
@@ -680,6 +875,17 @@ export function createScene(opts: {
       el.removeEventListener("wheel", onWheel);
       el.removeEventListener("contextmenu", onCtx);
       for (const g of groups) if (g) { island.remove(g); disposeGroup(g); }
+      // community + ripples
+      const disposeTree = (root: THREE.Object3D) =>
+        root.traverse((o) => {
+          const m = o as THREE.Mesh;
+          m.geometry?.dispose?.();
+          const mm = (o as unknown as { material?: THREE.Material | THREE.Material[] }).material;
+          if (Array.isArray(mm)) mm.forEach((x) => x.dispose());
+          else mm?.dispose();
+        });
+      disposeTree(community);
+      disposeTree(rippleGroup);
       steamTex.dispose();
       renderer.dispose();
       if (el.parentElement === container) container.removeChild(el);

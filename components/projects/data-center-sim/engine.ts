@@ -46,6 +46,8 @@ export type Spec = {
   compute: number;
   /** bandwidth units provided (network) */
   bandwidth: number;
+  /** relative acoustic power the unit emits (drives the noise model) */
+  noise: number;
   glyph: string;
   blurb: string;
 };
@@ -63,6 +65,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     cooling: 0,
     compute: 12,
     bandwidth: 0,
+    noise: 3,
     glyph: "▤",
     blurb: "Produces compute. Runs hot and draws power — keep coolers close.",
   },
@@ -78,6 +81,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     cooling: 40,
     compute: 0,
     bandwidth: 0,
+    noise: 9,
     glyph: "❄",
     blurb: "Pulls heat out of nearby tiles. Costs power — don't over-build.",
   },
@@ -93,6 +97,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     cooling: 0,
     compute: 0,
     bandwidth: 0,
+    noise: 4,
     glyph: "⚡",
     blurb: "Supplies kW to the whole floor. Runs slightly warm itself.",
   },
@@ -108,6 +113,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     cooling: 0,
     compute: 0,
     bandwidth: 30,
+    noise: 1,
     glyph: "⇄",
     blurb: "Turns compute into bandwidth you can actually sell. Needs power.",
   },
@@ -141,9 +147,23 @@ export type Hud = {
   racks: number;
   dead: number;
   buildings: number;
+  /** perceived noise at the fence line, in dB(A) */
+  noise: number;
+  /** community sentiment 0..100 (100 = content) */
+  sentiment: number;
+  sentimentLabel: string;
   goal: number;
   won: boolean;
 };
+
+const AMBIENT_NOISE = 34; // quiet rural night, dB(A)
+export function sentimentLabel(s: number): string {
+  if (s >= 80) return "Content";
+  if (s >= 60) return "Uneasy";
+  if (s >= 40) return "Concerned";
+  if (s >= 20) return "Frustrated";
+  return "Protesting";
+}
 
 export type Toast = { id: number; text: string; kind: "warn" | "bad" | "good" };
 
@@ -161,6 +181,11 @@ export class DataCenter {
   time = 0; // hours
   netPerHour = 0;
   won = false;
+
+  // noise & community (public so the renderer can read them each frame)
+  noise = AMBIENT_NOISE; // dB(A) at the fence line
+  sentiment = 100; // 0..100, community sentiment
+  private lastSentBand = 5;
 
   // cached economy readouts (filled each step)
   private _powerDraw = 0;
@@ -334,6 +359,7 @@ export class DataCenter {
     let dead = 0;
     let buildings = 0;
     let bandwidth = 0;
+    let noisePow = 0;
     const { n, grid } = this;
     for (let i = 0; i < n; i++) {
       const t = grid[i];
@@ -341,15 +367,19 @@ export class DataCenter {
       buildings++;
       if (t === CODE.power) {
         powerSupply += SPECS.power.supply;
+        noisePow += SPECS.power.noise;
       } else if (t === CODE.rack) {
         racks++;
-        if (this.dead[i]) { dead++; continue; }
+        if (this.dead[i]) { dead++; continue; } // dead racks are silent
         powerDraw += SPECS.rack.power;
+        noisePow += SPECS.rack.noise;
       } else if (t === CODE.cooler) {
         powerDraw += SPECS.cooler.power;
+        noisePow += SPECS.cooler.noise;
       } else if (t === CODE.network) {
         powerDraw += SPECS.network.power;
         bandwidth += SPECS.network.bandwidth;
+        noisePow += SPECS.network.noise;
       }
     }
     const powerRatio = powerDraw > 0 ? Math.min(1, powerSupply / powerDraw) : 1;
@@ -398,6 +428,30 @@ export class DataCenter {
     const revPerHour = served * PRICE;
     this.netPerHour = revPerHour - upkeep;
     this.money += this.netPerHour * dt;
+
+    // ---- noise & community sentiment ----
+    // Acoustic power adds up across equipment; the perceived level climbs steeply
+    // as the site grows (cooling towers dominate). Rural baseline ~34 dB(A).
+    const noiseDb = noisePow <= 0 ? AMBIENT_NOISE : Math.min(108, AMBIENT_NOISE + 1.7 * Math.pow(noisePow, 0.72));
+    this.noise = noiseDb;
+
+    // Residents are content up to ~44 dB(A) and outraged by ~86; failures upset them too.
+    const deadPenalty = Math.min(25, dead * 8);
+    let sentTarget = 100 * Math.max(0, Math.min(1, (86 - noiseDb) / (86 - 44))) - deadPenalty;
+    sentTarget = Math.max(0, Math.min(100, sentTarget));
+    // sentiment drifts toward the target over a couple of days, not instantly
+    this.sentiment += (sentTarget - this.sentiment) * Math.min(1, dt * 0.5);
+
+    const band = this.sentiment >= 80 ? 5 : this.sentiment >= 60 ? 4 : this.sentiment >= 40 ? 3 : this.sentiment >= 20 ? 2 : 1;
+    if (band < this.lastSentBand) {
+      const msg =
+        band === 4 ? "Neighbours are starting to notice the noise." :
+        band === 3 ? "Residents are complaining about the noise." :
+        band === 2 ? "The community is protesting the noise pollution." :
+        "Outrage — the community wants the data center gone.";
+      this.toast(msg, band <= 2 ? "bad" : "warn");
+    }
+    this.lastSentBand = band;
 
     // ---- toasts for notable states ----
     if (powerRatio < 0.999 && powerDraw > 0 && this.time - this.lastBrownout > 6) {
@@ -451,6 +505,9 @@ export class DataCenter {
       racks: this._racks,
       dead: this._dead,
       buildings: this._buildings,
+      noise: this.noise,
+      sentiment: this.sentiment,
+      sentimentLabel: sentimentLabel(this.sentiment),
       goal: GOAL,
       won: this.won,
     };
