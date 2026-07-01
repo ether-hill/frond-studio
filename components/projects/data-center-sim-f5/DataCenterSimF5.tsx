@@ -10,7 +10,10 @@ import {
   type Hud,
 } from "./engine";
 import type { Ctrl, SceneHandle } from "./scene";
+import { NoiseAudio } from "./audio";
 import s from "./DataCenterSimF5.module.css";
+
+const noiseToIntensity = (db: number) => Math.max(0, Math.min(1, (db - 38) / (100 - 38)));
 
 const TOOLS: BuildingType[] = ["hall", "chiller", "substation", "solar", "battery", "uplink"];
 const SPEEDS = [1, 2, 4];
@@ -64,19 +67,49 @@ export default function DataCenterSimF5() {
   const [toasts, setToasts] = useState<{ id: number; text: string; kind: string }[]>([]);
   const [ready, setReady] = useState(false);
   const [sceneKey, setSceneKey] = useState(0);
+  const [sound, setSound] = useState(false);
 
   const ctrl = useRef<Ctrl>({ tool, paused, speed, heat });
   ctrl.current = { tool, paused, speed, heat };
 
+  // noise sonification (own AudioContext; created on first enable = user gesture)
+  const audioRef = useRef<NoiseAudio | null>(null);
+  const soundRef = useRef(false);
+  const lastNoiseRef = useRef(32);
+  soundRef.current = sound;
+
+  const toggleSound = useCallback(() => {
+    const next = !soundRef.current;
+    setSound(next);
+    soundRef.current = next;
+    if (next) {
+      if (!audioRef.current) audioRef.current = new NoiseAudio();
+      audioRef.current.setIntensity(noiseToIntensity(lastNoiseRef.current));
+      void audioRef.current.start();
+    } else {
+      void audioRef.current?.stop();
+    }
+  }, []);
+
+  useEffect(() => () => { audioRef.current?.dispose(); audioRef.current = null; }, []);
+
+  const handleHud = useCallback((h: Hud) => {
+    setHud(h);
+    lastNoiseRef.current = h.noise;
+    if (soundRef.current) audioRef.current?.setIntensity(noiseToIntensity(h.noise));
+  }, []);
+
   if (!engRef.current) {
     const eng = new DataCenterF5(14, 9);
     seed(eng);
+    eng.step(0.001); // populate census/HUD figures before the first frame
     engRef.current = eng;
   }
 
   const handleReset = useCallback(() => {
     const eng = new DataCenterF5(14, 9);
     seed(eng);
+    eng.step(0.001);
     engRef.current = eng;
     setHud(eng.hud());
     setPaused(false);
@@ -105,7 +138,7 @@ export default function DataCenterSimF5() {
         container: mountRef.current,
         engine: engRef.current!,
         getCtrl: () => ctrl.current,
-        onHud: setHud,
+        onHud: handleHud,
         onToasts: (fresh) => {
           setToasts((prev) =>
             [...prev, ...fresh.map((t) => ({ id: t.id, text: t.text, kind: t.kind }))].slice(-4)
@@ -171,13 +204,14 @@ export default function DataCenterSimF5() {
           <h1 className={s.title}>Data Center Sim F5</h1>
         </div>
         <p className={s.intro}>
-          A from-scratch rebuild of the data center sim, moved to a high-desert plateau
-          where <strong>everything runs on the clock</strong>. Solar only works while the
-          sun is up, grid power is priciest at the evening peak and dirtiest at night, and
-          batteries carry the daylight into the dark. Customers pay a premium for{" "}
-          <strong>clean compute</strong> — so the question isn&apos;t just how big you build,
-          but <em>what you build it on</em>. Watch the sun cross the sky; the desert cools
-          hard at night and cooks by mid-afternoon.
+          A from-scratch rebuild of the data center sim, on a high-desert plateau you
+          share with a small town — homes, a school, a playground. Everything runs on
+          the clock: solar works only in daylight, grid power spikes at the evening peak
+          and runs <em>dirty</em> at night, and batteries carry the sun into the dark.
+          Clean compute sells at a premium, but scale has a price the HUD can&apos;t hide:
+          the chillers <strong>roar</strong>, grid carbon hangs as <strong>smog</strong>{" "}
+          over the town, and the <strong>Community</strong> gauge falls as the people next
+          door lose patience. Turn on <strong>Sound</strong> to hear it happen.
         </p>
       </header>
 
@@ -236,6 +270,13 @@ export default function DataCenterSimF5() {
             <button className={`${s.ctl} ${heat ? s.ctlOn : ""}`} onClick={() => setHeat((h) => !h)} title="H — thermal view">
               ◈
             </button>
+            <button
+              className={`${s.ctl} ${sound ? s.ctlOn : ""}`}
+              onClick={toggleSound}
+              title="Hear the site — the HVAC drone grows louder and harsher as it scales"
+            >
+              {sound ? "🔊" : "🔈"}
+            </button>
             <button className={s.ctl} onClick={handleReset} title="Reset">
               ↺
             </button>
@@ -291,6 +332,20 @@ export default function DataCenterSimF5() {
             value={`${hud?.repLabel ?? "Solid"} ${Math.round(hud?.reputation ?? 78)}`}
             pct={(hud?.reputation ?? 78) / 100}
             color={(hud?.reputation ?? 78) >= 60 ? "#8fe6b4" : (hud?.reputation ?? 78) >= 35 ? "#e8c46a" : "#ff8a75"}
+          />
+          <MiniGauge
+            label="NOISE"
+            value={`${Math.round(hud?.noise ?? 32)} dB`}
+            pct={Math.min(1, ((hud?.noise ?? 32) - 32) / (105 - 32))}
+            color="#6cc4e8"
+            warn={(hud?.noise ?? 32) > 72}
+          />
+          <MiniGauge
+            label="COMMUNITY"
+            value={`${hud?.sentimentLabel ?? "Content"} ${Math.round(hud?.sentiment ?? 100)}`}
+            pct={(hud?.sentiment ?? 100) / 100}
+            color={(hud?.sentiment ?? 100) >= 60 ? "#8fe6b4" : (hud?.sentiment ?? 100) >= 30 ? "#e8c46a" : "#ff8a75"}
+            warn={(hud?.sentiment ?? 100) < 30}
           />
           <div className={s.hallRow}>
             <span className={s.gLabel}>HALLS</span>
@@ -352,10 +407,13 @@ export default function DataCenterSimF5() {
         <strong>scroll</strong> zooms · keys <strong>1–6</strong> pick a building,{" "}
         <strong>X</strong> razes, <strong>H</strong> toggles the thermal view,{" "}
         <strong>space</strong> pauses. Solar earns nothing after sunset — bank it in
-        batteries or lean on the grid and eat the evening price spike (and the carbon).
-        Halls throttle as their tile heats and fail past 76°C, and the desert afternoon
-        pushes everything toward the red. Clean power sells at a premium; brownouts and
-        unmet demand bleed reputation, and a shaky reputation books less demand.
+        batteries or lean on the grid and eat the evening price spike, the carbon and
+        the smog it drapes over the town. Halls throttle as their tile heats and fail
+        past 76°C; chillers keep them alive but are the loudest thing on site, and as
+        the drone reaches the houses across the street, red pins pop up over the homes
+        losing patience. Brownouts and unmet demand bleed reputation, and a shaky
+        reputation books less demand — a demonstration of the trade-offs a real data
+        center imposes on the neighborhood around it.
       </p>
     </div>
   );

@@ -210,8 +210,12 @@
   padding: 13px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 9px;
+  max-height: calc(100% - 226px);
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+.gauges::-webkit-scrollbar { display: none; }
 .gLabel {
   font-family: var(--font-mono);
   font-size: 8.5px;

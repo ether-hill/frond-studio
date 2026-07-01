@@ -43,7 +43,7 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     title: "Data Center Sim F5",
     kicker: "GAME · FABLE 5 REBUILD",
     summary:
-      "A from-scratch rebuild of the data center sim on a high-desert plateau, where everything runs on the clock: solar only works in daylight, grid power spikes in price at the evening peak and runs dirty at night, and batteries carry the sun into the dark. Clean compute sells at a premium — build big, but mind what it runs on.",
+      "A from-scratch rebuild of the data center sim, on a high-desert plateau shared with a small town. Everything runs on the clock — solar by day, a dirty pricier grid at night, batteries in between — and scale has a price: the chillers roar (turn on Sound), grid carbon smogs the town, and community sentiment falls as the neighbors lose patience.",
     year: "2026",
     tags: ["Game", "Simulation", "three.js", "TypeScript"],
     href: "/projects/data-center-sim-f5",

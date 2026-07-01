@@ -75,6 +75,8 @@ export type Spec = {
   battCap: number;
   /** kW max charge/discharge (battery) */
   battRate: number;
+  /** relative acoustic power the unit emits (drives the noise model) */
+  noise: number;
   key: string;
   blurb: string;
 };
@@ -95,6 +97,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     solarPeak: 0,
     battCap: 0,
     battRate: 0,
+    noise: 3,
     key: "1",
     blurb: "Produces compute. Runs hot and draws power — keep chillers close.",
   },
@@ -113,6 +116,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     solarPeak: 0,
     battCap: 0,
     battRate: 0,
+    noise: 9,
     key: "2",
     blurb: "Pulls heat out of nearby tiles. Draws power — the desert afternoon works it hard.",
   },
@@ -131,6 +135,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     solarPeak: 0,
     battCap: 0,
     battRate: 0,
+    noise: 4,
     key: "3",
     blurb: "Imports up to 40 kW from the grid. Energy is priciest at the evening peak, dirtiest at night.",
   },
@@ -149,6 +154,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     solarPeak: 16,
     battCap: 0,
     battRate: 0,
+    noise: 0,
     key: "4",
     blurb: "Free clean power — but only while the sun is up. Peaks 16 kW at solar noon.",
   },
@@ -167,6 +173,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     solarPeak: 0,
     battCap: 60,
     battRate: 15,
+    noise: 1,
     key: "5",
     blurb: "Banks surplus solar by day, discharges it after dark. 60 kWh per bank.",
   },
@@ -185,6 +192,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     solarPeak: 0,
     battCap: 0,
     battRate: 0,
+    noise: 1,
     key: "6",
     blurb: "Turns compute into sellable bandwidth. Needs power.",
   },
@@ -229,6 +237,16 @@ export function gridCarbonAt(time: number): number {
   return 0.55 - 0.3 * solarFactorAt(time);
 }
 
+const AMBIENT_NOISE = 32; // quiet desert night, dB(A)
+
+export function sentimentLabel(s: number): string {
+  if (s >= 80) return "Content";
+  if (s >= 60) return "Uneasy";
+  if (s >= 40) return "Concerned";
+  if (s >= 20) return "Frustrated";
+  return "Protesting";
+}
+
 export function repLabel(r: number): string {
   if (r >= 85) return "Trusted";
   if (r >= 65) return "Solid";
@@ -268,6 +286,11 @@ export type Hud = {
   served: number;
   reputation: number;
   repLabel: string;
+  /** perceived noise at the fence line, dB(A) */
+  noise: number;
+  /** community sentiment 0..100 (100 = content) */
+  sentiment: number;
+  sentimentLabel: string;
   halls: number;
   dead: number;
   buildings: number;
@@ -293,6 +316,11 @@ export class DataCenterF5 {
   won = false;
   reputation = 78;
   battCharge = 0;
+
+  // noise & community (public so the renderer can read them each frame)
+  noise = AMBIENT_NOISE; // dB(A) at the fence line
+  sentiment = 100; // 0..100
+  private lastSentBand = 5;
 
   toasts: Toast[] = [];
   private toastId = 1;
@@ -482,6 +510,7 @@ export class DataCenterF5 {
     let halls = 0;
     let dead = 0;
     let buildings = 0;
+    let noisePow = 0;
     const { n, grid } = this;
     for (let i = 0; i < n; i++) {
       const t = grid[i];
@@ -489,20 +518,25 @@ export class DataCenterF5 {
       buildings++;
       if (t === CODE.hall) {
         halls++;
-        if (this.dead[i]) { dead++; continue; }
+        if (this.dead[i]) { dead++; continue; } // dead halls are silent
         draw += SPECS.hall.power;
+        noisePow += SPECS.hall.noise;
       } else if (t === CODE.chiller) {
         draw += SPECS.chiller.power;
+        noisePow += SPECS.chiller.noise;
       } else if (t === CODE.substation) {
         gridCap += SPECS.substation.gridCap;
+        noisePow += SPECS.substation.noise;
       } else if (t === CODE.solar) {
         solarPeak += SPECS.solar.solarPeak;
       } else if (t === CODE.battery) {
         battCap += SPECS.battery.battCap;
         battRate += SPECS.battery.battRate;
+        noisePow += SPECS.battery.noise;
       } else if (t === CODE.uplink) {
         draw += SPECS.uplink.power;
         bandwidth += SPECS.uplink.bandwidth;
+        noisePow += SPECS.uplink.noise;
       }
     }
     this.battCharge = Math.min(this.battCharge, battCap);
@@ -587,6 +621,31 @@ export class DataCenterF5 {
     const repTarget = Math.max(0, Math.min(100, 100 * Math.pow(quality, 1.6) - dead * 6));
     this.reputation += (repTarget - this.reputation) * Math.min(1, dt * 0.35);
 
+    // ---- noise & community sentiment ----
+    // Acoustic power adds up across equipment (chillers dominate); perceived
+    // level climbs steeply as the site grows. Desert-night baseline ~32 dB(A).
+    this.noise = noisePow <= 0 ? AMBIENT_NOISE : Math.min(108, AMBIENT_NOISE + 1.7 * Math.pow(noisePow, 0.72));
+
+    // Residents are content up to ~44 dB(A), outraged by ~86; the grid-smog
+    // haze and failed halls upset them too.
+    const deadPenalty = Math.min(25, dead * 8);
+    const smogPenalty = Math.min(45, carbonPerDay * 0.06);
+    let sentTarget = 100 * Math.max(0, Math.min(1, (86 - this.noise) / (86 - 44))) - deadPenalty - smogPenalty;
+    sentTarget = Math.max(0, Math.min(100, sentTarget));
+    // sentiment drifts toward the target over a couple of days, not instantly
+    this.sentiment += (sentTarget - this.sentiment) * Math.min(1, dt * 0.5);
+
+    const band = this.sentiment >= 80 ? 5 : this.sentiment >= 60 ? 4 : this.sentiment >= 40 ? 3 : this.sentiment >= 20 ? 2 : 1;
+    if (band < this.lastSentBand) {
+      const msg =
+        band === 4 ? "Neighbours are starting to notice the noise." :
+        band === 3 ? "Residents are complaining about the noise and haze." :
+        band === 2 ? "The community is protesting the data center." :
+        "Outrage — the town wants the data center gone.";
+      this.toast(msg, band <= 2 ? "bad" : "warn");
+    }
+    this.lastSentBand = band;
+
     // ---- toasts ----
     if (powerRatio < 0.999 && draw > 0 && this.time - this.lastBrownout > 6) {
       this.lastBrownout = this.time;
@@ -660,6 +719,9 @@ export class DataCenterF5 {
       served: this._served,
       reputation: this.reputation,
       repLabel: repLabel(this.reputation),
+      noise: this.noise,
+      sentiment: this.sentiment,
+      sentimentLabel: sentimentLabel(this.sentiment),
       halls: this._halls,
       dead: this._dead,
       buildings: this._buildings,
