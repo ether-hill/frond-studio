@@ -48,6 +48,8 @@ export type Spec = {
   bandwidth: number;
   /** relative acoustic power the unit emits (drives the noise model) */
   noise: number;
+  /** methane / greenhouse emissions the unit leaks (gas turbines only) */
+  methane: number;
   glyph: string;
   blurb: string;
 };
@@ -66,6 +68,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     compute: 12,
     bandwidth: 0,
     noise: 3,
+    methane: 0,
     glyph: "▤",
     blurb: "Produces compute. Runs hot and draws power — keep coolers close.",
   },
@@ -82,13 +85,14 @@ export const SPECS: Record<BuildingType, Spec> = {
     compute: 0,
     bandwidth: 0,
     noise: 9,
+    methane: 0,
     glyph: "❄",
     blurb: "Pulls heat out of nearby tiles. Costs power — don't over-build.",
   },
   power: {
     type: "power",
-    name: "Power Unit",
-    short: "Power",
+    name: "Gas Turbine",
+    short: "Gas",
     cost: 3200,
     upkeep: 8,
     power: 0,
@@ -97,9 +101,10 @@ export const SPECS: Record<BuildingType, Spec> = {
     cooling: 0,
     compute: 0,
     bandwidth: 0,
-    noise: 4,
-    glyph: "⚡",
-    blurb: "Supplies kW to the whole floor. Runs slightly warm itself.",
+    noise: 6,
+    methane: 12,
+    glyph: "⛽",
+    blurb: "Burns natural gas for power — cheap and reliable, but loud and it leaks methane that smogs the town.",
   },
   network: {
     type: "network",
@@ -114,6 +119,7 @@ export const SPECS: Record<BuildingType, Spec> = {
     compute: 0,
     bandwidth: 30,
     noise: 1,
+    methane: 0,
     glyph: "⇄",
     blurb: "Turns compute into bandwidth you can actually sell. Needs power.",
   },
@@ -149,6 +155,8 @@ export type Hud = {
   buildings: number;
   /** perceived noise at the fence line, in dB(A) */
   noise: number;
+  /** methane / GHG emissions, tonnes CO2e per day */
+  methane: number;
   /** community sentiment 0..100 (100 = content) */
   sentiment: number;
   sentimentLabel: string;
@@ -182,8 +190,9 @@ export class DataCenter {
   netPerHour = 0;
   won = false;
 
-  // noise & community (public so the renderer can read them each frame)
+  // noise, emissions & community (public so the renderer can read them each frame)
   noise = AMBIENT_NOISE; // dB(A) at the fence line
+  methane = 0; // tonnes CO2e / day from gas turbines
   sentiment = 100; // 0..100, community sentiment
   private lastSentBand = 5;
 
@@ -360,6 +369,7 @@ export class DataCenter {
     let buildings = 0;
     let bandwidth = 0;
     let noisePow = 0;
+    let methanePow = 0;
     const { n, grid } = this;
     for (let i = 0; i < n; i++) {
       const t = grid[i];
@@ -368,6 +378,7 @@ export class DataCenter {
       if (t === CODE.power) {
         powerSupply += SPECS.power.supply;
         noisePow += SPECS.power.noise;
+        methanePow += SPECS.power.methane;
       } else if (t === CODE.rack) {
         racks++;
         if (this.dead[i]) { dead++; continue; } // dead racks are silent
@@ -435,9 +446,15 @@ export class DataCenter {
     const noiseDb = noisePow <= 0 ? AMBIENT_NOISE : Math.min(108, AMBIENT_NOISE + 1.7 * Math.pow(noisePow, 0.72));
     this.noise = noiseDb;
 
-    // Residents are content up to ~44 dB(A) and outraged by ~86; failures upset them too.
+    // methane / GHG output — each gas turbine leaks; reported as tonnes CO2e/day
+    const methane = methanePow * 3.5;
+    this.methane = methane;
+
+    // Residents are content up to ~44 dB(A) and outraged by ~86; smog and
+    // failures upset them too.
     const deadPenalty = Math.min(25, dead * 8);
-    let sentTarget = 100 * Math.max(0, Math.min(1, (86 - noiseDb) / (86 - 44))) - deadPenalty;
+    const smogPenalty = Math.min(45, methane * 0.7);
+    let sentTarget = 100 * Math.max(0, Math.min(1, (86 - noiseDb) / (86 - 44))) - deadPenalty - smogPenalty;
     sentTarget = Math.max(0, Math.min(100, sentTarget));
     // sentiment drifts toward the target over a couple of days, not instantly
     this.sentiment += (sentTarget - this.sentiment) * Math.min(1, dt * 0.5);
@@ -506,6 +523,7 @@ export class DataCenter {
       dead: this._dead,
       buildings: this._buildings,
       noise: this.noise,
+      methane: this.methane,
       sentiment: this.sentiment,
       sentimentLabel: sentimentLabel(this.sentiment),
       goal: GOAL,

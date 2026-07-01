@@ -153,10 +153,11 @@ export default function DataCenterSim() {
         </div>
         <p className={s.intro}>
           Build a data center on the edge of a real neighborhood — homes, a school, a
-          playground. Compute earns money, but the plant runs hot <em>and loud</em>: heat
-          spreads tile to tile, and the cooling towers roar. Turn on <strong>Sound</strong>
-          {" "}to hear it grow, and watch the <strong>Community</strong> gauge as the noise
-          reaches the people next door.
+          playground. Compute earns money, but the plant runs hot, <em>loud</em> and
+          <em> dirty</em>: cooling roars, and the gas turbines that power it leak
+          <strong> methane</strong> that hangs as smog over the town. Turn on
+          {" "}<strong>Sound</strong> to hear it, and watch the <strong>Community</strong>
+          {" "}gauge as the noise and haze reach the people next door.
         </p>
       </header>
 
@@ -199,6 +200,13 @@ export default function DataCenterSim() {
             value={`${Math.round(hud?.noise ?? 34)} dB`}
             pct={hud ? Math.min(1, (hud.noise - 34) / (105 - 34)) : 0}
             warn={!!hud && hud.noise > 72}
+          />
+          <Gauge
+            label="Methane"
+            value={`${Math.round(hud?.methane ?? 0)} t/day`}
+            pct={hud ? Math.min(1, (hud.methane ?? 0) / 120) : 0}
+            warn={!!hud && (hud.methane ?? 0) > 40}
+            color={(hud?.methane ?? 0) > 40 ? "#b0895a" : undefined}
           />
           <Gauge
             label="Community"

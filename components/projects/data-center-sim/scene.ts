@@ -554,6 +554,30 @@ export function createScene(opts: {
     ripples.push({ mesh: m, phase: i / 5 });
   }
 
+  // ---- lingering methane smog hanging over the town ----
+  const townSmog = new THREE.Group();
+  island.add(townSmog);
+  const smogPuffs: { spr: THREE.Sprite; ph: number; bx: number; by: number; bz: number }[] = [];
+  {
+    const cols = 6, rows = 3;
+    let idx = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const sm = new THREE.SpriteMaterial({ map: steamTex, transparent: true, opacity: 0, depthWrite: false, color: 0x8f8a7e });
+        const spr = new THREE.Sprite(sm);
+        const bx = -plateHalfW + 2 + (c / (cols - 1)) * (plateW - 4);
+        const bz = innerHalfD + 2.2 + r * 1.9;
+        const by = 1.5 + (idx % 2 ? 0.25 : 0);
+        const scx = 3.2 + (idx % 3) * 0.8;
+        spr.scale.set(scx, scx * 0.5, 1);
+        spr.position.set(bx, by, bz);
+        townSmog.add(spr);
+        smogPuffs.push({ spr, ph: idx / (cols * rows), bx, by, bz });
+        idx++;
+      }
+    }
+  }
+
   // ---- building builders ----
   type Anim = {
     kind: BuildingType;
@@ -562,6 +586,7 @@ export function createScene(opts: {
     blink?: THREE.Mesh;
     rotor?: THREE.Object3D; // spinning wind-turbine rotor
     steam?: { spr: THREE.Sprite; t: number; sp: number; ox: number; oz: number }[];
+    smog?: { spr: THREE.Sprite; t: number; sp: number; ox: number; oz: number }[];
     emitY?: number;
     dead?: boolean;
   };
@@ -584,16 +609,25 @@ export function createScene(opts: {
     const body = box(0.86, 0.26, 0.86, bodyMat, 0.29);
     g.add(body);
     g.add(box(0.92, 0.05, 0.92, matRoofLight, 0.44)); // flat roof deck
-    // rooftop HVAC/condenser units scattered across the deck
-    for (let k = 0; k < 6; k++) {
-      const u = box(0.13, 0.08, 0.13, matMetal, 0.5);
-      u.position.set(-0.28 + (k % 3) * 0.28, 0, -0.26 + ((k / 3) | 0) * 0.36);
+    // grid of skylight panels across the roof (the reference's paneled look)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        const sky = box(0.24, 0.015, 0.24, matGlass, 0.475);
+        sky.position.set(-0.28 + c * 0.28, 0, -0.28 + r * 0.28);
+        sky.castShadow = false;
+        g.add(sky);
+      }
+    }
+    // a few rooftop HVAC units along the front edge
+    for (let k = 0; k < 3; k++) {
+      const u = box(0.1, 0.07, 0.1, matMetal, 0.49);
+      u.position.set(-0.3 + k * 0.3, 0, 0.4);
       g.add(u);
     }
-    // two vent stacks
+    // vent stacks
     for (let k = 0; k < 2; k++) {
-      const v = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.16, 8), matMetalDark);
-      v.position.set(-0.08 + k * 0.24, 0.55, 0.08);
+      const v = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.14, 8), matMetalDark);
+      v.position.set(-0.34 + k * 0.68, 0.54, -0.4);
       v.castShadow = true;
       g.add(v);
     }
@@ -659,37 +693,50 @@ export function createScene(opts: {
     return { group: g, anim: { kind: "cooler", steam, emitY } };
   }
 
-  function makeWindTurbine(): { group: THREE.Group; anim: Anim } {
+  function makeGasTurbine(): { group: THREE.Group; anim: Anim } {
     const g = new THREE.Group();
-    // concrete pad
-    g.add(box(0.34, 0.05, 0.34, matMetalDark, 0.025));
-    // tapered white tower
-    const towerH = 1.55;
-    const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.08, towerH, 12), matWhite);
-    tower.position.y = towerH / 2 + 0.03;
-    tower.castShadow = true;
-    g.add(tower);
-    const hubY = towerH + 0.03;
-    // nacelle
-    const nacelle = box(0.12, 0.11, 0.28, matWhite, hubY);
-    nacelle.position.z = 0.04;
-    g.add(nacelle);
-    // rotor — 3 blades + hub, spins around Z (faces the viewer)
-    const rotor = new THREE.Group();
-    rotor.position.set(0, hubY, 0.2);
-    const hub = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10), matWhite);
-    rotor.add(hub);
-    for (let b = 0; b < 3; b++) {
-      const holder = new THREE.Group();
-      holder.rotation.z = (b * Math.PI * 2) / 3;
-      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.62, 0.02), matWhite);
-      blade.position.y = 0.34;
-      blade.castShadow = true;
-      holder.add(blade);
-      rotor.add(holder);
+    g.add(box(0.94, 0.06, 0.94, matMetalDark, 0.03)); // pad
+    // silver turbine hall
+    const hall = box(0.46, 0.34, 0.66, matSiding, 0.18);
+    hall.position.set(0.2, 0, 0.0);
+    g.add(hall);
+    // HRSG / heat-recovery cylinders alongside
+    for (let k = 0; k < 2; k++) {
+      const c = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.4, 12), matSteel);
+      c.position.set(-0.12, 0.26, -0.16 + k * 0.32);
+      c.castShadow = true;
+      g.add(c);
     }
-    g.add(rotor);
-    return { group: g, anim: { kind: "power", rotor } };
+    // a row of tall exhaust stacks — the emissions source
+    const stackX: number[] = [];
+    for (let k = 0; k < 5; k++) {
+      const x = -0.36 + k * 0.12;
+      const st = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.038, 0.95, 10), matSteel);
+      st.position.set(x, 0.55, -0.34);
+      st.castShadow = true;
+      g.add(st);
+      // little cap
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.04, 10), matMetalDark);
+      cap.position.set(x, 1.03, -0.34);
+      g.add(cap);
+      stackX.push(x);
+    }
+    // smoggy plume from the stacks
+    const smog: Anim["smog"] = [];
+    const COUNT = 8;
+    const emitY = 1.05;
+    for (let i = 0; i < COUNT; i++) {
+      const sm = new THREE.SpriteMaterial({
+        map: steamTex, transparent: true, opacity: 0, depthWrite: false,
+        blending: THREE.NormalBlending, color: 0x9a9488,
+      });
+      const spr = new THREE.Sprite(sm);
+      const sx = stackX[i % stackX.length];
+      spr.position.set(sx, emitY, -0.34);
+      g.add(spr);
+      smog.push({ spr, t: i / COUNT, sp: 0.32 + (i % 3) * 0.05, ox: sx, oz: -0.34 });
+    }
+    return { group: g, anim: { kind: "power", smog, emitY } };
   }
 
   function makeNetwork(): { group: THREE.Group; anim: Anim } {
@@ -723,7 +770,7 @@ export function createScene(opts: {
     switch (type) {
       case "rack": return makeDataHall();
       case "cooler": return makeCoolingPlant();
-      case "power": return makeWindTurbine();
+      case "power": return makeGasTurbine();
       case "network": return makeNetwork();
     }
   }
@@ -958,8 +1005,18 @@ export function createScene(opts: {
           s.spr.scale.set(sc, sc, sc);
           (s.spr.material as THREE.SpriteMaterial).opacity = Math.sin(life * Math.PI) * 0.45;
         }
-      } else if (a.kind === "power" && a.rotor) {
-        a.rotor.rotation.z += dt * 1.5;
+      } else if (a.kind === "power" && a.smog) {
+        for (const s of a.smog) {
+          s.t += dt * s.sp;
+          if (s.t >= 1) s.t -= 1;
+          const life = s.t;
+          const y = (a.emitY ?? 1.05) + life * 1.7;
+          // rise and drift toward the town (+z), lingering
+          s.spr.position.set(s.ox + life * 0.35, y, s.oz + life * 1.4);
+          const sc = 0.35 + life * 1.5;
+          s.spr.scale.set(sc, sc, sc);
+          (s.spr.material as THREE.SpriteMaterial).opacity = Math.sin(life * Math.PI) * 0.5;
+        }
       } else if (a.kind === "network" && a.blink) {
         (a.blink.material as THREE.MeshStandardMaterial).emissiveIntensity =
           0.5 + 0.7 * Math.abs(Math.sin(time * 4 + i));
@@ -981,6 +1038,14 @@ export function createScene(opts: {
     }
 
     for (const r of bgRotors) r.rotation.z += dt * 1.1;
+
+    // lingering methane smog over the town
+    const methaneNorm = Math.max(0, Math.min(1, engine.methane / 90));
+    for (const p of smogPuffs) {
+      const drift = Math.sin(time * 0.12 + p.ph * 6.283) * 0.5;
+      p.spr.position.set(p.bx + drift, p.by + Math.sin(time * 0.4 + p.ph * 6.283) * 0.12, p.bz);
+      (p.spr.material as THREE.SpriteMaterial).opacity = methaneNorm * (0.16 + 0.1 * Math.sin(time * 0.25 + p.ph * 6.283));
+    }
 
     const discontent = 1 - engine.sentiment / 100;
     for (const m of communityMarkers) {
@@ -1070,6 +1135,7 @@ export function createScene(opts: {
         });
       disposeTree(community);
       disposeTree(rippleGroup);
+      disposeTree(townSmog);
       steamTex.dispose();
       renderer.dispose();
       if (el.parentElement === container) container.removeChild(el);
