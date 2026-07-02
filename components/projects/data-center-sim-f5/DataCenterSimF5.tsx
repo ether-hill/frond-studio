@@ -5,6 +5,7 @@ import {
   DataCenterF5,
   SPECS,
   CODE,
+  randomLayout,
   type BuildingType,
   type Tool,
   type Hud,
@@ -65,6 +66,7 @@ export default function DataCenterSimF5() {
   const [heat, setHeat] = useState(false);
   const [hud, setHud] = useState<Hud | null>(null);
   const [toasts, setToasts] = useState<{ id: number; text: string; kind: string }[]>([]);
+  const toastUid = useRef(0);
   const [ready, setReady] = useState(false);
   const [sceneKey, setSceneKey] = useState(0);
   const [sound, setSound] = useState(false);
@@ -112,6 +114,20 @@ export default function DataCenterSimF5() {
     eng.step(0.001);
     engRef.current = eng;
     setHud(eng.hud());
+    setToasts([]);
+    setPaused(false);
+    setSpeed(1);
+    setSceneKey((k) => k + 1);
+  }, []);
+
+  // roll a whole campus — anywhere from a scrappy starter to a full build-out
+  const handleRandomize = useCallback(() => {
+    const eng = new DataCenterF5(14, 9);
+    randomLayout(eng);
+    eng.step(0.001);
+    engRef.current = eng;
+    setHud(eng.hud());
+    setToasts([]);
     setPaused(false);
     setSpeed(1);
     setSceneKey((k) => k + 1);
@@ -140,10 +156,11 @@ export default function DataCenterSimF5() {
         getCtrl: () => ctrl.current,
         onHud: handleHud,
         onToasts: (fresh) => {
-          setToasts((prev) =>
-            [...prev, ...fresh.map((t) => ({ id: t.id, text: t.text, kind: t.kind }))].slice(-4)
-          );
-          for (const t of fresh) {
+          // component-level uid — engine toast ids restart at 1 on reset/randomise,
+          // which collides React keys and lets stale timers eat new toasts
+          const stamped = fresh.map((t) => ({ id: ++toastUid.current, text: t.text, kind: t.kind }));
+          setToasts((prev) => [...prev, ...stamped].slice(-4));
+          for (const t of stamped) {
             const id = t.id;
             window.setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), 4200);
           }
@@ -168,6 +185,7 @@ export default function DataCenterSimF5() {
       if (ti >= 0) setTool(TOOLS[ti]);
       else if (k === "x" || k === "b") setTool("bulldoze");
       else if (k === "h") setHeat((v) => !v);
+      else if (k === "r") handleRandomize();
       else if (k === " ") {
         e.preventDefault();
         setPaused((p) => !p);
@@ -277,6 +295,13 @@ export default function DataCenterSimF5() {
               title="Hear the site — the HVAC drone grows louder and harsher as it scales"
             >
               {sound ? "🔊" : "🔈"}
+            </button>
+            <button
+              className={s.ctl}
+              onClick={handleRandomize}
+              title="R — randomise: roll a whole campus, small or sprawling"
+            >
+              ⚂
             </button>
             <button className={s.ctl} onClick={handleReset} title="Reset">
               ↺
@@ -407,7 +432,8 @@ export default function DataCenterSimF5() {
         <strong>Click</strong> places · <strong>drag</strong> spins the land ·{" "}
         <strong>shift-drag</strong> paints · <strong>scroll</strong> zooms · keys{" "}
         <strong>1–6</strong> pick a building, <strong>X</strong> razes,{" "}
-        <strong>H</strong> toggles the thermal view, <strong>space</strong> pauses.
+        <strong>H</strong> toggles the thermal view, <strong>R</strong> rolls a random
+        campus — from a scrappy starter to a full build-out — <strong>space</strong> pauses.
         Solar earns nothing after sunset — bank it in batteries or lean on the grid and
         eat the evening price spike, the carbon and the smog it drapes over the town.
         Halls throttle as their tile heats and fail past 76°C; chillers keep them alive

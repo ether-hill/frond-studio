@@ -740,3 +740,94 @@ export class DataCenterF5 {
 
 export const GOAL_MONEY = GOAL;
 export const START = START_MONEY;
+
+// ---------------------------------------------------------------------------
+// Random campus generator — fills an EMPTY engine with a plausible build, from
+// a scrappy starter to a near-full build-out, so the sim can demo itself.
+// `rand` is injected so tests can seed it; the UI passes Math.random.
+// ---------------------------------------------------------------------------
+export function randomLayout(eng: DataCenterF5, rand: () => number = Math.random) {
+  const { w, h } = eng;
+  const put = (x: number, y: number, code: number): boolean => {
+    if (!eng.inBounds(x, y)) return false;
+    const i = eng.idx(x, y);
+    if (eng.grid[i] !== CODE.empty) return false;
+    eng.grid[i] = code;
+    return true;
+  };
+
+  // ---- scale of the build ----
+  const roll = rand();
+  const pairRows = roll < 0.3 ? 1 : roll < 0.62 ? 2 : roll < 0.88 ? 3 : 4;
+  const rowLen = 2 + Math.floor(rand() * (pairRows < 2 ? 3 : 6)); // 2..7 halls per row
+  const x0 = 2 + Math.floor(rand() * Math.max(1, w - rowLen - 4));
+  const y0 = Math.min(h - pairRows * 2 - 1, 1 + Math.floor(rand() * 2));
+
+  // ---- server blocks: each hall row backed by a chiller row ----
+  let halls = 0;
+  for (let p = 0; p < pairRows; p++) {
+    const y = y0 + p * 2;
+    for (let i = 0; i < rowLen; i++) {
+      if (put(x0 + i, y, CODE.hall)) halls++;
+      // the odd missing chiller — imperfect operators exist
+      if (rand() > 0.05) put(x0 + i, y + 1, CODE.chiller);
+    }
+  }
+
+  // ---- uplinks sized to compute, on the east column ----
+  const uplinks = Math.max(1, Math.ceil((halls * SPECS.hall.compute) / SPECS.uplink.bandwidth));
+  let placedUp = 0;
+  for (let u = 0; u < h && placedUp < uplinks; u++) {
+    if (put(x0 + rowLen, y0 + u, CODE.uplink)) placedUp++;
+  }
+
+  // ---- energy mix personality: grid-heavy … solar-heavy … off-grid gamble ----
+  const mix = rand();
+  const draw =
+    halls * (SPECS.hall.power + SPECS.chiller.power) + placedUp * SPECS.uplink.power;
+  // the all-solar gamble only fits on a small campus — big ones run out of pad
+  const offGrid = mix > 0.9 && pairRows <= 2;
+  const solarShare = offGrid ? 1 : 0.2 + 0.55 * mix; // of daytime draw
+  const solarWanted = Math.ceil((draw * solarShare * 2.1) / SPECS.solar.solarPeak);
+  const battsWanted = offGrid
+    ? Math.ceil((draw * 13) / SPECS.battery.battCap)
+    : Math.ceil((solarWanted * SPECS.solar.solarPeak * 0.35 * mix) / SPECS.battery.battCap);
+  // substations must carry the night: draw minus what batteries can push
+  const nightCover = Math.max(
+    draw * 0.35,
+    draw - battsWanted * SPECS.battery.battRate * 0.75
+  );
+  const subsWanted = offGrid ? 0 : Math.max(1, Math.ceil(nightCover / SPECS.substation.gridCap));
+
+  // substations down the west column
+  let placedSubs = 0;
+  for (let s = 0; s < h && placedSubs < subsWanted; s++) {
+    if (put(x0 - 1, y0 + s, CODE.substation)) placedSubs++;
+  }
+
+  // solar + batteries fill fields below the block, then above it
+  const fill = (code: number, want: number): number => {
+    let placed = 0;
+    for (let fy = y0 + pairRows * 2; fy < h && placed < want; fy++) {
+      for (let fx = x0 - 2; fx <= x0 + rowLen + 1 && placed < want; fx++) {
+        if (put(fx, fy, code)) placed++;
+      }
+    }
+    for (let fy = y0 - 1; fy >= 0 && placed < want; fy--) {
+      for (let fx = x0 - 2; fx <= x0 + rowLen + 1 && placed < want; fx++) {
+        if (put(fx, fy, code)) placed++;
+      }
+    }
+    return placed;
+  };
+  const placedBatts = fill(CODE.battery, battsWanted);
+  fill(CODE.solar, solarWanted);
+
+  // ---- a mature campus meets mature demand: fast-forward the calendar so the
+  // day-1 demand curve doesn't starve a big build ----
+  const capacity = halls * SPECS.hall.compute;
+  const days = Math.max(0, Math.round((capacity * 0.8 - 24) / 12));
+  eng.time = days * 24 + 6.5; // pick up at dawn
+  eng.battCharge = placedBatts * SPECS.battery.battCap * 0.5;
+  eng.reputation = 70 + rand() * 20;
+}
