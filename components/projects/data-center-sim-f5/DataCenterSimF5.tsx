@@ -204,10 +204,11 @@ export default function DataCenterSimF5() {
           <h1 className={s.title}>Data Center Sim F5</h1>
         </div>
         <p className={s.intro}>
-          A from-scratch rebuild of the data center sim, on a high-desert plateau you
-          share with a small town — homes, a school, a playground. Everything runs on
-          the clock: solar works only in daylight, grid power spikes at the evening peak
-          and runs <em>dirty</em> at night, and batteries carry the sun into the dark.
+          A from-scratch rebuild of the data center sim, on a green river plain you
+          share with a small town — homes, a school, a playground, a wind farm over the
+          fence. Everything runs on the clock: solar works only in daylight, grid power
+          spikes at the evening peak and runs <em>dirty</em> at night, and batteries
+          carry the sun into the dark.
           Clean compute sells at a premium, but scale has a price the HUD can&apos;t hide:
           the chillers <strong>roar</strong>, grid carbon hangs as <strong>smog</strong>{" "}
           over the town, and the <strong>Community</strong> gauge falls as the people next
@@ -403,17 +404,18 @@ export default function DataCenterSimF5() {
       </div>
 
       <p className={s.legend}>
-        <strong>Left-drag</strong> places · <strong>right-drag</strong> orbits ·{" "}
-        <strong>scroll</strong> zooms · keys <strong>1–6</strong> pick a building,{" "}
-        <strong>X</strong> razes, <strong>H</strong> toggles the thermal view,{" "}
-        <strong>space</strong> pauses. Solar earns nothing after sunset — bank it in
-        batteries or lean on the grid and eat the evening price spike, the carbon and
-        the smog it drapes over the town. Halls throttle as their tile heats and fail
-        past 76°C; chillers keep them alive but are the loudest thing on site, and as
-        the drone reaches the houses across the street, red pins pop up over the homes
-        losing patience. Brownouts and unmet demand bleed reputation, and a shaky
-        reputation books less demand — a demonstration of the trade-offs a real data
-        center imposes on the neighborhood around it.
+        <strong>Click</strong> places · <strong>drag</strong> spins the land ·{" "}
+        <strong>shift-drag</strong> paints · <strong>scroll</strong> zooms · keys{" "}
+        <strong>1–6</strong> pick a building, <strong>X</strong> razes,{" "}
+        <strong>H</strong> toggles the thermal view, <strong>space</strong> pauses.
+        Solar earns nothing after sunset — bank it in batteries or lean on the grid and
+        eat the evening price spike, the carbon and the smog it drapes over the town.
+        Halls throttle as their tile heats and fail past 76°C; chillers keep them alive
+        but are the loudest thing on site, and as the drone reaches the houses across
+        the street, red pins pop up over the homes losing patience. Brownouts and unmet
+        demand bleed reputation, and a shaky reputation books less demand — a
+        demonstration of the trade-offs a real data center imposes on the neighborhood
+        around it.
       </p>
     </div>
   );

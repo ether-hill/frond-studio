@@ -1,6 +1,6 @@
 // Data Center Sim F5 — 3D diorama renderer (three.js).
 //
-// A floating high-desert plateau shared between your campus and the town that
+// A floating green river plain shared between your campus and the town that
 // has to live with it: a residential district on tree-lined avenues, a school,
 // playground and tennis court, a wind farm over the north fence and a canal
 // under the access-road bridge. The campus itself is fenced, with visitor
@@ -29,19 +29,18 @@ export type SceneHandle = { dispose: () => void };
 
 const CELL = 1.05;
 const SIM_HOURS_PER_SEC = 2.4;
-const APRON = 9.5; // desert ring around the buildable pad — town, wind farm, canal live here
+const APRON = 9.5; // countryside ring around the buildable pad — town, wind farm, river live here
 
 // ---- palette ----
 const COL = {
-  sandTop: 0xd8b98a,
-  sandDark: 0xc4a171,
-  strataA: 0xb98a5e,
+  grassTop: 0x7f9e58,
+  grassDark: 0x66854a,
+  strataA: 0x8a6f4e, // topsoil
   strataB: 0x9a6b47,
   strataC: 0x7c5236,
-  rock: 0xa88a68,
-  scrub: 0x7d8455,
-  scrubDry: 0x9a9060,
-  cactus: 0x5f7d4a,
+  rock: 0x9a9284,
+  scrub: 0x5f8a48,
+  scrubDry: 0x7d9a55,
   pad: 0xb9b2a4,
   padLine: 0x8f887a,
   road: 0x6b6257,
@@ -133,10 +132,13 @@ export function createScene(opts: {
   for (const z of [-7.4, -5.6, -1.9, 0.1, 2.1, 5.2, 7.2]) {
     houseLots.push({ x: aveA + 1.55, z, rot: -Math.PI / 2 }); // east side of avenue A
   }
+  for (const z of [-6.4, -4.5, -0.9, 1.0, 4.4, 6.3]) {
+    houseLots.push({ x: aveA - 1.55, z, rot: Math.PI / 2 }); // west side of avenue A
+  }
   for (const z of [-7.4, -5.4, -2.0, 0.0, 2.0, 5.4, 7.4]) {
     houseLots.push({ x: aveB - 1.2, z, rot: Math.PI / 2 }); // west side of avenue B
   }
-  for (const x of [-14.2, -12.1, -10.0, -7.9, 5.6, 7.6]) {
+  for (const x of [-16.1, -14.2, -12.1, -10.0, -7.9, 5.6, 7.6, 9.5]) {
     houseLots.push({ x, z: southSt + 1.7, rot: 0 }); // south street, facing the campus
   }
   const schoolPos = { x: -5.2, z: southSt + 1.9 };
@@ -180,7 +182,7 @@ export function createScene(opts: {
   placeCamera();
 
   // ---- lights ----
-  const hemi = new THREE.HemisphereLight(0xbdd6f2, 0x8a6f50, 0.7);
+  const hemi = new THREE.HemisphereLight(0xbdd6f2, 0x5a7048, 0.7);
   scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff2dc, 1.3);
   sun.castShadow = true;
@@ -240,7 +242,7 @@ export function createScene(opts: {
   scene.add(stars);
 
   // =====================================================================
-  // TERRAIN — floating desert plate with strata sides
+  // TERRAIN — floating grass plate with earth strata sides
   // =====================================================================
   const world = new THREE.Group();
   scene.add(world);
@@ -259,22 +261,40 @@ export function createScene(opts: {
   const sx = (w: number) => (w / (plateHalfW * 2)) * texW;
   const sz = (w: number) => (w / (plateHalfD * 2)) * texH;
 
-  // sand base + speckle
-  g.fillStyle = "#d8b98a";
+  // grass base + meadow mottling (the reference is lush green, not desert)
+  g.fillStyle = "#7f9e58";
   g.fillRect(0, 0, texW, texH);
-  for (let i = 0; i < 7000; i++) {
+  for (let i = 0; i < 9000; i++) {
     const a = rng();
-    g.fillStyle = a < 0.5 ? "rgba(160,120,74,0.16)" : "rgba(240,220,180,0.14)";
-    const s = 1 + rng() * 2.6;
+    g.fillStyle =
+      a < 0.45 ? "rgba(90,120,58,0.22)" : a < 0.9 ? "rgba(165,190,110,0.18)" : "rgba(120,140,70,0.25)";
+    const s = 1 + rng() * 2.8;
     g.fillRect(rng() * texW, rng() * texH, s, s);
   }
+  // broad meadow patches — dried grass and clover drifts
+  for (let i = 0; i < 26; i++) {
+    const mx = rng() * texW;
+    const mz = rng() * texH;
+    const mr = 26 + rng() * 80;
+    const grad = g.createRadialGradient(mx, mz, 0, mx, mz, mr);
+    const c = rng() < 0.5 ? "150,160,90" : "100,130,66";
+    grad.addColorStop(0, `rgba(${c},0.28)`);
+    grad.addColorStop(1, `rgba(${c},0)`);
+    g.fillStyle = grad;
+    g.fillRect(mx - mr, mz - mr, mr * 2, mr * 2);
+  }
+  // wildflower flecks
+  for (let i = 0; i < 500; i++) {
+    g.fillStyle = rng() < 0.5 ? "rgba(240,235,190,0.5)" : "rgba(220,180,200,0.4)";
+    g.fillRect(rng() * texW, rng() * texH, 1.6, 1.6);
+  }
 
-  // irrigated lawns — one soft green lot per house + a park around the school
+  // mown lawns — one bright lot per house + a park around the school
   const lawn = (wx: number, wz: number, ww: number, wd: number) => {
-    g.fillStyle = "#79975a";
+    g.fillStyle = "#8db763";
     g.fillRect(px(wx - ww / 2), pz(wz - wd / 2), sx(ww), sz(wd));
     for (let i = 0; i < 60; i++) {
-      g.fillStyle = rng() < 0.5 ? "rgba(90,120,60,0.35)" : "rgba(150,175,105,0.3)";
+      g.fillStyle = rng() < 0.5 ? "rgba(100,140,64,0.35)" : "rgba(170,205,120,0.3)";
       g.fillRect(px(wx - ww / 2) + rng() * sx(ww), pz(wz - wd / 2) + rng() * sz(wd), 2, 2);
     }
   };
@@ -310,11 +330,17 @@ export function createScene(opts: {
     g.setLineDash([]);
   }
 
-  // canal banks — damp sand darkening toward the waterline
-  g.fillStyle = "#b08a5e";
-  g.fillRect(px(canalX0 - 0.5), 0, sx(canalX1 - canalX0 + 1.0), texH);
-  g.fillStyle = "#8a6a44";
-  g.fillRect(px(canalX0 - 0.15), 0, sx(canalX1 - canalX0 + 0.3), texH);
+  // river banks — marsh grass fading into wet mud at the waterline
+  g.fillStyle = "#6d8a4e";
+  g.fillRect(px(canalX0 - 0.7), 0, sx(canalX1 - canalX0 + 1.4), texH);
+  g.fillStyle = "#7a6a48";
+  g.fillRect(px(canalX0 - 0.2), 0, sx(canalX1 - canalX0 + 0.4), texH);
+  for (let i = 0; i < 500; i++) {
+    // sedge tufts along both banks
+    const bankX = rng() < 0.5 ? canalX0 - 0.1 - rng() * 0.7 : canalX1 + 0.1 + rng() * 0.7;
+    g.fillStyle = rng() < 0.5 ? "rgba(120,145,70,0.5)" : "rgba(90,110,55,0.5)";
+    g.fillRect(px(bankX), rng() * texH, 2, 3);
+  }
 
   // tennis court surface
   {
@@ -382,12 +408,13 @@ export function createScene(opts: {
   const topMat = new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.96, metalness: 0 });
   const top = new THREE.Mesh(new THREE.PlaneGeometry(plateHalfW * 2, plateHalfD * 2), topMat);
   top.rotation.x = -Math.PI / 2;
+  top.position.y = 0.012; // sit clear of the strata slab below — coplanar surfaces z-fight
   top.receiveShadow = true;
   world.add(top);
 
   // strata slabs under the top
   const strataDefs = [
-    { s: 1.0, h: 0.85, y: -0.425, c: COL.strataA },
+    { s: 1.0, h: 0.85, y: -0.437, c: COL.strataA },
     { s: 0.9, h: 0.8, y: -1.2, c: COL.strataB },
     { s: 0.72, h: 0.9, y: -2.0, c: COL.strataC },
     { s: 0.45, h: 0.9, y: -2.8, c: COL.strataC },
@@ -415,7 +442,7 @@ export function createScene(opts: {
     world.add(m);
   }
 
-  // ---- desert scatter (kept off the pad, roads, town, canal and wind farm) ----
+  // ---- meadow scatter (kept off the pad, roads, town, river and wind farm) ----
   const clearOfPad = (x: number, z: number) =>
     !(Math.abs(x) < padHalfW + 2.6 && Math.abs(z) < padHalfD + 2.6) && // campus + ring road
     !(x > padHalfW && Math.abs(z) < 1.6) && // access road corridor
@@ -482,34 +509,7 @@ export function createScene(opts: {
     world.add(bushes);
   }
 
-  // a few saguaro cacti
-  const cactusMat = new THREE.MeshStandardMaterial({ color: COL.cactus, roughness: 0.9 });
-  const trunkGeo = new THREE.CapsuleGeometry(0.07, 0.5, 4, 8);
-  const armGeo = new THREE.CapsuleGeometry(0.045, 0.2, 4, 8);
-  for (let i = 0; i < 4; i++) {
-    const [x, z] = scatterPoint();
-    const cactus = new THREE.Group();
-    const trunk = new THREE.Mesh(trunkGeo, cactusMat);
-    trunk.position.y = 0.32;
-    trunk.castShadow = true;
-    cactus.add(trunk);
-    const arms = 1 + Math.floor(rng() * 2);
-    for (let a = 0; a < arms; a++) {
-      const arm = new THREE.Mesh(armGeo, cactusMat);
-      const side = a === 0 ? 1 : -1;
-      arm.position.set(side * 0.13, 0.3 + rng() * 0.18, 0);
-      arm.rotation.z = side * -0.5;
-      arm.castShadow = true;
-      cactus.add(arm);
-    }
-    const s = 0.8 + rng() * 0.7;
-    cactus.scale.setScalar(s);
-    cactus.position.set(x, 0, z);
-    cactus.rotation.y = rng() * Math.PI * 2;
-    world.add(cactus);
-  }
-
-  // distant floating mesas for depth
+  // distant floating hills for depth
   const mesas: THREE.Group[] = [];
   const mesaDefs = [
     { x: -plateR * 3.4, y: -3.6, z: -plateR * 2.4, s: 0.3 },
@@ -520,7 +520,7 @@ export function createScene(opts: {
     const mesa = new THREE.Group();
     const topM = new THREE.Mesh(
       new THREE.CylinderGeometry(3.2, 3.5, 0.7, 9),
-      new THREE.MeshStandardMaterial({ color: COL.sandDark, roughness: 1 })
+      new THREE.MeshStandardMaterial({ color: COL.grassDark, roughness: 1 })
     );
     mesa.add(topM);
     const mid = new THREE.Mesh(
@@ -747,14 +747,23 @@ export function createScene(opts: {
     town.add(tn);
   }
 
-  // ---- trees (instanced trunks + canopies) ----
+  // ---- trees (instanced trunks + canopies; clusters like the reference) ----
   const treePts: { x: number; z: number; s: number }[] = [];
   for (const lot of houseLots) {
-    if (rng() < 0.75) treePts.push({ x: lot.x + (rng() - 0.5) * 1.6, z: lot.z + (rng() < 0.5 ? -1.05 : 1.05), s: 0.75 + rng() * 0.6 });
+    if (rng() < 0.9) treePts.push({ x: lot.x + (rng() - 0.5) * 1.6, z: lot.z + (rng() < 0.5 ? -1.05 : 1.05), s: 0.75 + rng() * 0.6 });
+    if (rng() < 0.45) treePts.push({ x: lot.x + (rng() < 0.5 ? -1.1 : 1.1), z: lot.z + (rng() - 0.5) * 1.2, s: 0.6 + rng() * 0.5 });
   }
-  for (let i = 0; i < 7; i++) treePts.push({ x: schoolPos.x - 2.2 + rng() * 9, z: southSt - 1.9 + rng() * 0.7, s: 0.8 + rng() * 0.7 });
-  for (let i = 0; i < 9; i++) treePts.push({ x: canalX0 - 1.1 - rng() * 1.3, z: -plateHalfD + 1.5 + rng() * (plateHalfD * 2 - 3), s: 0.9 + rng() * 0.8 });
-  for (let i = 0; i < 5; i++) treePts.push({ x: aveA + 2.9 + rng() * 2.2, z: -plateHalfD + 2 + rng() * (plateHalfD * 2 - 4), s: 0.7 + rng() * 0.5 });
+  for (let i = 0; i < 12; i++) treePts.push({ x: schoolPos.x - 2.2 + rng() * 10, z: southSt - 1.9 + rng() * 0.7, s: 0.8 + rng() * 0.7 });
+  for (let i = 0; i < 16; i++) treePts.push({ x: canalX0 - 1.1 - rng() * 1.5, z: -plateHalfD + 1.5 + rng() * (plateHalfD * 2 - 3), s: 0.9 + rng() * 0.8 });
+  for (let i = 0; i < 8; i++) treePts.push({ x: aveA + 2.9 + rng() * 2.2, z: -plateHalfD + 2 + rng() * (plateHalfD * 2 - 4), s: 0.7 + rng() * 0.5 });
+  // copses on the open meadow between the district and the wind farm
+  for (let c = 0; c < 5; c++) {
+    const cx2 = -9 + rng() * 18;
+    const cz2 = -(padHalfD + 2.9) - rng() * 0.9;
+    for (let i = 0; i < 3 + Math.floor(rng() * 3); i++) {
+      treePts.push({ x: cx2 + (rng() - 0.5) * 1.8, z: cz2 + (rng() - 0.5) * 0.8, s: 0.7 + rng() * 0.8 });
+    }
+  }
   const trunkGeoT = new THREE.CylinderGeometry(0.03, 0.05, 0.34, 6);
   const trunkMatT = new THREE.MeshStandardMaterial({ color: 0x6a4e34, roughness: 1 });
   const canopyGeoT = new THREE.IcosahedronGeometry(0.3, 0);
@@ -813,11 +822,13 @@ export function createScene(opts: {
   const turbineMat = new THREE.MeshStandardMaterial({ color: 0xf0f2f4, roughness: 0.4 });
   const windZ = -(padHalfD + 4.8);
   const turbines: [number, number, number][] = [
-    [-13.2, windZ - 0.6, 4.6],
-    [-7.0, windZ + 0.5, 5.3],
-    [-0.8, windZ - 0.3, 4.9],
-    [5.4, windZ + 0.6, 5.6],
-    [11.6, windZ - 0.5, 4.5],
+    [-14.4, windZ - 0.7, 5.6],
+    [-9.6, windZ + 0.5, 6.4],
+    [-4.8, windZ - 0.4, 5.9],
+    [0.2, windZ + 0.6, 6.6],
+    [5.2, windZ - 0.5, 5.7],
+    [10.2, windZ + 0.4, 6.2],
+    [14.6, windZ - 0.6, 5.4],
   ];
   for (const [tx, tz, th] of turbines) {
     const t = new THREE.Group();
@@ -865,10 +876,10 @@ export function createScene(opts: {
   // reeds along both banks
   const reedGeo = new THREE.ConeGeometry(0.02, 0.26, 5);
   const reedMat = new THREE.MeshStandardMaterial({ color: 0x4d6e3a, roughness: 1 });
-  const reeds = new THREE.InstancedMesh(reedGeo, reedMat, 30);
+  const reeds = new THREE.InstancedMesh(reedGeo, reedMat, 46);
   {
     const m = new THREE.Matrix4();
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 46; i++) {
       const bank = rng() < 0.5 ? canalX0 - 0.12 : canalX1 + 0.12;
       let rz = -plateHalfD + 1 + rng() * (plateHalfD * 2 - 2);
       if (Math.abs(rz) < 1.6) rz = 2 + rng() * 3; // keep the bridge clear
@@ -952,9 +963,13 @@ export function createScene(opts: {
   const carSpots: [number, number, number][] = [
     [(parkingRect.x0 + parkingRect.x1) / 2, 1.75, Math.PI / 2],
     [(parkingRect.x0 + parkingRect.x1) / 2, 2.38, Math.PI / 2],
+    [(parkingRect.x0 + parkingRect.x1) / 2, 3.01, Math.PI / 2],
     [(parkingRect.x0 + parkingRect.x1) / 2, 3.64, Math.PI / 2],
+    [(parkingRect.x0 + parkingRect.x1) / 2, 4.27, Math.PI / 2],
     [aveA - 0.42, -3.0, 0],
+    [aveA + 0.42, 3.9, Math.PI],
     [aveB + 0.42, 6.4, Math.PI],
+    [-9.1, southSt + 0.42, Math.PI / 2],
   ];
   carSpots.forEach(([cx2, cz2, rotY], i) => {
     const car = new THREE.Group();
@@ -1489,9 +1504,13 @@ export function createScene(opts: {
 
   let painting = false;
   let orbiting = false;
+  let maybeClick = false; // left button down, not yet decided click vs drag-orbit
+  let downX = 0;
+  let downY = 0;
   let lastPX = 0;
   let lastPY = 0;
   let hoverTile = -1;
+  const DRAG_THRESHOLD = 6; // px of movement before a left-drag becomes an orbit
 
   const tileFromEvent = (e: PointerEvent): number => {
     const rect = renderer.domElement.getBoundingClientRect();
@@ -1520,11 +1539,26 @@ export function createScene(opts: {
       lastPX = e.clientX;
       lastPY = e.clientY;
     } else if (e.button === 0) {
-      painting = true;
-      applyTool(tileFromEvent(e));
+      if (e.shiftKey) {
+        // shift-drag paints continuously
+        painting = true;
+        applyTool(tileFromEvent(e));
+      } else {
+        // plain left button: click places, drag spins the land
+        maybeClick = true;
+        downX = e.clientX;
+        downY = e.clientY;
+        lastPX = e.clientX;
+        lastPY = e.clientY;
+      }
     }
   };
   const onPointerMove = (e: PointerEvent) => {
+    if (maybeClick && Math.hypot(e.clientX - downX, e.clientY - downY) > DRAG_THRESHOLD) {
+      maybeClick = false;
+      orbiting = true;
+      renderer.domElement.style.cursor = "grabbing";
+    }
     if (orbiting) {
       cam.az -= (e.clientX - lastPX) * 0.006;
       cam.pol = Math.max(0.32, Math.min(1.28, cam.pol - (e.clientY - lastPY) * 0.005));
@@ -1537,8 +1571,11 @@ export function createScene(opts: {
     if (painting) applyTool(hoverTile);
   };
   const onPointerUp = (e: PointerEvent) => {
+    if (maybeClick && e.button === 0) applyTool(tileFromEvent(e)); // stationary press = place
+    maybeClick = false;
     painting = false;
     orbiting = false;
+    renderer.domElement.style.cursor = "crosshair";
     try {
       renderer.domElement.releasePointerCapture(e.pointerId);
     } catch {}
@@ -1546,6 +1583,7 @@ export function createScene(opts: {
   const onPointerLeave = () => {
     hoverTile = -1;
     painting = false;
+    maybeClick = false;
   };
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
