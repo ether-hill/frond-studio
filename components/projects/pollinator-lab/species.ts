@@ -491,29 +491,62 @@ export type ModelAsset = {
 };
 
 export const MODEL_ASSETS: Partial<Record<string, ModelAsset>> = {
+  // ---- bees ----
   "honey-bee": {
-    url: "/models/pollinator-lab/bee.glb",
-    size: 2.6,
-    yaw: -Math.PI / 2,
-    credit: { title: "Bee", author: "jeremy", license: "CC-BY 3.0", url: "https://poly.pizza/m/6ktZgxSVVn1" },
+    url: "/models/pollinator-lab/bee-honey.glb", size: 2.6, yaw: -Math.PI / 2,
+    credit: { title: "Wasp", author: "Poly by Google", license: "CC-BY 3.0", url: "https://poly.pizza/m/4UdWQxbm0-B" },
   },
+  "bumble-bee": {
+    url: "/models/pollinator-lab/bee-bumble.glb", size: 2.4, yaw: -0.6,
+    credit: { title: "Bee", author: "apelab", license: "CC-BY 3.0", url: "https://poly.pizza/m/f0lW38lzjd4" },
+  },
+  "carpenter-bee": {
+    url: "/models/pollinator-lab/bee-carpenter.glb", size: 2.5, yaw: -0.6,
+    credit: { title: "Wasp", author: "Poly by Google", license: "CC-BY 3.0", url: "https://poly.pizza/m/e-maR6CzcKc" },
+  },
+  // ---- moths ----
   "garden-tiger": {
-    url: "/models/pollinator-lab/monarch.glb",
-    size: 3.0,
-    yaw: 0,
-    credit: { title: "Butterfly", author: "Poly by Google", license: "CC-BY 3.0", url: "https://poly.pizza/m/e9NAQQrCbLu" },
+    url: "/models/pollinator-lab/moth-tiger.glb", size: 2.8, yaw: -Math.PI / 2,
+    credit: { title: "Lil' Moth", author: "Lee Mason", license: "CC-BY 3.0", url: "https://poly.pizza/m/8ojwMQpu6DK" },
   },
+  "luna-moth": {
+    url: "/models/pollinator-lab/moth-swallowtail.glb", size: 3.0, yaw: -Math.PI / 2,
+    credit: { title: "Butterfly", author: "sirkitree", license: "CC-BY 3.0", url: "https://poly.pizza/m/fv6J8XW4hvC" },
+  },
+  "hawk-moth": {
+    url: "/models/pollinator-lab/moth-monarch.glb", size: 3.0, yaw: 0,
+    credit: { title: "Monarch Butterfly", author: "Paul Spooner", license: "CC-BY 3.0", url: "https://poly.pizza/m/eeO11BVjvsO" },
+  },
+  // ---- beetles ----
   "jewel-beetle": {
-    url: "/models/pollinator-lab/beetle.glb",
-    size: 2.7,
-    yaw: -1.05,
+    url: "/models/pollinator-lab/beetle-jewel.glb", size: 2.7, yaw: -1.05,
     credit: { title: "Beetle", author: "Poly by Google", license: "CC-BY 3.0", url: "https://poly.pizza/m/4yufxgZ1QQ2" },
   },
+  "rose-chafer": {
+    url: "/models/pollinator-lab/beetle-ladybug.glb", size: 2.6, yaw: -0.8,
+    credit: { title: "Ladybug", author: "Poly by Google", license: "CC-BY 3.0", url: "https://poly.pizza/m/4RkgtgojPCk" },
+  },
+  // ---- hummingbirds ----
+  "ruby-throated": {
+    url: "/models/pollinator-lab/bird-hummingbird.glb", size: 2.8, yaw: -0.6,
+    credit: { title: "Hummingbird", author: "Poly by Google", license: "CC-BY 3.0", url: "https://poly.pizza/m/70NyKFt-vLF" },
+  },
+  "violet-sabrewing": {
+    url: "/models/pollinator-lab/bird-teal.glb", size: 2.8, yaw: -0.6,
+    credit: { title: "Bird", author: "Kelli Ray", license: "CC-BY 3.0", url: "https://poly.pizza/m/1TjSVf4Yl79" },
+  },
+  // ---- bats ----
   "vesper-bat": {
-    url: "/models/pollinator-lab/bat.glb",
-    size: 2.8,
-    yaw: Math.PI,
+    url: "/models/pollinator-lab/bat-grey.glb", size: 3.0, yaw: 0,
+    credit: { title: "Bat", author: "Poly by Google", license: "CC-BY 3.0", url: "https://poly.pizza/m/5-MuhNMDmY_" },
+  },
+  "flying-fox": {
+    url: "/models/pollinator-lab/bat-fruit.glb", size: 2.8, yaw: 2.4,
     credit: { title: "Bat", author: "jeremy", license: "CC-BY 3.0", url: "https://poly.pizza/m/fzJn9xTT-UO" },
+  },
+  "long-tongued-bat": {
+    url: "/models/pollinator-lab/bat-black.glb", size: 2.8, yaw: 0,
+    credit: { title: "Bat wing", author: "Poly by Google", license: "CC-BY 3.0", url: "https://poly.pizza/m/ci_ZOYQ5fRM" },
   },
 };
 
