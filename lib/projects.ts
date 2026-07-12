@@ -19,6 +19,16 @@ export type PersonalProject = {
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
   {
+    slug: "pollinator-lab",
+    title: "Pollinator Lab",
+    kicker: "3D VIEWER · FIELD GUIDE · LIVE IN BROWSER",
+    summary:
+      "An interactive 3D field guide to the animals that move pollen — bees, moths, beetles, hummingbirds and bats. Every specimen is a procedurally built three.js model (no meshes loaded), lit in a soft studio and set on a turntable: pick a pollinator, drag to spin it, scrub the 360° dial and read its field notes.",
+    year: "2026",
+    tags: ["three.js", "3D Viewer", "Procedural", "TypeScript"],
+    href: "/projects/pollinator-lab",
+  },
+  {
     slug: "render-inspector",
     title: "Render Inspector",
     kicker: "THREE.JS · GLASS + LIVE CONTROLS",
