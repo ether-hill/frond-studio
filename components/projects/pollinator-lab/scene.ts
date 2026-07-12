@@ -10,15 +10,24 @@
 
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { buildCreature, type Creature } from "./models";
-import type { ModelSpec } from "./species";
+import { buildCreature, creatureFromGltf, loadGltfScene, type Creature } from "./models";
+import { MODEL_ASSETS, type ModelSpec, type ModelCredit } from "./species";
+
+export type ArtMode = "model" | "procedural";
+export type SpeciesRef = { id: string; model: ModelSpec };
 
 export type ViewerHandle = {
-  setSpecies: (spec: ModelSpec) => void;
+  setSpecies: (sp: SpeciesRef) => void;
+  /** Switch between the loaded glTF model and the procedural build. */
+  setArtMode: (mode: ArtMode) => void;
   /** Set turntable angle in degrees (from the slider). */
   setYaw: (deg: number) => void;
   /** Register a callback that fires when drag changes the angle. */
   onYaw: (cb: (deg: number) => void) => void;
+  /** Fires with the on-screen credit when a loaded model is shown (null otherwise). */
+  onCredit: (cb: (credit: ModelCredit | null) => void) => void;
+  /** Fires true while a model is loading. */
+  onLoading: (cb: (loading: boolean) => void) => void;
   /** Reset orbit tilt / zoom to the default framing. */
   resetView: () => void;
   resize: () => void;
@@ -29,7 +38,7 @@ const DEG = Math.PI / 180;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const norm360 = (d: number) => ((d % 360) + 360) % 360;
 
-export function createViewer(container: HTMLElement, initial: ModelSpec): ViewerHandle {
+export function createViewer(container: HTMLElement, initial: SpeciesRef): ViewerHandle {
   // ---- renderer ----
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -95,6 +104,11 @@ export function createViewer(container: HTMLElement, initial: ModelSpec): Viewer
   let creature: Creature | null = null;
   let popStart = -1; // time the current creature was mounted (for scale-in)
   let popBase = 1;
+  let artMode: ArtMode = "model";
+  let currentSp: SpeciesRef = initial;
+  let mountToken = 0;
+  let creditCb: ((c: ModelCredit | null) => void) | null = null;
+  let loadingCb: ((l: boolean) => void) | null = null;
 
   // orbit state
   let yaw = 0; // degrees — model rotation
@@ -125,8 +139,7 @@ export function createViewer(container: HTMLElement, initial: ModelSpec): Viewer
     scene.add(key.target);
   }
 
-  function mountCreature(spec: ModelSpec, animate: boolean) {
-    const c = buildCreature(spec);
+  function install(c: Creature, animate: boolean) {
     // synchronous swap — dispose the old creature before adding the new one so
     // there is never more than one in the scene
     if (creature) {
@@ -144,7 +157,35 @@ export function createViewer(container: HTMLElement, initial: ModelSpec): Viewer
     yawCb?.(yaw);
   }
 
-  mountCreature(initial, false);
+  async function mountSpecies(sp: SpeciesRef, animate: boolean) {
+    currentSp = sp;
+    const token = ++mountToken;
+    const asset = artMode === "model" ? MODEL_ASSETS[sp.id] : undefined;
+
+    if (!asset) {
+      install(buildCreature(sp.model), animate);
+      creditCb?.(null);
+      loadingCb?.(false);
+      return;
+    }
+
+    loadingCb?.(true);
+    try {
+      const src = await loadGltfScene(asset.url);
+      if (token !== mountToken) return; // superseded by a newer selection
+      install(creatureFromGltf(src, asset), animate);
+      creditCb?.(asset.credit);
+    } catch {
+      if (token !== mountToken) return;
+      // fall back to the procedural build if the model fails to load
+      install(buildCreature(sp.model), animate);
+      creditCb?.(null);
+    } finally {
+      if (token === mountToken) loadingCb?.(false);
+    }
+  }
+
+  void mountSpecies(initial, false);
 
   // ---- pointer interaction ----
   let dragging = false;
@@ -232,9 +273,12 @@ export function createViewer(container: HTMLElement, initial: ModelSpec): Viewer
   tick();
 
   return {
-    setSpecies: (spec) => mountCreature(spec, true),
+    setSpecies: (sp) => void mountSpecies(sp, true),
+    setArtMode: (mode) => { artMode = mode; void mountSpecies(currentSp, true); },
     setYaw: (deg) => { yaw = norm360(deg); yawVel = 0; },
     onYaw: (cb) => { yawCb = cb; cb(yaw); },
+    onCredit: (cb) => { creditCb = cb; },
+    onLoading: (cb) => { loadingCb = cb; },
     resetView: () => { pitch = 12; dist = baseDist; yawVel = 0; },
     resize,
     dispose: () => {

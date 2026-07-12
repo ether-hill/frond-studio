@@ -8,11 +8,13 @@ import {
   TAG_TINT,
   speciesById,
   speciesInCategory,
+  hasModelAsset,
   type Category,
   type Species,
   type FlowerSpec,
+  type ModelCredit,
 } from "./species";
-import type { ViewerHandle } from "./scene";
+import type { ViewerHandle, ArtMode } from "./scene";
 import { Glyph, FactIcon, ToolIcon } from "./icons";
 import s from "./PollinatorLab.module.css";
 
@@ -61,8 +63,12 @@ export default function PollinatorLab() {
   const [openCat, setOpenCat] = useState<Category>("bees");
   const [ready, setReady] = useState(false);
   const [fs, setFs] = useState(false);
+  const [artMode, setArtMode] = useState<ArtMode>("model");
+  const [credit, setCredit] = useState<ModelCredit | null>(null);
+  const [modelLoading, setModelLoading] = useState(false);
 
   const species = useMemo(() => speciesById(activeId), [activeId]);
+  const modelAvailable = hasModelAsset(activeId);
 
   // mount viewer once
   useEffect(() => {
@@ -73,11 +79,14 @@ export default function PollinatorLab() {
     (async () => {
       const { createViewer } = await import("./scene");
       if (cancelled || !mountRef.current) return;
-      handle = createViewer(mountRef.current, speciesById("orchid-bee").model);
+      const bee = speciesById("orchid-bee");
+      handle = createViewer(mountRef.current, { id: bee.id, model: bee.model });
       handle.onYaw((deg) => {
         if (sliderRef.current) sliderRef.current.value = String(Math.round(deg));
         if (angleLabelRef.current) angleLabelRef.current.textContent = `${Math.round(deg)}°`;
       });
+      handle.onCredit(setCredit);
+      handle.onLoading(setModelLoading);
       viewerRef.current = handle;
       setReady(true);
     })();
@@ -92,8 +101,13 @@ export default function PollinatorLab() {
   const firstMount = useRef(true);
   useEffect(() => {
     if (firstMount.current) { firstMount.current = false; return; }
-    viewerRef.current?.setSpecies(species.model);
+    viewerRef.current?.setSpecies({ id: species.id, model: species.model });
   }, [species]);
+
+  const changeArtMode = useCallback((mode: ArtMode) => {
+    setArtMode(mode);
+    viewerRef.current?.setArtMode(mode);
+  }, []);
 
   const selectSpecies = useCallback((sp: Species) => {
     setOpenCat(sp.category);
@@ -260,6 +274,35 @@ export default function PollinatorLab() {
           <div className={s.viewport}>
             <div ref={mountRef} className={s.canvas} />
             {!ready && <div className={s.loading}>Preparing specimen…</div>}
+            {ready && modelLoading && <div className={s.loading}>Loading model…</div>}
+
+            {/* art-source toggle: loaded glTF model vs procedural build */}
+            <div className={s.artToggle} role="group" aria-label="Model source">
+              <button
+                className={`${s.artBtn} ${artMode === "model" ? s.artOn : ""}`}
+                onClick={() => changeArtMode("model")}
+                disabled={!modelAvailable}
+                title={modelAvailable ? "Show the downloaded 3D model" : "No model for this species yet"}
+              >
+                Model
+              </button>
+              <button
+                className={`${s.artBtn} ${artMode === "procedural" || !modelAvailable ? s.artOn : ""}`}
+                onClick={() => changeArtMode("procedural")}
+              >
+                Procedural
+              </button>
+            </div>
+
+            {credit && artMode === "model" && (
+              <div className={s.credit}>
+                Model:{" "}
+                <a href={credit.url} target="_blank" rel="noopener noreferrer">
+                  &ldquo;{credit.title}&rdquo; by {credit.author}
+                </a>{" "}
+                · {credit.license} · Poly&nbsp;Pizza
+              </div>
+            )}
 
             <div className={s.toolRail}>
               {[

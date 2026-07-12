@@ -8,7 +8,8 @@
 // environment does the heavy lifting and everything stays GPU-cheap.
 
 import * as THREE from "three";
-import type { ModelSpec } from "./species";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import type { ModelSpec, ModelAsset } from "./species";
 
 export type Creature = {
   group: THREE.Group;
@@ -738,6 +739,82 @@ function buildBat(j: Junk, spec: ModelSpec): Creature {
 }
 
 // --- dispatch --------------------------------------------------------------
+
+// =========================================================================
+//  LOADED glTF MODELS
+// =========================================================================
+
+const _loader = new GLTFLoader();
+const _cache = new Map<string, Promise<THREE.Group>>();
+
+/** Load (and cache) a glTF scene. Returns the source scene to clone from. */
+export function loadGltfScene(url: string): Promise<THREE.Group> {
+  let p = _cache.get(url);
+  if (!p) {
+    p = new Promise<THREE.Group>((resolve, reject) => {
+      _loader.load(url, (g) => resolve(g.scene), undefined, reject);
+    });
+    _cache.set(url, p);
+  }
+  return p;
+}
+
+/** Wrap a cloned glTF scene as a Creature: centred, normalised, shadowed. */
+export function creatureFromGltf(source: THREE.Group, asset: ModelAsset): Creature {
+  const model = source.clone(true);
+
+  // enable shadows and make sure materials tolerate our environment lighting
+  model.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (m.isMesh) {
+      m.castShadow = true;
+      m.receiveShadow = true;
+      const mat = m.material as THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[];
+      const fix = (mm: THREE.Material) => {
+        const s = mm as THREE.MeshStandardMaterial;
+        if (s.map) s.map.colorSpace = THREE.SRGBColorSpace;
+        s.side = THREE.DoubleSide;
+      };
+      Array.isArray(mat) ? mat.forEach(fix) : mat && fix(mat);
+    }
+  });
+
+  // centre at origin and normalise the longest dimension to asset.size
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z) || 1;
+  const scale = (asset.size ?? 2.6) / maxDim;
+  model.position.sub(center);
+
+  const inner = new THREE.Group();
+  inner.add(model);
+  inner.scale.setScalar(scale);
+  inner.rotation.y = asset.yaw ?? 0;
+  inner.rotation.x = asset.pitch ?? 0;
+
+  const g = new THREE.Group();
+  g.add(inner);
+
+  return {
+    group: g,
+    yaw0: 0,
+    update: (t) => {
+      g.position.y = Math.sin(t * 1.7) * 0.05;
+      g.rotation.z = Math.sin(t * 1.1) * 0.015;
+    },
+    dispose: () => {
+      model.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) {
+          m.geometry?.dispose();
+          const mat = m.material as THREE.Material | THREE.Material[];
+          Array.isArray(mat) ? mat.forEach((x) => x.dispose()) : mat?.dispose();
+        }
+      });
+    },
+  };
+}
 
 export function buildCreature(spec: ModelSpec): Creature {
   const j = new Junk();

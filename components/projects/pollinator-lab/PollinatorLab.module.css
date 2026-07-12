@@ -364,6 +364,47 @@
   color: var(--ink-faint);
 }
 
+/* art-source toggle (Model / Procedural) */
+.artToggle {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(251,247,236,0.85);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 20px -16px rgba(60,50,30,0.6);
+}
+.artBtn {
+  border: none;
+  background: none;
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.artBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.artOn { background: var(--green-deep); color: #fff; }
+
+.credit {
+  position: absolute;
+  left: 14px;
+  bottom: 10px;
+  max-width: 46%;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--ink-faint);
+}
+.credit a { color: var(--ink-dim); text-decoration: underline; text-underline-offset: 2px; }
+.credit a:hover { color: var(--ink); }
+
 /* floating tool rail */
 .toolRail {
   position: absolute;

@@ -473,6 +473,52 @@ export const SPECIES: Species[] = [
   },
 ];
 
+// ---- loaded 3D model assets (glTF) --------------------------------------
+// A "mix" alongside the procedural builders: where a species has an entry here,
+// the viewer can show a real downloaded model (toggle in the UI). All sourced
+// from Poly Pizza under CC-BY 3.0 — the credit is shown on screen when used.
+
+export type ModelCredit = { title: string; author: string; license: string; url: string };
+export type ModelAsset = {
+  url: string;
+  /** target longest-dimension in world units after normalisation. */
+  size?: number;
+  /** fixed orientation offset (radians about Y) baked into the model. */
+  yaw?: number;
+  /** fixed tilt (radians about X). */
+  pitch?: number;
+  credit: ModelCredit;
+};
+
+export const MODEL_ASSETS: Partial<Record<string, ModelAsset>> = {
+  "honey-bee": {
+    url: "/models/pollinator-lab/bee.glb",
+    size: 2.6,
+    yaw: -Math.PI / 2,
+    credit: { title: "Bee", author: "jeremy", license: "CC-BY 3.0", url: "https://poly.pizza/m/6ktZgxSVVn1" },
+  },
+  "garden-tiger": {
+    url: "/models/pollinator-lab/monarch.glb",
+    size: 3.0,
+    yaw: 0,
+    credit: { title: "Butterfly", author: "Poly by Google", license: "CC-BY 3.0", url: "https://poly.pizza/m/e9NAQQrCbLu" },
+  },
+  "jewel-beetle": {
+    url: "/models/pollinator-lab/beetle.glb",
+    size: 2.7,
+    yaw: -1.05,
+    credit: { title: "Beetle", author: "Poly by Google", license: "CC-BY 3.0", url: "https://poly.pizza/m/4yufxgZ1QQ2" },
+  },
+  "vesper-bat": {
+    url: "/models/pollinator-lab/bat.glb",
+    size: 2.8,
+    yaw: Math.PI,
+    credit: { title: "Bat", author: "jeremy", license: "CC-BY 3.0", url: "https://poly.pizza/m/fzJn9xTT-UO" },
+  },
+};
+
+export const hasModelAsset = (id: string) => id in MODEL_ASSETS;
+
 export const speciesById = (id: string) => SPECIES.find((s) => s.id === id)!;
 export const speciesInCategory = (c: Category) => SPECIES.filter((s) => s.category === c);
 export const categoryCount = (c: Category) => speciesInCategory(c).length;
