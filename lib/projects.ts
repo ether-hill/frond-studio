@@ -19,6 +19,16 @@ export type PersonalProject = {
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
   {
+    slug: "turtle-crossing",
+    title: "Turtle Crossing",
+    kicker: "CONSERVATION · INTERACTIVE FIELD RESOURCE",
+    summary:
+      "An interactive field resource for southwestern Ontario's eight at-risk turtle species. A living dusk marsh, field-guide plates of all eight, a to-scale season wheel of the turtle year, a road-rescue trainer, a habitat explorer — and the phone number that saves a thirty-year-old animal.",
+    year: "2026",
+    tags: ["Conservation", "Interactive", "Canvas", "Field Guide"],
+    href: "/projects/turtle-crossing",
+  },
+  {
     slug: "object-viewer",
     title: "Object Viewer",
     kicker: "3D VIEWER · CC0 MODELS · LIVE IN BROWSER",
