@@ -36,25 +36,32 @@ const cardFields = `
   thumbnailImage
 `;
 
+// Projects that stay in the dataset but are not shown under Work: no row on
+// /work or the home, no /work/<slug> page.
+//  - thomas-custom-marine: taken off the site and archived (content/archive/).
+//  - biophilia-matters-…: moved to the personal Projects list (lib/projects.ts).
+const HIDDEN_WORK_SLUGS = ["thomas-custom-marine", "biophilia-matters-design-and-creative-strategy"];
+
 // Timelapse Media lives in the personal Projects list (lib/projects.ts), not the
 // client Work section — exclude it here so it doesn't show in Recent Work / /work.
 export async function getProjects(): Promise<ProjectCard[]> {
   return client.fetch(
-    groq`*[_type == "project" && defined(slug.current) && !(slug.current match "timelapse*")] | order(order asc, title asc){${cardFields}}`,
-    {},
+    groq`*[_type == "project" && defined(slug.current) && !(slug.current match "timelapse*") && !(slug.current in $hidden)] | order(order asc, title asc){${cardFields}}`,
+    { hidden: HIDDEN_WORK_SLUGS },
     { next: { revalidate: 60 } }
   );
 }
 
 export async function getProjectSlugs(): Promise<string[]> {
   return client.fetch(
-    groq`*[_type == "project" && defined(slug.current)].slug.current`,
-    {},
+    groq`*[_type == "project" && defined(slug.current) && !(slug.current in $hidden)].slug.current`,
+    { hidden: HIDDEN_WORK_SLUGS },
     { next: { revalidate: 60 } }
   );
 }
 
 export async function getProject(slug: string): Promise<ProjectFull | null> {
+  if (HIDDEN_WORK_SLUGS.includes(slug)) return null;
   return client.fetch(
     groq`*[_type == "project" && slug.current == $slug][0]{
       ${cardFields},

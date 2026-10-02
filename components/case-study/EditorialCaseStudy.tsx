@@ -25,7 +25,16 @@ const PAD = { maxWidth: "var(--maxw)", margin: "0 auto", padding: "0 var(--gutte
 
 function Well({ media }: { media: EditorialMedia }) {
   if (!media.src) return <MediaPlaceholder label={media.label} />;
-  if (media.type === "video") return <AutoVideo src={media.src} poster={media.poster} />;
+  if (media.type === "video") return <AutoVideo src={media.src} mobileSrc={media.srcMobile} poster={media.poster} />;
+  if (media.type === "embed") {
+    return (
+      <div className="ecs-embed">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {media.poster ? <img src={media.poster} alt={media.alt} loading="lazy" decoding="async" /> : null}
+        <iframe src={media.src} title={media.alt} loading="lazy" tabIndex={-1} sandbox="allow-scripts allow-same-origin" />
+      </div>
+    );
+  }
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={media.src} alt={media.alt} loading="lazy" decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
@@ -62,7 +71,7 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
       </div>
       <div className="ecs-hero-screen">
         {p.hero.type === "video" ? (
-          <AutoVideo src={p.hero.src} poster={p.hero.poster} objectFit="contain" />
+          <AutoVideo src={p.hero.src} mobileSrc={p.hero.srcMobile} poster={p.hero.poster} objectFit="contain" />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={p.hero.src} alt={p.hero.alt} loading="lazy" decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
@@ -120,8 +129,16 @@ export default function EditorialCaseStudy({ project, moreWork = [] }: { project
             </div>
             <div className="ecs-meta">
               <div>
-                <Eyebrow color="var(--fg-faint)">Client</Eyebrow>
-                <div style={{ marginTop: 12, fontSize: 17, color: "var(--fg)" }}>{p.client}</div>
+                <Eyebrow color="var(--fg-faint)">{p.clientLabel ?? "Client"}</Eyebrow>
+                <div style={{ marginTop: 12, fontSize: 17, color: "var(--fg)" }}>
+                  {p.clientLink && p.client.includes(p.clientLink.text) ? (
+                    <>
+                      {p.client.split(p.clientLink.text)[0]}
+                      <a className="linku" href={p.clientLink.href} target="_blank" rel="noopener noreferrer">{p.clientLink.text}</a>
+                      {p.client.split(p.clientLink.text)[1]}
+                    </>
+                  ) : p.client}
+                </div>
               </div>
               <div>
                 <Eyebrow color="var(--fg-faint)">Services</Eyebrow>

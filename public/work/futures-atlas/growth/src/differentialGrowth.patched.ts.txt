@@ -1,0 +1,365 @@
+// differentialGrowth — a polyline that relaxes under three competing forces and
+// keeps growing, buckling into brain-coral / hyphal folds (Hoff-lineage
+// differential growth):
+//   1. rest-length springs hold neighbours at a target spacing,
+//   2. short-range repulsion (via a spatial hash, so it scales to thousands of
+//      nodes instead of O(n²)) keeps the curve from overlapping,
+//   3. a curl/Perlin-noise field gently steers the buckling into flowing ridges.
+// Edges longer than the split length spawn a midpoint, so the line lengthens and
+// is forced to fold. Rendered as a smooth (Catmull-Rom) closed curve.
+// complexity = node budget; chaos = jitter / field turbulence; flow = field strength.
+
+import type { Piece, PieceContext, PieceFactory, ParamSchema } from "../core/piece";
+import type { RNG } from "../core/rng";
+import type { NoiseKit } from "../core/noise";
+import type { Palette } from "../core/color/theme";
+import { sample } from "../core/color/theme";
+import { count } from "../core/meta";
+
+const TAU = Math.PI * 2;
+// Patched: read live, so the page can ease the pace once the band is full.
+const rate = (): number => Number((globalThis as any).__RATE ?? 1);
+const clamp = (v: number, a: number, b: number): number => (v < a ? a : v > b ? b : v);
+
+class DifferentialGrowth implements Piece {
+  id = "differential-growth";
+  title = "Differential Growth";
+  tags = ["nature", "flow"];
+  backend = "canvas2d" as const;
+  schema: ParamSchema = {
+    lineWidth: { type: "number", min: 0.4, max: 3, step: 0.1, default: 1, label: "line width" },
+    flow: { type: "number", min: 0, max: 1, step: 0.01, default: 0.35, label: "flow field" },
+    fieldScale: { type: "number", min: 0.4, max: 4, step: 0.05, default: 1.4, label: "field scale" },
+  };
+
+  private ctx!: CanvasRenderingContext2D;
+  private w = 1;
+  private h = 1;
+  private unit = 1;
+  private pal!: Palette;
+  private rng!: RNG;
+  private noise!: NoiseKit;
+
+  private xs: number[] = [];
+  private ys: number[] = [];
+  private age: number[] = [];
+  private maxNodes = 4000;
+  private chaos = 0.45;
+  private lw = 1;
+  private pFlow = 0.35;
+  private pFieldScale = 1.4;
+  private step = 0;
+  private framesSincePrune = 0;
+
+  // spatial-hash scratch
+  private head = new Int32Array(0);
+  private next = new Int32Array(0);
+  private cols = 1;
+  private rows = 1;
+  private cell = 1;
+
+  // per-node force accumulators
+  private fx = new Float32Array(0);
+  private fy = new Float32Array(0);
+
+  init(ctx: PieceContext): void {
+    if (ctx.surface.kind !== "canvas2d") throw new Error("growth: canvas2d");
+    this.ctx = ctx.surface.ctx;
+    this.w = ctx.width;
+    this.h = ctx.height;
+    this.unit = Number((globalThis as any).__UNIT) || Math.min(this.w, this.h);
+    this.pal = ctx.palette;
+    this.rng = ctx.rng;
+    this.noise = ctx.noise;
+    this.lw = Number(ctx.params.lineWidth);
+    this.pFlow = Number(ctx.params.flow);
+    this.pFieldScale = Number(ctx.params.fieldScale);
+    this.applyMeta(ctx.meta.complexity, ctx.meta.chaos);
+    this.seed();
+    this.clear();
+  }
+
+  applyMeta(complexity: number, chaos: number): void {
+    this.maxNodes = Number((globalThis as any).__MAX_NODES) || count(complexity, 1200, 8000);
+    this.chaos = chaos;
+  }
+
+  private clear(): void {
+    this.ctx.fillStyle = this.pal.bg;
+    this.ctx.fillRect(0, 0, this.w, this.h);
+  }
+
+  private seed(): void {
+    const n = 44;
+    const r = this.unit * 0.05;
+    const wob = this.rng.range(0, TAU);
+    this.xs = [];
+    this.ys = [];
+    this.age = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * TAU;
+      const rr = r * (1 + 0.06 * Math.sin(a * 3 + wob) + this.rng.range(-0.02, 0.02));
+      this.xs.push(this.w / 2 + Math.cos(a) * rr);
+      this.ys.push(this.h / 2 + Math.sin(a) * rr);
+      this.age.push(0);
+    }
+    this.step = 0;
+  }
+
+  private restLen(): number {
+    return this.unit * 0.012;
+  }
+
+  private rebuildHash(repelR: number): void {
+    const n = this.xs.length;
+    this.cell = repelR;
+    this.cols = Math.max(1, Math.ceil(this.w / this.cell));
+    this.rows = Math.max(1, Math.ceil(this.h / this.cell));
+    const ncells = this.cols * this.rows;
+    if (this.head.length < ncells) this.head = new Int32Array(ncells);
+    this.head.fill(-1, 0, ncells);
+    if (this.next.length < n) this.next = new Int32Array(n);
+    for (let i = 0; i < n; i++) {
+      const gx = clamp((this.xs[i]! / this.cell) | 0, 0, this.cols - 1);
+      const gy = clamp((this.ys[i]! / this.cell) | 0, 0, this.rows - 1);
+      const c = gy * this.cols + gx;
+      this.next[i] = this.head[c]!;
+      this.head[c] = i;
+    }
+  }
+
+  private relax(repelR: number, repelStr: number, springStr: number, jitter: number): void {
+    const n = this.xs.length;
+    const { xs, ys } = this;
+    if (this.fx.length < n) {
+      this.fx = new Float32Array(n);
+      this.fy = new Float32Array(n);
+    }
+    const fx = this.fx;
+    const fy = this.fy;
+    fx.fill(0, 0, n);
+    fy.fill(0, 0, n);
+    const rest = this.restLen();
+    const minSpace = Math.max(rest * 0.85, repelR * 0.45);
+    const r2 = repelR * repelR;
+
+    this.rebuildHash(repelR);
+    // short-range repulsion via spatial hash
+    for (let i = 0; i < n; i++) {
+      const xi = xs[i]!;
+      const yi = ys[i]!;
+      const gx = clamp((xi / this.cell) | 0, 0, this.cols - 1);
+      const gy = clamp((yi / this.cell) | 0, 0, this.rows - 1);
+      for (let oy = -1; oy <= 1; oy++) {
+        const cy = gy + oy;
+        if (cy < 0 || cy >= this.rows) continue;
+        for (let ox = -1; ox <= 1; ox++) {
+          const cx = gx + ox;
+          if (cx < 0 || cx >= this.cols) continue;
+          let j = this.head[cy * this.cols + cx]!;
+          while (j !== -1) {
+            if (j > i) {
+              const dx = xi - xs[j]!;
+              const dy = yi - ys[j]!;
+              const d2 = dx * dx + dy * dy;
+              if (d2 < r2 && d2 > 1e-6) {
+                const d = Math.sqrt(d2);
+                const target = Math.max(minSpace, d);
+                const push = ((repelR - d) / repelR) * repelStr * target;
+                const inv = 1 / d;
+                const px = dx * inv * push;
+                const py = dy * inv * push;
+                fx[i] += px;
+                fy[i] += py;
+                fx[j]! -= px;
+                fy[j]! -= py;
+              }
+            }
+            j = this.next[j]!;
+          }
+        }
+      }
+    }
+
+    // springs (toward neighbour midpoint + rest length) + jitter + curl-noise field
+    const ns = (this.pFieldScale * 2.4) / this.unit;
+    const flowAmp = this.pFlow * this.unit * 0.006;
+    const RATE = rate();
+    const ph = this.step * 0.003 * RATE;
+    for (let i = 0; i < n; i++) {
+      const a = (i - 1 + n) % n;
+      const b = (i + 1) % n;
+      const mx = (xs[a]! + xs[b]!) * 0.5;
+      const my = (ys[a]! + ys[b]!) * 0.5;
+      fx[i]! += (mx - xs[i]!) * springStr * 0.5;
+      fy[i]! += (my - ys[i]!) * springStr * 0.5;
+      // rest-length springs to each neighbour
+      for (const nb of [a, b]) {
+        const dx = xs[nb]! - xs[i]!;
+        const dy = ys[nb]! - ys[i]!;
+        const d = Math.hypot(dx, dy) || 1e-6;
+        const diff = ((d - rest) / d) * springStr * 0.5;
+        fx[i]! += dx * diff;
+        fy[i]! += dy * diff;
+      }
+      // curl-noise flow field — steers the buckling into flowing ridges
+      if (flowAmp > 0) {
+        const [cxn, cyn] = this.noise.curl(xs[i]! * ns + ph, ys[i]! * ns - ph);
+        fx[i]! += cxn * flowAmp;
+        fy[i]! += cyn * flowAmp;
+      }
+      if (jitter > 0) {
+        fx[i]! += this.rng.gaussian(0, 1) * jitter;
+        fy[i]! += this.rng.gaussian(0, 1) * jitter;
+      }
+    }
+
+    // apply, clamped so a frame can't explode; soft-contain to the frame
+    const maxMove = repelR * 0.9;
+    const m = this.unit * 0.02; // margin
+    for (let i = 0; i < n; i++) {
+      let dx = fx[i]!;
+      let dy = fy[i]!;
+      const mm2 = dx * dx + dy * dy;
+      if (mm2 > maxMove * maxMove) {
+        const sc = maxMove / Math.sqrt(mm2);
+        dx *= sc;
+        dy *= sc;
+      }
+      let nx = xs[i]! + dx * RATE;
+      let ny = ys[i]! + dy * RATE;
+      if (nx < m) nx += (m - nx) * 0.5;
+      else if (nx > this.w - m) nx -= (nx - (this.w - m)) * 0.5;
+      if (ny < m) ny += (m - ny) * 0.5;
+      else if (ny > this.h - m) ny -= (ny - (this.h - m)) * 0.5;
+      xs[i] = nx;
+      ys[i] = ny;
+    }
+  }
+
+  private grow(): void {
+    const { xs, ys, age } = this;
+    const n = xs.length;
+    if (n >= this.maxNodes) return;
+    const splitLen = this.restLen() * 1.7;
+    const split2 = splitLen * splitLen;
+    let room = this.maxNodes - n;
+    const start = 0;
+    // collect midpoints for edges that stretched past the split length
+    const nx: number[] = [];
+    const ny: number[] = [];
+    const na: number[] = [];
+    for (let k = 0; k < n; k++) {
+      const i = (start + k) % n;
+      nx.push(xs[i]!);
+      ny.push(ys[i]!);
+      na.push(age[i]!);
+      if (room <= 0) continue;
+      const b = (i + 1) % n;
+      const dx = xs[b]! - xs[i]!;
+      const dy = ys[b]! - ys[i]!;
+      if (dx * dx + dy * dy > split2) {
+        nx.push((xs[i]! + xs[b]!) * 0.5);
+        ny.push((ys[i]! + ys[b]!) * 0.5);
+        na.push(this.step);
+        room--;
+      }
+    }
+    this.xs = nx;
+    this.ys = ny;
+    this.age = na;
+  }
+
+  private prune(): void {
+    // at the cap, cut a chunk so the strand keeps re-buckling instead of freezing
+    const n = this.xs.length;
+    const remove = clamp(Math.round(n * (0.12 + this.chaos * 0.12)), 1, n - 60);
+    const start = this.rng.int(0, n - 1);
+    const end = Math.min(n, start + remove);
+    this.xs.splice(start, end - start);
+    this.ys.splice(start, end - start);
+    this.age.splice(start, end - start);
+  }
+
+  update(): void {
+    const repelR = this.unit * 0.02;
+    const repelStr = 0.5;
+    const springStr = 0.32;
+    const jitter = (this.unit * 0.0004) * (0.5 + this.chaos);
+    const subSteps = 2 + Math.round(2 * this.chaos);
+    for (let s = 0; s < subSteps; s++) this.relax(repelR, repelStr, springStr, jitter);
+    this.step++;
+    if (this.xs.length < this.maxNodes) {
+      this.grow();
+    } else if (!(globalThis as any).__NO_PRUNE && ++this.framesSincePrune >= 4) {
+      this.framesSincePrune = 0;
+      this.prune();
+    }
+  }
+
+  render(): void {
+    const { ctx, xs, ys } = this;
+    const n = xs.length;
+    ctx.fillStyle = this.pal.bg;
+    ctx.fillRect(0, 0, this.w, this.h);
+    if (n < 3) return;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    const P = (i: number): [number, number] => {
+      const k = ((i % n) + n) % n;
+      return [xs[k]!, ys[k]!];
+    };
+    const path = new Path2D();
+    path.moveTo(xs[0]!, ys[0]!);
+    for (let i = 0; i < n; i++) {
+      const [p0x, p0y] = P(i - 1);
+      const [p1x, p1y] = P(i);
+      const [p2x, p2y] = P(i + 1);
+      const [p3x, p3y] = P(i + 2);
+      const c1x = p1x + (p2x - p0x) / 6;
+      const c1y = p1y + (p2y - p0y) / 6;
+      const c2x = p2x - (p3x - p1x) / 6;
+      const c2y = p2y - (p3y - p1y) / 6;
+      path.bezierCurveTo(c1x, c1y, c2x, c2y, p2x, p2y);
+    }
+    path.closePath();
+
+    const OX = Number((globalThis as any).__OX ?? 0);
+    const OY = Number((globalThis as any).__OY ?? 0);
+    ctx.save();
+    ctx.translate(-OX, -OY);
+    const lw = this.lw;
+    const c = (t: number): string => {
+      const rgb = sample(this.pal, t);
+      return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+    };
+    // soft wide underlay for depth, then the crisp bright ridge
+    ctx.strokeStyle = c(0.45);
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = lw * 3;
+    ctx.stroke(path);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = c(0.92);
+    ctx.lineWidth = lw;
+    ctx.stroke(path);
+    ctx.restore();
+  }
+
+  resize(w: number, h: number): void {
+    this.w = w;
+    this.h = h;
+    this.unit = Number((globalThis as any).__UNIT) || Math.min(w, h);
+    this.seed();
+    this.clear();
+  }
+
+  reseed(): void {
+    this.seed();
+    this.clear();
+  }
+
+  dispose(): void {}
+}
+
+export const createDifferentialGrowth: PieceFactory = () => new DifferentialGrowth();

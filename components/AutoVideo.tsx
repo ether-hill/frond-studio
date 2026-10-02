@@ -7,10 +7,12 @@ import { useEffect, useRef } from "react";
  * its box. Pass `noFade` to let CSS own opacity (for blend-mode backdrops), and
  * `objectFit="contain"` to letterbox instead of crop. An IntersectionObserver
  * re-asserts muted + play() when it enters the viewport (reliable autoplay) and
- * pauses it off-screen.
+ * pauses it off-screen. `mobileSrc` is a lighter encode that narrow screens load
+ * instead of `src`.
  */
 export default function AutoVideo({
   src,
+  mobileSrc,
   poster,
   style,
   className,
@@ -18,6 +20,7 @@ export default function AutoVideo({
   noFade = false,
 }: {
   src: string;
+  mobileSrc?: string;
   poster?: string;
   style?: React.CSSProperties;
   className?: string;
@@ -70,7 +73,7 @@ export default function AutoVideo({
   return (
     <video
       ref={ref}
-      src={src}
+      src={mobileSrc ? undefined : src}
       poster={poster}
       muted
       loop
@@ -87,6 +90,13 @@ export default function AutoVideo({
         transition: "opacity 1.3s ease, transform 1.5s cubic-bezier(0.16, 1, 0.3, 1)",
         ...style,
       }}
-    />
+    >
+      {mobileSrc ? (
+        <>
+          <source src={mobileSrc} media="(max-width: 700px)" type="video/mp4" />
+          <source src={src} type="video/mp4" />
+        </>
+      ) : null}
+    </video>
   );
 }

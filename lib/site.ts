@@ -1,3 +1,7 @@
+// The production origin. Canonical URLs, Open Graph URLs, the sitemap and
+// robots.txt are all built from it.
+export const SITE_URL = "https://frond-studio.com";
+
 export const EMAIL = "hello@frond.studio";
 
 // Placeholder media — replace with real per-project videos/posters in production.

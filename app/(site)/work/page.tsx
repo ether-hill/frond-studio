@@ -7,7 +7,8 @@ import { getWorkCards } from "@/lib/work";
 
 export const metadata: Metadata = {
   title: "Work — Frond Studio",
-  description: "Selected client work in design, development and art direction.",
+  description: "Selected client work and studio ventures in design, development and art direction.",
+  alternates: { canonical: "/work" },
 };
 
 export const revalidate = 60;
@@ -20,7 +21,7 @@ export default async function WorkPage() {
       <section className="page-gutter" style={{ maxWidth: "var(--maxw)", margin: "0 auto", padding: "var(--pad-top) var(--gutter) var(--pad-bottom)" }}>
         <PageHeader
           title="Work"
-          intro="Selected client work in design, development and art direction, for people who care how things are built."
+          intro="Selected client work and studio ventures in design, development and art direction, for people who care how things are built."
         />
 
         <div style={{ marginTop: "clamp(56px,8vh,104px)", display: "flex", flexDirection: "column", gap: "clamp(72px,11vh,140px)" }}>
