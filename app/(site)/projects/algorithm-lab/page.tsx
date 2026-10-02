@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { projectShareCard } from "@/lib/projects";
 import RevealRoot from "@/components/RevealRoot";
 import AlgorithmLab from "@/components/projects/algorithm-lab/AlgorithmLab";
 import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
+  ...projectShareCard("algorithm-lab"),
   title: "Algorithm Lab — Frond Studio",
   description:
     "A live lab of nature-inspired generative systems — sonar lattices, venation, differential growth, phyllotaxis, strange attractors, fluids and reaction-diffusion. Pick one, tune it live, record it as a smooth motion-graphic background.",

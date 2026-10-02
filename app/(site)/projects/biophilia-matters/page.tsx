@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { projectShareCard } from "@/lib/projects";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import MoreProjects from "@/components/MoreProjects";
@@ -7,13 +8,7 @@ export const metadata: Metadata = {
   title: "Biophilia Matters · Frond Studio",
   description:
     "Exploring plant and fungi based innovation and appreciation through design and creative strategy.",
-  alternates: { canonical: "/projects/biophilia-matters" },
-  openGraph: {
-    title: "Biophilia Matters · Frond Studio",
-    description: "Exploring plant and fungi based innovation and appreciation through design and creative strategy.",
-    url: "/projects/biophilia-matters",
-    images: [{ url: "/posters/biophilia-matters-design-and-creative-strategy.jpg" }],
-  },
+  ...projectShareCard("biophilia-matters"),
 };
 
 // Moved here from the client Work list. The copy and media are the project's

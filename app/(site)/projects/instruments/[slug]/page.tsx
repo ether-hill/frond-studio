@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { shareCard } from "@/lib/site";
 import RevealRoot from "@/components/RevealRoot";
 import InstrumentMount, { type InstrumentKind } from "@/components/projects/instruments/InstrumentMount";
 import MoreProjects from "@/components/MoreProjects";
@@ -18,7 +19,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const m = INSTRUMENTS[slug];
-  return m ? { title: m.title, description: m.desc } : { title: "Instruments — Frond Studio" };
+  return m
+    ? { title: m.title, description: m.desc, ...shareCard(`/projects/instruments/${slug}`, `/cards/inst-${slug}.jpg`) }
+    : { title: "Instruments — Frond Studio" };
 }
 
 export default async function InstrumentPage({ params }: { params: Promise<{ slug: string }> }) {

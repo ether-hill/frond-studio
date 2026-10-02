@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { projectShareCard } from "@/lib/projects";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import MoreProjects from "@/components/MoreProjects";
 import CymaticsSimulator from "@/components/projects/cymatics/CymaticsSimulator";
 
 export const metadata: Metadata = {
+  ...projectShareCard("cymatics"),
   title: "Cymatics — Sound Made Visible · Frond Studio",
   description:
     "An interactive cymatics simulator and live-display research rig — vibrating water at key frequencies to induce complex geometry, exploring how sound, tone and resonance shape matter.",

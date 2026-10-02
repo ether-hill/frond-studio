@@ -17,6 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/contact",
     ...work.map((p) => `/work/${p.slug}`),
     ...PERSONAL_PROJECTS.filter((p) => !p.external && p.href.startsWith("/projects/")).map((p) => p.href),
+    ...["juno-106", "space-echo", "theremin", "biome"].map((s) => `/projects/instruments/${s}`),
   ];
   return [...new Set(paths)].map((path) => ({
     url: `${SITE_URL}${path === "/" ? "" : path}`,
