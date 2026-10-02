@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { projectShareCard } from "@/lib/projects";
 import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
@@ -9,6 +10,7 @@ import FungiGallery, { type GalleryItem } from "@/components/projects/fungi-sour
 import { FUNGI_BOOKS, FUNGI_PLATES } from "@/content/fungi-source";
 
 export const metadata: Metadata = {
+  ...projectShareCard("fungi-source"),
   title: "Fungi Source · Frond Studio",
   description:
     "A far-and-wide search for the literature of fungi — gathered, translated and catalogued into one open, free, API-accessible database for AI-driven research, and handed off to Source Library.",

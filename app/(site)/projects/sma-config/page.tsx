@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { projectShareCard } from "@/lib/projects";
 import RevealRoot from "@/components/RevealRoot";
 import SmaConfig from "@/components/projects/sma-config/SmaConfig";
 import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
+  ...projectShareCard("sma-config"),
   title: "SMA Config — Frond Studio",
   description:
     "An advanced real-time GPU studio for the Jones (2010) agent-based Physarum slime-mould model — sculpt the parameters live.",

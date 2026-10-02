@@ -3,6 +3,8 @@
 // data object here. Each `href` points either at an internal ported page
 // (e.g. /projects/algorithms) or an external link (set `external: true`).
 
+import { shareCard } from "./site";
+
 export type PersonalProject = {
   slug: string;
   title: string;
@@ -171,3 +173,9 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     hideOnHome: true,
   },
 ];
+
+/** Canonical URL and share card for a project page, using its card image. */
+export function projectShareCard(slug: string) {
+  const p = PERSONAL_PROJECTS.find((x) => x.slug === slug);
+  return shareCard(p?.href ?? `/projects/${slug}`, p?.image);
+}

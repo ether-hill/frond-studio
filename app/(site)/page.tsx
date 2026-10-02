@@ -7,7 +7,12 @@ import SelectedProjects from "@/components/SelectedProjects";
 import FeaturedInstrument from "@/components/FeaturedInstrument";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
 import Cta from "@/components/Cta";
+import type { Metadata } from "next";
 import { getWorkCards } from "@/lib/work";
+import { shareCard } from "@/lib/site";
+
+// Title and description come from the root layout.
+export const metadata: Metadata = { ...shareCard("/") };
 
 export const revalidate = 60;
 

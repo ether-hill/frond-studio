@@ -4,11 +4,12 @@ import PageHeader from "@/components/PageHeader";
 import CaseStudyRow from "@/components/CaseStudyRow";
 import Cta from "@/components/Cta";
 import { getWorkCards } from "@/lib/work";
+import { shareCard } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Work — Frond Studio",
   description: "Selected client work and studio ventures in design, development and art direction.",
-  alternates: { canonical: "/work" },
+  ...shareCard("/work"),
 };
 
 export const revalidate = 60;

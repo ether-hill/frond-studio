@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { projectShareCard } from "@/lib/projects";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import VideoPlayer from "@/components/projects/symcyto/VideoPlayer";
 import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
+  ...projectShareCard("timelapse-media-production"),
   title: "Timelapse Media Production · Frond Studio",
   description:
     "Process design, rigging, content creation and consulting for timelapse photography and film production — focussed on the kingdoms of plants, fungi and slime mould.",

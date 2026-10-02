@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { projectShareCard } from "@/lib/projects";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import VideoPlayer from "@/components/projects/symcyto/VideoPlayer";
 import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
+  ...projectShareCard("cymatics-bubbles"),
   title: "Spherical Cymatics in High Performance Bubbles · Frond Studio",
   description:
     "Research & development: cymatic patterns in hard-to-pop, high-performance bubbles — a multisensory study of sound made visible in three dimensions, with thin-film interference colour.",
