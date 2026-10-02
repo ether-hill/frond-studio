@@ -7,10 +7,14 @@
 export type EditorialRatio = "16:9" | "4:5" | "3:4" | "1:1";
 
 export type EditorialMedia = {
-  type: "image" | "video";
+  /** "embed" plays a live page in an iframe (src is its URL), for generative
+      pieces that a video cannot hold sharp; poster is the still shown underneath. */
+  type: "image" | "video" | "embed";
   /** Empty string renders a labelled placeholder well so a page can ship early. */
   src: string;
-  /** Poster frame for video (also the reduced-motion still). */
+  /** Video only: a lighter encode that narrow screens load instead of `src`. */
+  srcMobile?: string;
+  /** Poster frame for video or embed (also the reduced-motion still). */
   poster?: string;
   alt: string;
   ratio: EditorialRatio;
@@ -49,6 +53,10 @@ export type EditorialProject = {
   introLead: string;
   introBody: string;
   client: string;
+  /** Eyebrow above the client line (default "Client"). Studio ventures set their own. */
+  clientLabel?: string;
+  /** Optional name inside `client` to link, e.g. a partner ({ text, href }). */
+  clientLink?: { text: string; href: string };
   services: string[];
 
   /** Points shown on the /work preview card. Falls back to the stats when omitted. */

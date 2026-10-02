@@ -1,0 +1,112 @@
+// Differential Growth, slowed. The piece is the one on the Futures Atlas
+// (futures-atlas-02, generatives/src/pieces/differentialGrowth.ts, MIT), with
+// three small changes: every per-step displacement is scaled by RATE so the
+// line moves gently, the strokes are drawn into a band-shaped window on the
+// middle of a slightly larger simulation, and at its node budget the line is
+// left whole instead of being pruned. It grows until the band is full, eases
+// off and keeps folding a little longer, fades out, and starts again from a
+// new seed.
+import { createDifferentialGrowth } from "./src/pieces/differentialGrowth";
+import { createSurface } from "./src/core/surface";
+import { makeRng } from "./src/core/rng";
+import { makeNoise } from "./src/core/noise";
+import { makePaletteFromColors } from "./src/core/color/theme";
+
+const G = globalThis as any;
+const canvas = document.getElementById("c") as HTMLCanvasElement;
+const q = new URLSearchParams(location.search);
+const num = (k: string, d: number) => Number(q.get(k)) || d;
+const small = Math.min(innerWidth, innerHeight * 3) < 1400;
+const complexity = 1;
+// A cycle shows from START nodes to STOP nodes. The scale of the folds (UNIT, as
+// a share of the width) is set so that STOP nodes just about fill the band.
+const START = num("start", small ? 500 : 1000);
+const STOP = num("stop", small ? 2900 : 5800);
+const UNIT = num("unit", 0.9);
+const HOLD = num("hold", 9) * 1000; // ms the full band stays up before it fades
+const BASE_RATE = Number(G.__RATE) || 0.032;
+const HOLD_RATE = BASE_RATE * 0.25;   // once full, the line keeps folding, more gently
+G.__MAX_NODES = Math.round(STOP * 1.25);
+G.__NO_PRUNE = 1;
+const WARM_MAX = 40000;
+
+let piece = createDifferentialGrowth();
+let stepsPerSec = 60;
+
+function mount(): void {
+  const w = Math.max(2, innerWidth), h = Math.max(2, innerHeight);
+  canvas.width = w;
+  canvas.height = h;
+  // The simulation runs in a frame a little larger than the band, and the band
+  // shows its middle. The line meets the top and bottom early and is pushed
+  // sideways, so it fills the band, and where it piles up against the frame's
+  // edges is out of sight.
+  const simW = Math.round(w * 1.08), simH = Math.round(h * 1.15);
+  G.__OX = (simW - w) / 2;
+  G.__OY = (simH - h) / 2;
+  G.__UNIT = w * UNIT;
+  const surface = createSurface(canvas, piece.backend);
+  (surface as any).width = w;
+  (surface as any).height = h;
+  const rng = makeRng("frond-" + Math.floor(Math.random() * 1e6));
+  piece.init({
+    surface, width: simW, height: simH, rng, noise: makeNoise(rng),
+    palette: makePaletteFromColors({ bg: "#05070d", lo: "#2a3a8f", hi: "#9fe7ff" }),
+    params: { lineWidth: w >= 2000 ? 2 : 1, flow: 0.35, fieldScale: 1.4 },
+    meta: { complexity, chaos: 0.2 },
+  });
+  warm = WARM_MAX;
+}
+
+let visible = true, fading = false, last = 0, acc = 0, warm = 0, fullAt = 0;
+function tick(now: number): void {
+  requestAnimationFrame(tick);
+  if (warm > 0) {
+    // Warm-up runs a slice per frame with the canvas still transparent, so it
+    // never holds up the page this frame sits in.
+    const until = performance.now() + 6;
+    while (warm > 0 && performance.now() < until) {
+      piece.update(1 / 60, 0);
+      warm = (piece as any).xs.length >= START ? 0 : warm - 1;
+    }
+    if (warm === 0) { piece.render(); canvas.style.opacity = "1"; fading = false; }
+    last = now;
+    return;
+  }
+  if (!visible || fading) { last = now; return; }
+  // The first rAF timestamp can precede the performance.now() taken at start-up,
+  // so the elapsed time is clamped at zero and the step count is never negative.
+  acc += Math.max(0, Math.min(0.05, (now - last) / 1000)) * stepsPerSec;
+  last = now;
+  const steps = Math.min(2, Math.floor(acc));
+  acc -= Math.floor(acc);
+  if (steps < 1) return;
+  const w0 = performance.now();
+  for (let i = 0; i < steps; i++) piece.update(1 / 60, 0);
+  piece.render();
+  G.__ms = (G.__ms || 0) * 0.9 + (performance.now() - w0) * 0.1;
+  const nodes = (piece as any).xs.length;
+  G.__n = nodes;
+  if (nodes >= STOP && !fullAt) { fullAt = now; G.__RATE = HOLD_RATE; }
+  // A machine that cannot keep up (the work per frame creeps past 14 ms) starts
+  // a fresh, lighter cycle early instead of dragging the page it sits in.
+  if ((fullAt && (now - fullAt > HOLD || nodes >= G.__MAX_NODES)) || G.__ms > 14) restart();
+}
+function restart(): void {
+  fading = true;
+  fullAt = 0;
+  G.__ms = 0;
+  G.__RATE = BASE_RATE;
+  canvas.style.opacity = "0";
+  setTimeout(() => {
+    piece = createDifferentialGrowth();
+    mount();
+  }, 2600);
+}
+
+mount();
+new IntersectionObserver((es) => { visible = es[es.length - 1].isIntersecting; }).observe(canvas);
+let rt = 0;
+addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(mount, 250) as unknown as number; });
+last = performance.now();
+requestAnimationFrame(tick);

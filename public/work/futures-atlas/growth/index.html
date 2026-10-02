@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Differential Growth</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #05070d; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100vh; opacity: 0; transition: opacity 2.4s ease; }
+</style>
+<canvas id="c"></canvas>
+<script>window.__RATE = Number(new URLSearchParams(location.search).get("rate")) || 0.032;</script>
+<script src="growth.js"></script>
+</html>

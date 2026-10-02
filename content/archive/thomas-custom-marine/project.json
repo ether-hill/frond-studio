@@ -1,0 +1,75 @@
+{
+  "_createdAt": "2026-06-14T21:13:34Z",
+  "_id": "project-thomas-custom-marine",
+  "_rev": "HNy9YN7pNh9lCaItYQaaAG",
+  "_type": "project",
+  "_updatedAt": "2026-06-15T14:31:53Z",
+  "client": "Thomas Custom Marine",
+  "keyPoints": [
+    "Modern, differentiated web presence",
+    "Custom video & cinemagraphs",
+    "Google Maps business locator"
+  ],
+  "liveUrl": "https://thomascustommarine.com",
+  "order": 9,
+  "overview": [
+    {
+      "_key": "b0",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "s0",
+          "_type": "span",
+          "marks": [],
+          "text": "We created a contemporary web presence for Thomas Custom Marine, an Ontario-based marine fabrication business and Certified SeaDek Fabricator."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    },
+    {
+      "_key": "b1",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "s1",
+          "_type": "span",
+          "marks": [],
+          "text": "Design elements were crafted to differentiate the client from competitors, supported by custom video production and cinemagraph assets."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    },
+    {
+      "_key": "b2",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "s2",
+          "_type": "span",
+          "marks": [],
+          "text": "A specialised integration combines Google Maps with Webflow's CMS to power a business locator tool, and the site also incorporates an online product catalogue for browsing their offerings."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    }
+  ],
+  "services": [
+    "Website",
+    "Design",
+    "Development",
+    "CMS",
+    "Video"
+  ],
+  "slug": {
+    "_type": "slug",
+    "current": "thomas-custom-marine"
+  },
+  "subtitle": "New Website & Custom Graphics",
+  "summary": "A sleek, modern Webflow website for Ontario's certified SeaDek fabricator, featuring custom video, cinemagraphs and a Google Maps powered business locator.",
+  "thumbnailImage": "https://cdn.prod.website-files.com/66814f0ee309216729bdc0f7/6695d87dd0fcb0d6be34b350_6687995b779e81908f195940_thomas%20custom%20marine%20website%20screengrab%20preview.avif",
+  "thumbnailVideo": "https://a.storyblok.com/f/69529/x/9de7cb5888/tcm-cinemagraphs-preview.mp4",
+  "title": "Thomas Custom Marine"
+}

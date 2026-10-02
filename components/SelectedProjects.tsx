@@ -8,7 +8,7 @@ import { PERSONAL_PROJECTS } from "@/lib/projects";
  */
 // Newest-first: PERSONAL_PROJECTS is maintained oldest→newest, so reverse to
 // surface the most recently added projects (the cymatics work) on the home.
-const RECENT = [...PERSONAL_PROJECTS].reverse().slice(0, 6);
+const RECENT = [...PERSONAL_PROJECTS].filter((p) => !p.hideOnHome).reverse().slice(0, 6);
 
 export default function SelectedProjects() {
   return (

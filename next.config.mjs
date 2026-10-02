@@ -11,6 +11,8 @@ const nextConfig = {
       { source: '/services', destination: '/about', permanent: true },
       // The EFM case study lives at the clean slug; redirect the older URL.
       { source: '/work/embassy-of-the-free-mind-case-study', destination: '/work/embassy-of-the-free-mind', permanent: true },
+      // Biophilia Matters moved from Work to the personal Projects list.
+      { source: '/work/biophilia-matters-design-and-creative-strategy', destination: '/projects/biophilia-matters', permanent: true },
     ];
   },
 };
