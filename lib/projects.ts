@@ -23,6 +23,17 @@ export type PersonalProject = {
 };
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
+  {
+    slug: "specimen-lab",
+    title: "Specimen Lab",
+    kicker: "GENERATIVE · 3D · LIVE IN BROWSER",
+    summary:
+      "An ongoing notebook of generative specimens. The first is a radiolarian sphere: a golden-angle lattice of Voronoi openings with bone-like struts and bead-tipped spines, grown from a seed and rendered live in greyscale.",
+    year: "2026",
+    tags: ["Generative", "Three.js", "WebGL"],
+    href: "/projects/specimen-lab",
+    image: "/cards/specimen-lab.jpg",
+  },
   // Studio ventures. Their case studies live under /work, so these two cards
   // link there. They sit first so they lead the /projects page, and so the
   // home "Recent Projects" (the last six, reversed) does not repeat what the
