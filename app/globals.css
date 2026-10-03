@@ -1748,6 +1748,16 @@ button {
 .cyma-section { max-width: var(--maxw); margin: 0 auto; padding: clamp(56px,10vh,120px) var(--gutter); }
 .cyma-narrow { max-width: 760px; }
 
+/* Specimen Lab — the live lab, framed */
+.spec-frame {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #000;
+  overflow: hidden;
+  height: clamp(520px, 82vh, 920px);
+}
+.spec-frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+
 /* Live simulator */
 .csim {
   margin-top: clamp(28px, 4.5vh, 52px);

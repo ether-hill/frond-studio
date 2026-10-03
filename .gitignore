@@ -35,3 +35,4 @@ next-env.d.ts
 
 # raw video source drops — only the optimised copies in /public are committed
 /video/
+.env*
