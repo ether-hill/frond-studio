@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { projectShareCard } from "@/lib/projects";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import VideoPlayer from "@/components/projects/symcyto/VideoPlayer";
@@ -7,6 +8,7 @@ import InstagramFeed from "@/components/projects/symcyto/InstagramFeed";
 import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
+  ...projectShareCard("symcyto"),
   title: "Symcyto — New Forms of Harvest · Frond Studio",
   description:
     "A collaboration with Physarum polycephalum — slime mould as both scientific subject and artistic medium. Timelapse bio-art and documentary content grown in smart-enabled studio ecosystems.",

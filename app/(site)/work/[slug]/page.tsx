@@ -33,6 +33,25 @@ export async function generateStaticParams() {
   return [...new Set([...editorialSlugs, ...contentProjectSlugs, ...slugs])].map((slug) => ({ slug }));
 }
 
+// Title, description, canonical URL and share card for one case study.
+function caseStudyMetadata(slug: string, title: string, description?: string, image?: string): Metadata {
+  const full = `${title} — Frond Studio`;
+  return {
+    title: full,
+    description,
+    alternates: { canonical: `/work/${slug}` },
+    openGraph: {
+      title: full,
+      description,
+      url: `/work/${slug}`,
+      siteName: "Frond Studio",
+      type: "article",
+      ...(image ? { images: [{ url: image }] } : {}),
+    },
+    twitter: { card: image ? "summary_large_image" : "summary", title: full, description, ...(image ? { images: [image] } : {}) },
+  };
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -40,19 +59,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const editorial = getEditorialProject(slug);
-  if (editorial) {
-    return { title: `${editorial.title} — Frond Studio`, description: editorial.oneLiner };
-  }
+  if (editorial) return caseStudyMetadata(slug, editorial.title, editorial.oneLiner, editorial.card?.poster);
   const content = getContentProject(slug);
-  if (content) {
-    return { title: `${content.title} — Frond Studio`, description: content.oneLiner };
-  }
+  if (content) return caseStudyMetadata(slug, content.title, content.oneLiner, content.homepageGrab?.src || undefined);
   const project = await getProject(slug);
   if (!project) return { title: "Project — Frond Studio" };
-  return {
-    title: `${project.title} — Frond Studio`,
-    description: project.summary || project.subtitle || undefined,
-  };
+  return caseStudyMetadata(slug, project.title, project.summary || project.subtitle || undefined, `/posters/${slug}.jpg`);
 }
 
 const meta = (label: string, value: React.ReactNode) => (

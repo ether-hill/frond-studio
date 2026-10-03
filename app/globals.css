@@ -262,6 +262,18 @@ button {
   background: var(--nav);
   border-bottom-color: var(--line);
 }
+/* A very light scrim at the very top of the page (data-nav="top"): darkest at the
+   very top, fading to nothing below, so the transparent nav's text stays legible
+   over the hero. Dark theme only — the light theme keeps its solid bar. */
+[data-theme="dark"] .nav-bar[data-nav="top"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 150px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.22), transparent);
+  pointer-events: none;
+  z-index: -1;
+}
 .seg button[data-on="true"] {
   background: var(--fg);
   color: var(--bg-0);
@@ -597,6 +609,13 @@ button {
 }
 .cs-row[data-flip="true"] .cs-text {
   order: 1;
+}
+/* The site-wide `ul li { white-space: nowrap }` made long bullet points push
+   the page wider than a phone screen; these lists wrap. */
+.cs-row li,
+.ecs-ba li,
+.sym-root li {
+  white-space: normal;
 }
 .cs-row .cs-title {
   transition: color 0.4s ease;
@@ -1826,13 +1845,15 @@ button {
 }
 
 /* ── Editorial case study (EditorialCaseStudy.tsx) ─────────────────────── */
-.ecs-frame { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--bg-2); box-shadow: 0 50px 130px rgba(0, 0, 0, 0.55); }
+/* Browser-frame chrome is pinned to a charcoal (a touch lighter than near-black)
+   in BOTH themes, so it always reads as a dark browser around the client site. */
+.ecs-frame { border: 1px solid rgba(241, 237, 229, 0.14); border-radius: 14px; overflow: hidden; background: #201e24; box-shadow: 0 50px 130px rgba(0, 0, 0, 0.55); }
 .ecs-frame-flat { box-shadow: none; }
 /* Showcase: a full-width rounded media well (feature video + text section). */
 .ecs-showcase-well { position: relative; width: 100%; border-radius: 14px; overflow: hidden; background: var(--media); border: 1px solid var(--line-2); }
-.ecs-frame-bar { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid var(--line-2); background: color-mix(in srgb, var(--bg-2) 70%, var(--bg-0)); }
-.ecs-frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); display: block; }
-.ecs-url { margin-left: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--fg-faint); background: var(--bg-0); border: 1px solid var(--line-2); border-radius: 7px; padding: 5px 13px; flex: 1 1 auto; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecs-frame-bar { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid rgba(241, 237, 229, 0.08); background: #29262e; }
+.ecs-frame-bar i { width: 10px; height: 10px; border-radius: 50%; background: rgba(241, 237, 229, 0.22); display: block; }
+.ecs-url { margin-left: 10px; font-family: var(--font-mono); font-size: 11px; color: #b6b0a6; background: #19171c; border: 1px solid rgba(241, 237, 229, 0.10); border-radius: 7px; padding: 5px 13px; flex: 1 1 auto; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ecs-frame-screen { position: relative; background: var(--media); }
 
 /* Hero: floating frosted browser card over a full-bleed atmospheric image. */
@@ -1846,7 +1867,6 @@ button {
 .ecs-hero-bar i { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.18); display: block; }
 .ecs-hero-url { margin-left: 14px; flex: 1 1 auto; max-width: 340px; height: 25px; border-radius: 999px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 0 14px; display: flex; align-items: center; font-family: var(--font-mono); font-size: 11px; color: rgba(244,240,232,0.6); white-space: nowrap; overflow: hidden; }
 .ecs-hero-screen { position: relative; border-radius: 9px; overflow: hidden; background: #16130f; aspect-ratio: 16 / 9; border: 1px solid rgba(255,255,255,0.06); }
-.ecs-hero-screen:hover video, .ecs-hero-screen:hover img { transform: scale(1.045); }
 
 /* Intro: text left, meta right (plain text, no pills + outline live button). */
 .ecs-intro { display: grid; grid-template-columns: 1.35fr 0.65fr; gap: clamp(40px, 6vw, 110px); align-items: start; }
@@ -1857,7 +1877,7 @@ button {
 /* Matching 4-col bordered grids (stats + tech). */
 /* Borders on the cells (not a container bg) so empty trailing cells show no grey. */
 .ecs-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line-2); border-left: 1px solid var(--line-2); }
-.ecs-cell { background: var(--bg-0); padding: clamp(22px, 2.4vw, 34px); border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
+.ecs-cell { min-width: 0; overflow-wrap: anywhere; background: var(--bg-0); padding: clamp(22px, 2.4vw, 34px); border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
 .ecs-techcell { display: flex; align-items: center; gap: 14px; min-height: 80px; }
 .ecs-techicon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--bg-2); color: var(--fg); }
 
@@ -1865,6 +1885,17 @@ button {
 .ecs-band { position: relative; width: 100vw; margin-left: calc(50% - 50vw); min-height: clamp(360px, 60vh, 620px); display: flex; align-items: flex-end; overflow: hidden; background: var(--media); }
 .ecs-band-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 9, 7, 0.2) 0%, rgba(10, 9, 7, 0) 30%, rgba(10, 9, 7, 0.78) 100%); z-index: 1; }
 .ecs-band-inner { position: relative; z-index: 2; width: 100%; padding-bottom: clamp(34px, 6vh, 72px) !important; padding-top: clamp(34px, 6vh, 72px) !important; }
+
+/* Live embed well: an iframe over its poster still. The frame takes no pointer
+   events so the page scrolls through it; reduced motion keeps the still. */
+.ecs-embed { position: absolute; inset: 0; overflow: hidden; }
+.ecs-embed img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* The Atlas players draw one canvas pixel per CSS pixel, so the frame is laid
+   out at twice the size and scaled back down to stay sharp on dense screens. */
+.ecs-embed iframe { position: absolute; top: 0; left: 0; width: 200%; height: 200%; border: 0; transform: scale(0.5); transform-origin: 0 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ecs-embed iframe { display: none; }
+}
 
 /* Device cluster — warm stage, overlapping phone + tablet + laptop (flex row). */
 .ecs-plate { background: #e8e2d6; border: 1px solid var(--line-2); border-radius: 16px; padding: clamp(30px, 5vw, 76px) clamp(18px, 4vw, 56px); }
@@ -1914,7 +1945,7 @@ button {
 
 @media (max-width: 900px) {
   .ecs-intro { grid-template-columns: 1fr; gap: 32px; }
-  .ecs-grid { grid-template-columns: repeat(2, 1fr); }
+  .ecs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ecs-films { grid-template-columns: 1fr; gap: 56px; }
   .ecs-circle { width: min(440px, 86%); }
 }
@@ -1930,7 +1961,7 @@ button {
   .ecs-dev-laptop { width: 100%; }
 }
 @media (max-width: 560px) {
-  .ecs-grid { grid-template-columns: 1fr 1fr; }
+  .ecs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ecs-band { min-height: 320px; }
 }
 

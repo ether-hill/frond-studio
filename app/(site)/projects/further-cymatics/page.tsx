@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { projectShareCard } from "@/lib/projects";
 import RevealRoot from "@/components/RevealRoot";
 import AutoVideo from "@/components/AutoVideo";
 import VideoPlayer from "@/components/projects/symcyto/VideoPlayer";
 import MoreProjects from "@/components/MoreProjects";
 
 export const metadata: Metadata = {
+  ...projectShareCard("further-cymatics"),
   title: "Further Cymatics · Frond Studio",
   description:
     "New cymatics rigs pairing sound with programmable light — RGB LED ring arrays driven by Arduino and DMX, temporal-aliasing tests that phase light against sound, and new vessel geometries.",

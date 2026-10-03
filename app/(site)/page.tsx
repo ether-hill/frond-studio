@@ -7,7 +7,12 @@ import SelectedProjects from "@/components/SelectedProjects";
 import FeaturedInstrument from "@/components/FeaturedInstrument";
 import CapabilitiesGraph from "@/components/CapabilitiesGraph";
 import Cta from "@/components/Cta";
+import type { Metadata } from "next";
 import { getWorkCards } from "@/lib/work";
+import { shareCard } from "@/lib/site";
+
+// Title and description come from the root layout.
+export const metadata: Metadata = { ...shareCard("/") };
 
 export const revalidate = 60;
 
@@ -73,8 +78,8 @@ export default async function Home() {
             <span style={{ display: "block", marginBottom: 9, fontSize: "clamp(10px,0.8vw,12px)", fontWeight: 600, letterSpacing: "0.08em", color: "var(--fg-dim)" }}>
               Things that matter to us:
             </span>
-            transdisciplinary and biophilic design, meandering, ethical AI, design systems, working remotely worldwide… the
-            planet, animal welfare, social justice…
+            Design that crosses disciplines and stays close to the natural world, AI we can stand behind, and systems made to
+            last. The same care extends past the work, to the planet and to social justice.
           </p>
         </div>
 

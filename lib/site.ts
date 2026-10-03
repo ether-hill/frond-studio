@@ -1,3 +1,29 @@
+// The production origin. Canonical URLs, Open Graph URLs, the sitemap and
+// robots.txt are all built from it.
+export const SITE_URL = "https://frond-studio.com";
+
+// The share image for any page without one of its own: the home hero, 1200x630.
+export const DEFAULT_SHARE_IMAGE = { url: "/og.jpg", width: 1200, height: 630, alt: "Frond Studio. Natural selections." };
+
+/**
+ * Canonical URL and share card for one page, to spread into its `metadata`.
+ * The title and description of the card are taken from the page's own. A page
+ * that sets `openGraph` replaces the site-wide one, so the site name is
+ * repeated here.
+ */
+export function shareCard(path: string, image?: string) {
+  return {
+    alternates: { canonical: path },
+    openGraph: {
+      siteName: "Frond Studio",
+      type: "website" as const,
+      locale: "en_GB",
+      url: path,
+      images: [image ? { url: image } : DEFAULT_SHARE_IMAGE],
+    },
+  };
+}
+
 export const EMAIL = "hello@frond.studio";
 
 // Placeholder media — replace with real per-project videos/posters in production.

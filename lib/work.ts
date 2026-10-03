@@ -33,7 +33,7 @@ const EDITORIAL_CARDS: ProjectCard[] = EDITORIAL_PROJECTS.map((p) => ({
   year: "2026",
   services: p.services,
   summary: p.oneLiner,
-  keyPoints: (p.stats ?? []).map((s) => `${s.value} ${s.label.toLowerCase()}`),
+  keyPoints: p.cardPoints ?? (p.stats ?? []).map((s) => `${s.value} ${s.label.toLowerCase()}`),
   thumbnailVideo: p.card?.video ?? null,
   thumbnailImage: p.card?.poster ?? null,
 }));

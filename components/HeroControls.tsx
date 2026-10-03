@@ -1,27 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { submitHeroVote } from "@/app/hero-vote-actions";
 
 /**
- * Hero control cluster (bottom-right): a small caption + four equal-height
- * buttons — Remix, a sound toggle, and 👍/👎.
+ * Hero control cluster (bottom-right): a small caption + two equal-height
+ * buttons — Remix and a sound toggle.
  *  - Remix re-seeds the live Jones/Physarum sim (hero-physarum-reseed) and, if
  *    sound is on, rolls a fresh random biome soundscape.
  *  - Sound toggles a generative biome soundscape (the instruments-rack engine,
  *    lazy-loaded on first enable; the click is the audio-unlock gesture).
- *  - 👍/👎 vote on the render on screen (via the hero-render / hero-feedback
- *    events + the global aggregate), teaching the randomiser.
  */
-type Render = { id: string; params: Record<string, unknown> };
 type BiomeLike = { start: () => Promise<void>; setMuted: (m: boolean) => void; apply: (s: unknown, m?: unknown) => void; setPalette?: (p: number[]) => void };
 
 export default function HeroControls() {
-  const [current, setCurrent] = useState<Render | null>(null);
-  const [flash, setFlash] = useState<"up" | "down" | null>(null);
   const [soundOn, setSoundOn] = useState(false);
   const [busy, setBusy] = useState(false);
-  const votedRef = useRef(false);
   const biomeRef = useRef<BiomeLike | null>(null);
   const rollRef = useRef<(() => void) | null>(null);
   const suspendRef = useRef<(() => void) | null>(null);
@@ -39,15 +32,7 @@ export default function HeroControls() {
   const restartRef = useRef<() => void>(() => {});
 
   useEffect(() => {
-    const onRender = (ev: Event) => {
-      const d = (ev as CustomEvent).detail as Render | undefined;
-      if (!d?.id) return;
-      votedRef.current = false;
-      setCurrent(d);
-    };
-    window.addEventListener("hero-render", onRender);
     return () => {
-      window.removeEventListener("hero-render", onRender);
       try {
         biomeRef.current?.setMuted(true);
         suspendRef.current?.();
@@ -172,16 +157,6 @@ export default function HeroControls() {
     }
   };
 
-  const vote = (dir: "up" | "down") => {
-    if (!current || votedRef.current) return;
-    votedRef.current = true;
-    const { id, params } = current;
-    submitHeroVote(id, dir, dir === "up" ? params : null).catch(() => {});
-    window.dispatchEvent(new CustomEvent("hero-feedback", { detail: { id, dir, params } }));
-    setFlash(dir);
-    window.setTimeout(() => setFlash(null), 600);
-  };
-
   return (
     <div className="hero-ctl" ref={rootRef}>
       <span className="hero-ctl-cap">Slime mold algorithm visualisation</span>
@@ -221,20 +196,6 @@ export default function HeroControls() {
             ) : (
               <path d="M17 9.5l4 5M21 9.5l-4 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
             )}
-          </svg>
-        </button>
-        <button type="button" className={`ui-btn ui-btn-icon${flash === "up" ? " voted" : ""}`} onClick={() => vote("up")} aria-label="More patterns like this" title="Show more like this">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-            <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <button type="button" className={`ui-btn ui-btn-icon${flash === "down" ? " voted" : ""}`} onClick={() => vote("down")} aria-label="Fewer patterns like this" title="Show fewer like this">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <g transform="rotate(180 12 12)">
-              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-              <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-            </g>
           </svg>
         </button>
       </div>

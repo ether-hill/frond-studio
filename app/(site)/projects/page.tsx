@@ -3,8 +3,10 @@ import Link from "next/link";
 import RevealRoot from "@/components/RevealRoot";
 import PageHeader from "@/components/PageHeader";
 import { PERSONAL_PROJECTS } from "@/lib/projects";
+import { shareCard } from "@/lib/site";
 
 export const metadata: Metadata = {
+  ...shareCard("/projects"),
   title: "Projects — Frond Studio",
   description:
     "The studio's own experiments, tools and generative pieces — a growing directory of things we make to keep things interesting.",

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import RevealRoot from "@/components/RevealRoot";
 import ContactForm from "@/components/ContactForm";
+import { shareCard } from "@/lib/site";
 
 export const metadata: Metadata = {
+  ...shareCard("/contact"),
   title: "Contact · Frond Studio",
   description: "Let's connect. Tell us about what you're building.",
 };

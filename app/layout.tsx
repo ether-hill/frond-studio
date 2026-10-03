@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
 import ScrollToTop from "@/components/ScrollToTop";
+import { SITE_URL, DEFAULT_SHARE_IMAGE } from "@/lib/site";
 
 const schibsted = Schibsted_Grotesk({
   subsets: ["latin"],
@@ -11,6 +12,9 @@ const schibsted = Schibsted_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  openGraph: { siteName: "Frond Studio", type: "website", locale: "en_GB", images: [DEFAULT_SHARE_IMAGE] },
+  twitter: { card: "summary_large_image" },
   title: "Frond Studio — Natural selections",
   description:
     "A transdisciplinary design & technology studio — biophilic design, ethical AI, design systems and generative work, remotely worldwide.",

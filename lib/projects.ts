@@ -3,21 +3,52 @@
 // data object here. Each `href` points either at an internal ported page
 // (e.g. /projects/algorithms) or an external link (set `external: true`).
 
+import { shareCard } from "./site";
+
 export type PersonalProject = {
   slug: string;
   title: string;
   /** Caps micro-label, e.g. "GENERATIVE · LIVE IN BROWSER". */
   kicker: string;
   summary: string;
-  year: string;
+  /** Omit when the year is not known. */
+  year?: string;
   tags: string[];
   href: string;
   external?: boolean;
   /** 16:9 cover image (in /public). */
   image?: string;
+  /** Keep it on /projects but out of the home "Recent Projects". */
+  hideOnHome?: boolean;
 };
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
+  // Studio ventures. Their case studies live under /work, so these two cards
+  // link there. They sit first so they lead the /projects page, and so the
+  // home "Recent Projects" (the last six, reversed) does not repeat what the
+  // home "Recent Work" already shows.
+  {
+    slug: "futures-atlas",
+    title: "Futures Atlas",
+    kicker: "STUDIO VENTURE · FORESIGHT",
+    summary:
+      "Our own venture, in partnership with leading foresight labs: interactive tools, games, stories and visuals about where computing is heading.",
+    year: "2026",
+    tags: ["Foresight", "Creative coding", "AI"],
+    href: "/work/futures-atlas",
+    image: "/cards/futures-atlas.jpg",
+  },
+  {
+    slug: "folium",
+    title: "Folium",
+    kicker: "STUDIO VENTURE · DIGITAL LIBRARIES",
+    summary:
+      "Our own venture, in partnership with Playpower Labs. It helps libraries, museums and archives get their collections read.",
+    year: "2026",
+    tags: ["Libraries", "Translation", "Publishing"],
+    href: "/work/folium",
+    image: "/cards/folium.jpg",
+  },
   {
     slug: "turtle-crossing",
     title: "Turtle Crossing",
@@ -188,4 +219,23 @@ export const PERSONAL_PROJECTS: PersonalProject[] = [
     href: "/projects/fungi-source",
     image: "/cards/fungi-source.jpg",
   },
+  // Moved here from the client Work list. It sits at the end of /projects and is
+  // kept off the home page. Copy is the project's own, as it stood under Work.
+  {
+    slug: "biophilia-matters",
+    title: "Biophilia Matters",
+    kicker: "CREATIVE STRATEGY · DESIGN",
+    summary:
+      "Exploring plant and fungi based innovation and appreciation through design and creative strategy.",
+    tags: ["Creative", "Website", "Development", "Timelapse", "Video"],
+    href: "/projects/biophilia-matters",
+    image: "/posters/biophilia-matters-design-and-creative-strategy.jpg",
+    hideOnHome: true,
+  },
 ];
+
+/** Canonical URL and share card for a project page, using its card image. */
+export function projectShareCard(slug: string) {
+  const p = PERSONAL_PROJECTS.find((x) => x.slug === slug);
+  return shareCard(p?.href ?? `/projects/${slug}`, p?.image);
+}

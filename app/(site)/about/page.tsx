@@ -5,8 +5,10 @@ import CapabilitiesGraph from "@/components/CapabilitiesGraph";
 import MyceliumBg from "@/components/MyceliumBg";
 import AboutMyceliumControls from "@/components/AboutMyceliumControls";
 import Cta from "@/components/Cta";
+import { shareCard } from "@/lib/site";
 
 export const metadata: Metadata = {
+  ...shareCard("/about"),
   title: "About · Frond Studio",
   description:
     "A growing, transdisciplinary studio working the way living systems do: across boundaries, with ethical AI, on projects that nourish people and the planet.",

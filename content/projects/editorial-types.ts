@@ -7,10 +7,14 @@
 export type EditorialRatio = "16:9" | "4:5" | "3:4" | "1:1";
 
 export type EditorialMedia = {
-  type: "image" | "video";
+  /** "embed" plays a live page in an iframe (src is its URL), for generative
+      pieces that a video cannot hold sharp; poster is the still shown underneath. */
+  type: "image" | "video" | "embed";
   /** Empty string renders a labelled placeholder well so a page can ship early. */
   src: string;
-  /** Poster frame for video (also the reduced-motion still). */
+  /** Video only: a lighter encode that narrow screens load instead of `src`. */
+  srcMobile?: string;
+  /** Poster frame for video or embed (also the reduced-motion still). */
   poster?: string;
   alt: string;
   ratio: EditorialRatio;
@@ -49,7 +53,14 @@ export type EditorialProject = {
   introLead: string;
   introBody: string;
   client: string;
+  /** Eyebrow above the client line (default "Client"). Studio ventures set their own. */
+  clientLabel?: string;
+  /** Optional name inside `client` to link, e.g. a partner ({ text, href }). */
+  clientLink?: { text: string; href: string };
   services: string[];
+
+  /** Points shown on the /work preview card. Falls back to the stats when omitted. */
+  cardPoints?: string[];
 
   /** "At a glance" numeric stats. Omit to skip. */
   stats?: EditorialStat[];
@@ -72,6 +83,8 @@ export type EditorialProject = {
   /** Content model block + the overlapping device cluster. Omit to skip. */
   contentModel?: EditorialSection;
   devices?: { phone: EditorialMedia; tablet: EditorialMedia; laptop: EditorialMedia };
+  /** Optional background image behind the device cluster (replaces the neutral plate). */
+  devicesBg?: string;
 
   /** Film & motion block + two circular looping clips. Omit to skip. */
   film?: EditorialSection & { clips: EditorialFilmClip[] };
@@ -84,7 +97,11 @@ export type EditorialProject = {
   after?: string[];
 
   /** Client testimonial. May be a clearly-marked placeholder. */
-  quote?: { body: string; author: string; needsConfirmation?: boolean };
+  quote?: { body: string; author: string; role?: string; needsConfirmation?: boolean };
+  /** Longer-form client testimonial, rendered as a calm editorial block. */
+  testimonial?: { body: string; author: string; role?: string };
+  /** A portrait screen-recording shown inside an iPhone device mockup. */
+  phoneFilm?: { eyebrow?: string; heading?: string; body?: string; src: string; poster?: string; alt?: string };
   /** Looping video shown behind the quote (distinct dark/light treatment in CSS). */
   quoteBg?: EditorialMedia;
   /** Still image shown behind the quote, with a tint overlay for legibility. */
