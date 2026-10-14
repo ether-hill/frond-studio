@@ -23,32 +23,6 @@ export type PersonalProject = {
 };
 
 export const PERSONAL_PROJECTS: PersonalProject[] = [
-  // Studio ventures. Their case studies live under /work, so these two cards
-  // link there. They sit first so they lead the /projects page, and so the
-  // home "Recent Projects" (the last six, reversed) does not repeat what the
-  // home "Recent Work" already shows.
-  {
-    slug: "futures-atlas",
-    title: "Futures Atlas",
-    kicker: "STUDIO VENTURE · FORESIGHT",
-    summary:
-      "Our own venture, in partnership with leading foresight labs: interactive tools, games, stories and visuals about where computing is heading.",
-    year: "2026",
-    tags: ["Foresight", "Creative coding", "AI"],
-    href: "/work/futures-atlas",
-    image: "/cards/futures-atlas.jpg",
-  },
-  {
-    slug: "folium",
-    title: "Folium",
-    kicker: "STUDIO VENTURE · DIGITAL LIBRARIES",
-    summary:
-      "Our own venture, in partnership with Playpower Labs. It helps libraries, museums and archives get their collections read.",
-    year: "2026",
-    tags: ["Libraries", "Translation", "Publishing"],
-    href: "/work/folium",
-    image: "/cards/folium.jpg",
-  },
   {
     slug: "algorithms",
     title: "Algorithms V1",
