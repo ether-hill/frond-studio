@@ -20,6 +20,7 @@ const project: EditorialProject = {
   hero: {
     type: "video",
     src: `${M}/hero.mp4`,
+    srcMobile: `${M}/hero-720.mp4`,
     poster: `${M}/hero.jpg`,
     alt: "A walkthrough of the Source Library.",
     ratio: "16:9",
