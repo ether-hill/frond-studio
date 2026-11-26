@@ -9,6 +9,7 @@ type Option = { name: string; price: string; when: string; items: string[] };
 type Shot = { name: string; by?: string; url: string; img: string; note?: string };
 type Bar = { label: string; text?: string; start: number; end: number };
 type Block =
+  | { nav: { items: { name: string; note?: string }[]; extras?: string[]; button?: string } }
   | { sitemap: { group: string; pages: { name: string; note?: string; key?: boolean }[] }[] }
   | { flow: Item[] }
   | { gantt: { cols: string[]; rows: Bar[] } }
@@ -76,6 +77,30 @@ function Gantt({ g }: { g: { cols: string[]; rows: Bar[] } }) {
   );
 }
 
+function NavPlan({ nav }: { nav: { items: { name: string; note?: string }[]; extras?: string[]; button?: string } }) {
+  return (
+    <div className={s.navPlan}>
+      <div className={s.navBar}>
+        <div className={s.navItems}>
+          {nav.items.map((it) => <span key={it.name}>{it.name}</span>)}
+        </div>
+        <div className={s.navExtras}>
+          {nav.extras?.map((x) => <span key={x}>{x}</span>)}
+          {nav.button && <span className={s.navButton}>{nav.button}</span>}
+        </div>
+      </div>
+      <dl className={s.navNotes}>
+        {nav.items.map((it) => (
+          <div key={it.name}>
+            <dt>{it.name}</dt>
+            <dd>{it.note}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
 function Sitemap({ groups }: { groups: { group: string; pages: { name: string; note?: string; key?: boolean }[] }[] }) {
   return (
     <div className={s.sitemap}>
@@ -115,6 +140,7 @@ function Gallery({ shots }: { shots: Shot[] }) {
 }
 
 function BlockView({ block }: { block: Block }) {
+  if ("nav" in block) return <NavPlan nav={block.nav} />;
   if ("sitemap" in block) return <Sitemap groups={block.sitemap} />;
   if ("flow" in block) return <Flow steps={block.flow} />;
   if ("gantt" in block) return <Gantt g={block.gantt} />;
