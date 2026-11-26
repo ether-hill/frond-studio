@@ -7,9 +7,10 @@ type Item = { b?: string; t: string };
 type Link = { name: string; url: string; note?: string };
 type Option = { name: string; price: string; when: string; items: string[] };
 type Shot = { name: string; by?: string; url: string; img: string; note?: string };
+type NavSpec = { items: { name: string; note?: string; children?: string[] }[]; extras?: string[]; button?: string };
 type Bar = { label: string; text?: string; start: number; end: number };
 type Block =
-  | { nav: { items: { name: string; note?: string }[]; extras?: string[]; button?: string } }
+  | { nav: NavSpec }
   | { sitemap: { group: string; pages: { name: string; note?: string; key?: boolean }[] }[] }
   | { flow: Item[] }
   | { gantt: { cols: string[]; rows: Bar[] } }
@@ -77,26 +78,33 @@ function Gantt({ g }: { g: { cols: string[]; rows: Bar[] } }) {
   );
 }
 
-function NavPlan({ nav }: { nav: { items: { name: string; note?: string }[]; extras?: string[]; button?: string } }) {
+function NavPlan({ nav }: { nav: NavSpec }) {
   return (
     <div className={s.navPlan}>
       <div className={s.navBar}>
         <div className={s.navItems}>
-          {nav.items.map((it) => <span key={it.name}>{it.name}</span>)}
+          {nav.items.map((it) => (
+            <span key={it.name}>
+              {it.name}
+              {it.children?.length ? <svg width="10" height="6" viewBox="0 0 10 6" aria-hidden className={s.navCaret}><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.4" /></svg> : null}
+            </span>
+          ))}
         </div>
         <div className={s.navExtras}>
           {nav.extras?.map((x) => <span key={x}>{x}</span>)}
           {nav.button && <span className={s.navButton}>{nav.button}</span>}
         </div>
       </div>
-      <dl className={s.navNotes}>
-        {nav.items.map((it) => (
-          <div key={it.name}>
-            <dt>{it.name}</dt>
-            <dd>{it.note}</dd>
+      <div className={s.navMenus}>
+        {nav.items.filter((it) => it.children?.length).map((it) => (
+          <div key={it.name} className={s.navMenu}>
+            <p className={s.navMenuName}>{it.name}</p>
+            <ul>
+              {it.children!.map((c) => <li key={c}>{c}</li>)}
+            </ul>
           </div>
         ))}
-      </dl>
+      </div>
     </div>
   );
 }
