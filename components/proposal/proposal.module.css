@@ -81,20 +81,25 @@
 }
 .section {
   scroll-margin-top: 110px;
-  padding-bottom: clamp(48px, 8vh, 88px);
+  padding-bottom: clamp(88px, 14vh, 160px);
+}
+.section + .section {
+  padding-top: clamp(40px, 6vh, 64px);
+  border-top: 1px solid var(--line);
 }
 .h2 {
   font-family: var(--font-display), sans-serif;
   font-weight: 600;
-  font-size: var(--text-subtitle);
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  margin-bottom: 20px;
+  font-size: var(--text-title);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-bottom: clamp(24px, 3.5vh, 40px);
 }
 .h3 {
   font-weight: 600;
-  font-size: var(--text-body);
-  margin: 36px 0 4px;
+  font-size: var(--text-lead);
+  letter-spacing: -0.01em;
+  margin: 56px 0 14px;
 }
 .p {
   font-size: var(--text-body);
