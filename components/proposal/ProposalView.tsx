@@ -9,7 +9,7 @@ type Option = { name: string; price: string; when: string; items: string[] };
 type Shot = { name: string; by?: string; url: string; img: string; note?: string };
 type Bar = { label: string; text?: string; start: number; end: number };
 type Block =
-  | { wireframe: { expert: Item; answers: Item; feed: Item; data: Item } }
+  | { sitemap: { group: string; pages: { name: string; note?: string; key?: boolean }[] }[] }
   | { flow: Item[] }
   | { gantt: { cols: string[]; rows: Bar[] } }
   | { gallery: Shot[] }
@@ -35,64 +35,6 @@ const ItemText = ({ it }: { it: Item }) => (
     {it.t}
   </>
 );
-
-const Region = ({ it, className, children }: { it: Item; className: string; children?: React.ReactNode }) => (
-  <div className={`${s.wfRegion} ${className}`}>
-    <p className={s.wfLabel}>{it.b?.replace(/\.$/, "")}</p>
-    {children}
-    <p className={s.wfText}>{it.t}</p>
-  </div>
-);
-
-// Placeholder bars standing in for text in the home page sketch.
-const Lines = ({ n, short }: { n: number; short?: boolean }) => (
-  <div className={s.wfLines} aria-hidden>
-    {Array.from({ length: n }, (_, i) => (
-      <span key={i} style={{ width: `${short ? 40 + ((i * 23) % 35) : 62 + ((i * 17) % 34)}%` }} />
-    ))}
-  </div>
-);
-
-function Wireframe({ w }: { w: { expert: Item; answers: Item; feed: Item; data: Item } }) {
-  return (
-    <figure className={s.wf}>
-      <div className={s.wfBrowser} aria-hidden>
-        <span /><span /><span />
-      </div>
-      <div className={s.wfPage}>
-        <Region it={w.expert} className={s.wfExpert}>
-          <div className={s.wfExpertRow}>
-            <div className={s.wfPortrait} aria-hidden />
-            <Lines n={3} />
-          </div>
-        </Region>
-        <Region it={w.answers} className={s.wfAnswers}>
-          <div className={s.wfQuestions} aria-hidden>
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className={s.wfQ}><b>?</b><Lines n={2} /></div>
-            ))}
-          </div>
-        </Region>
-        <Region it={w.feed} className={s.wfFeed}>
-          <div className={s.wfFeedList} aria-hidden>
-            {[0, 1, 2].map((i) => (
-              <div key={i} className={s.wfFeedItem}><i /><Lines n={2} short /></div>
-            ))}
-          </div>
-        </Region>
-        <Region it={w.data} className={s.wfData}>
-          <svg className={s.wfChart} viewBox="0 0 300 90" preserveAspectRatio="none" aria-hidden>
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => {
-              const h = 14 + ((i * 37) % 60) + i * 1.5;
-              return <rect key={i} x={i * 25 + 3} y={90 - h} width={17} height={h} />;
-            })}
-          </svg>
-        </Region>
-      </div>
-      <figcaption className={s.caption}>A rough sketch, not the final design.</figcaption>
-    </figure>
-  );
-}
 
 function Flow({ steps }: { steps: Item[] }) {
   return (
@@ -134,6 +76,26 @@ function Gantt({ g }: { g: { cols: string[]; rows: Bar[] } }) {
   );
 }
 
+function Sitemap({ groups }: { groups: { group: string; pages: { name: string; note?: string; key?: boolean }[] }[] }) {
+  return (
+    <div className={s.sitemap}>
+      {groups.map((g) => (
+        <div key={g.group} className={s.smGroup}>
+          <p className={s.smGroupName}>{g.group}</p>
+          <ul>
+            {g.pages.map((pg) => (
+              <li key={pg.name} className={pg.key ? s.smKey : undefined}>
+                <span className={s.smName}>{pg.name}</span>
+                {pg.note && <span className={s.smNote}>{pg.note}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Gallery({ shots }: { shots: Shot[] }) {
   return (
     <div className={s.gallery}>
@@ -153,7 +115,7 @@ function Gallery({ shots }: { shots: Shot[] }) {
 }
 
 function BlockView({ block }: { block: Block }) {
-  if ("wireframe" in block) return <Wireframe w={block.wireframe} />;
+  if ("sitemap" in block) return <Sitemap groups={block.sitemap} />;
   if ("flow" in block) return <Flow steps={block.flow} />;
   if ("gantt" in block) return <Gantt g={block.gantt} />;
   if ("gallery" in block) return <Gallery shots={block.gallery} />;

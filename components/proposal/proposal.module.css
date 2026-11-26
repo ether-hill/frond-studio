@@ -325,120 +325,6 @@
   font-size: var(--text-caption);
 }
 
-/* Home page sketch */
-.wf {
-  margin: 8px 0 24px;
-}
-.wfBrowser {
-  display: flex;
-  gap: 6px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-bottom: 0;
-  background: var(--bg-2);
-}
-.wfBrowser span {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--line);
-}
-.wfPage {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  grid-template-areas: "expert expert" "answers feed" "data data";
-  gap: 1px;
-  background: var(--line);
-  border: 1px solid var(--line);
-}
-.wfRegion {
-  background: var(--bg-1);
-  padding: 22px 22px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.wfExpert { grid-area: expert; }
-.wfAnswers { grid-area: answers; }
-.wfFeed { grid-area: feed; }
-.wfData { grid-area: data; }
-.wfLabel {
-  font-weight: 600;
-  font-size: var(--text-body);
-}
-.wfText {
-  color: var(--fg-dim);
-  font-size: var(--text-caption);
-  line-height: 1.5;
-  max-width: 60ch;
-  margin-top: auto;
-}
-.wfLines {
-  display: grid;
-  gap: 7px;
-  flex: 1;
-}
-.wfLines span {
-  display: block;
-  height: 7px;
-  border-radius: 4px;
-  background: var(--line);
-}
-.wfExpertRow {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-.wfPortrait {
-  width: 76px;
-  height: 76px;
-  flex: none;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 38%, var(--fg-faint) 0 18%, transparent 19%),
-    radial-gradient(ellipse at 50% 100%, var(--fg-faint) 0 42%, transparent 43%), var(--bg-2);
-  opacity: 0.8;
-}
-.wfQuestions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.wfQ {
-  display: flex;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--line);
-}
-.wfQ b {
-  font-weight: 600;
-  color: var(--accent);
-}
-.wfFeedList {
-  display: grid;
-  gap: 12px;
-}
-.wfFeedItem {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-.wfFeedItem i {
-  width: 8px;
-  height: 8px;
-  margin-top: 0;
-  border-radius: 50%;
-  background: var(--accent);
-  flex: none;
-}
-.wfChart {
-  width: 100%;
-  height: 90px;
-}
-.wfChart rect {
-  fill: var(--accent);
-  opacity: 0.3;
-}
-
 /* Feed flow */
 .flow {
   list-style: none;
@@ -548,6 +434,57 @@
   display: none;
 }
 
+/* Page list */
+.sitemap {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin: 8px 0 24px;
+}
+.smGroup {
+  background: var(--bg-1);
+  padding: 20px 18px 22px;
+}
+.smGroupName {
+  color: var(--fg-dim);
+  font-size: var(--text-caption);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.smGroup ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.smGroup li {
+  white-space: normal;
+  padding: 12px 0 12px;
+  border-bottom: 1px solid var(--line-2);
+  display: grid;
+  gap: 3px;
+}
+.smName {
+  font-weight: 600;
+}
+.smNote {
+  color: var(--fg-dim);
+  font-size: var(--text-caption);
+  line-height: 1.45;
+}
+.smKey {
+  margin: 8px -10px 0;
+  padding: 12px 10px !important;
+  background: color-mix(in srgb, var(--accent) 16%, var(--bg-1));
+  border-left: 3px solid var(--accent);
+}
+@media (max-width: 1100px) and (min-width: 761px) {
+  .sitemap {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Inspiration gallery */
 .gallery {
   display: grid;
@@ -604,9 +541,34 @@
   }
 }
 @media (max-width: 760px) {
-  .wfPage {
+  .table thead {
+    display: none;
+  }
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+  }
+  .table tr {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .table td {
+    border: 0;
+    padding: 2px 0;
+  }
+  .table td:first-child {
+    white-space: normal;
+    font-weight: 600;
+  }
+  .table td + td + td {
+    color: var(--fg-dim);
+    font-size: var(--text-caption);
+    margin-top: 4px;
+  }
+  .sitemap {
     grid-template-columns: 1fr;
-    grid-template-areas: "expert" "answers" "feed" "data";
   }
   .flow {
     grid-template-columns: 1fr;
