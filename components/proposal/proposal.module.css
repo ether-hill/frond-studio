@@ -158,6 +158,42 @@
   font-weight: 500;
 }
 
+.pickBox {
+  margin: 8px 0 20px;
+}
+.pickNote {
+  color: var(--fg-dim);
+  font-size: var(--text-caption);
+  margin: 0 0 12px;
+}
+.pickList {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+}
+.pickRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.pickRow input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--fg);
+  align-self: center;
+}
+.pickName {
+  font-weight: 500;
+}
+.pickMeta {
+  color: var(--fg-dim);
+  font-size: var(--text-caption);
+}
+
 .options {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

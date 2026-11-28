@@ -21,7 +21,99 @@ type Block =
   | { ol: Item[] }
   | { table: { head: string[]; rows: string[][] } }
   | { links: Link[] }
-  | { options: Option[] };
+  | { options: Option[] }
+  | { domains: { head: string[]; rows: string[][]; picks?: string[] } };
+
+const PICKS_KEY = "proposal:domain-picks";
+
+function Rows({ head, rows }: { head: string[]; rows: string[][] }) {
+  return (
+    <div className={s.tableWrap}>
+      <table className={s.table}>
+        <thead>
+          <tr>{head.map((h) => <th key={h}>{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>{r.map((c, j) => <td key={j}>{c}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// Domain list. Picked domains show first. With ?pick in the URL the author can
+// tick favourites (saved in this browser) and copy the list to bake it in.
+function Domains({ d }: { d: { head: string[]; rows: string[][]; picks?: string[] } }) {
+  const [pickMode, setPickMode] = useState(false);
+  const [picks, setPicks] = useState<string[]>(d.picks ?? []);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!new URLSearchParams(location.search).has("pick")) return;
+    setPickMode(true);
+    try {
+      const saved = localStorage.getItem(PICKS_KEY);
+      if (saved) setPicks(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  const toggle = (name: string) => {
+    const next = picks.includes(name) ? picks.filter((x) => x !== name) : [...picks, name];
+    setPicks(next);
+    try {
+      localStorage.setItem(PICKS_KEY, JSON.stringify(next));
+    } catch {}
+  };
+
+  const picked = picks.map((n) => d.rows.find((r) => r[0] === n)).filter(Boolean) as string[][];
+  const rest = d.rows.filter((r) => !picks.includes(r[0]));
+
+  if (!pickMode)
+    return picked.length ? (
+      <>
+        <h3 className={s.h3}>Our picks</h3>
+        <Rows head={d.head} rows={picked} />
+        <h3 className={s.h3}>Other options</h3>
+        <Rows head={d.head} rows={rest} />
+      </>
+    ) : (
+      <Rows head={d.head} rows={d.rows} />
+    );
+
+  return (
+    <div className={s.pickBox}>
+      <p className={s.pickNote}>
+        Tick your favourites. They move to the top. Only you see this view.
+      </p>
+      <ul className={s.pickList}>
+        {[...picked, ...rest].map((r) => (
+          <li key={r[0]}>
+            <label className={s.pickRow}>
+              <input type="checkbox" checked={picks.includes(r[0])} onChange={() => toggle(r[0])} />
+              <span className={s.pickName}>{r[0]}</span>
+              <span className={s.pickMeta}>{r.slice(1).join(" · ")}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      <button
+        type="button"
+        className={s.gateButton}
+        style={{ height: 44 }}
+        onClick={() => {
+          navigator.clipboard?.writeText(`Domain picks: ${picks.join(", ")}`).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          });
+        }}
+      >
+        {copied ? "Copied" : `Copy ${picks.length} picks`}
+      </button>
+    </div>
+  );
+}
 
 export type ProposalDoc = {
   title: string;
@@ -148,6 +240,7 @@ function Gallery({ shots }: { shots: Shot[] }) {
 }
 
 function BlockView({ block }: { block: Block }) {
+  if ("domains" in block) return <Domains d={block.domains} />;
   if ("nav" in block) return <NavPlan nav={block.nav} />;
   if ("sitemap" in block) return <Sitemap groups={block.sitemap} />;
   if ("flow" in block) return <Flow steps={block.flow} />;
