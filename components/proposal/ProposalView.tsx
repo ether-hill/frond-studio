@@ -187,16 +187,6 @@ function NavPlan({ nav }: { nav: NavSpec }) {
           {nav.button && <span className={s.navButton}>{nav.button}</span>}
         </div>
       </div>
-      <div className={s.navMenus}>
-        {nav.items.filter((it) => it.children?.length).map((it) => (
-          <div key={it.name} className={s.navMenu}>
-            <p className={s.navMenuName}>{it.name}</p>
-            <ul>
-              {it.children!.map((c) => <li key={c}>{c}</li>)}
-            </ul>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
